@@ -22,8 +22,8 @@
   body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
 
   /* LOGIN */
-  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px 36px; width: 100%; max-width: 380px; }
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #F7F5F0; }
+  .login-card { background: #FFFFFF; border: 1px solid #E0DBD0; border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 380px; }
   .login-logo { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
   .login-sub { font-size: 12px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.5px; margin-bottom: 32px; }
   .login-label { font-size: 11px; font-family: var(--mono); color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
@@ -485,7 +485,7 @@
     </div>
 
     <div id="step-pin" style="display:none">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="pin-greeting"></div>
+      <div style="font-size:13px;color:#6B6660;margin-bottom:16px" id="pin-greeting"></div>
       <label class="login-label">PIN</label>
       <input type="password" inputmode="numeric" maxlength="6" class="login-input" id="login-pin" placeholder="Masukkan PIN kamu" autocomplete="one-time-code">
       <div class="login-error" id="pin-error"></div>
@@ -496,7 +496,7 @@
     </div>
 
     <div id="step-setpin" style="display:none">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Halo! Buat PIN untuk keamanan akun kamu.</div>
+      <div style="font-size:13px;color:#6B6660;margin-bottom:16px">Halo! Buat PIN untuk keamanan akun kamu.</div>
       <label class="login-label">Buat PIN Baru (4-6 digit)</label>
       <input type="password" inputmode="numeric" maxlength="6" class="login-input" id="new-pin1" placeholder="PIN baru">
       <label class="login-label" style="margin-top:12px">Konfirmasi PIN</label>
