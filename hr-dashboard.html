@@ -340,7 +340,7 @@
 <body>
 
 <!-- LOGIN OVERLAY -->
-<div class="login-overlay" id="login-overlay" style="display:none">
+<div class="login-overlay" id="login-overlay" style="display:none!important">
   <div class="login-box">
     <div class="login-brand">Gracie</div>
     <div class="login-sub">HR DASHBOARD</div>
@@ -1107,24 +1107,21 @@ function navigate(page, btn) {
 }
 
 function renderPage(page) {
-  if(page==='dashboard') // Check session from staff portal
-const staffSession = localStorage.getItem('gracie_staff');
-if (staffSession) {
-  try {
-    const s = JSON.parse(staffSession);
-    if (s.role === 'hr') {
-      showApp();
-    } else {
-      // Not HR, redirect back
-      window.location.href = 'index.html';
-    }
-  } catch(e) {
-    document.getElementById('login-overlay').style.display = 'flex';
+  if(page==='dashboard') // Auto-login from staff portal session
+(function() {
+  const raw = localStorage.getItem('gracie_staff');
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      if (s && s.role === 'hr') {
+        showApp();
+        return;
+      }
+    } catch(e) {}
   }
-} else {
-  // No session, show login or redirect to portal
+  // No valid HR session - redirect to login portal
   window.location.href = 'index.html';
-}
+})();
 
 function doLoginHR() {
   const pw = document.getElementById('login-pw').value;
