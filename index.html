@@ -132,11 +132,35 @@
   <div class="login-card">
     <div class="login-logo">Gracie</div>
     <div class="login-sub">STAFF PORTAL</div>
-    <label class="login-label">Nomor WhatsApp</label>
-    <input type="tel" class="login-input" id="login-wa" placeholder="08xxxxxxxxxx" autocomplete="tel">
-    <div class="login-error" id="login-error"></div>
-    <button class="login-btn" onclick="doLogin()">Masuk</button>
-    <div class="login-hint">Gunakan nomor WA yang terdaftar di HR</div>
+    
+    <div id="step-wa">
+      <label class="login-label">Nomor WhatsApp</label>
+      <input type="tel" class="login-input" id="login-wa" placeholder="08xxxxxxxxxx" autocomplete="tel">
+      <div class="login-error" id="login-error"></div>
+      <button class="login-btn" onclick="doLogin()">Lanjut</button>
+      <div class="login-hint">Gunakan nomor WA yang terdaftar di HR</div>
+    </div>
+
+    <div id="step-pin" style="display:none">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="pin-greeting"></div>
+      <label class="login-label">PIN</label>
+      <input type="password" inputmode="numeric" maxlength="6" class="login-input" id="login-pin" placeholder="Masukkan PIN kamu" autocomplete="one-time-code">
+      <div class="login-error" id="pin-error"></div>
+      <button class="login-btn" onclick="doLoginPin()">Masuk</button>
+      <div style="text-align:center;margin-top:12px">
+        <span style="font-size:12px;color:var(--text3);cursor:pointer" onclick="backToWA()">← Ganti nomor WA</span>
+      </div>
+    </div>
+
+    <div id="step-setpin" style="display:none">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Halo! Buat PIN untuk keamanan akun kamu.</div>
+      <label class="login-label">Buat PIN Baru (4-6 digit)</label>
+      <input type="password" inputmode="numeric" maxlength="6" class="login-input" id="new-pin1" placeholder="PIN baru">
+      <label class="login-label" style="margin-top:12px">Konfirmasi PIN</label>
+      <input type="password" inputmode="numeric" maxlength="6" class="login-input" id="new-pin2" placeholder="Ulangi PIN">
+      <div class="login-error" id="setpin-error"></div>
+      <button class="login-btn" onclick="doSetPin()">Simpan PIN & Masuk</button>
+    </div>
   </div>
 </div>
 
@@ -199,6 +223,25 @@
       <div class="tg-guide">
         <strong>Cara dapat Telegram ID kamu</strong>
         Buka Telegram → cari <b>@userinfobot</b> → kirim pesan apa saja → bot balas dengan ID kamu → masukkan di atas.
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><h3>Ganti PIN</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">PIN Lama</label>
+            <input type="password" inputmode="numeric" maxlength="6" class="form-input" id="cp-lama" placeholder="PIN saat ini">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PIN Baru (4-6 digit)</label>
+            <input type="password" inputmode="numeric" maxlength="6" class="form-input" id="cp-baru" placeholder="PIN baru">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Konfirmasi PIN Baru</label>
+            <input type="password" inputmode="numeric" maxlength="6" class="form-input" id="cp-konfirm" placeholder="Ulangi PIN baru">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doChangePin()">Ganti PIN</button>
+        </div>
       </div>
     </div>
 
@@ -345,13 +388,53 @@ function daysBetween(a, b) {
 }
 
 // ── AUTH ─────────────────────────────────────────
+let tempWA = '';
+
 async function doLogin() {
   const wa = document.getElementById('login-wa').value.trim();
   if (!wa) return;
-  const btn = document.querySelector('.login-btn');
+  const btn = document.getElementById('step-wa').querySelector('.login-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
 
   const res = await apiGet({ action: 'loginStaff', wa }).catch(() => null);
+  btn.textContent = 'Lanjut'; btn.disabled = false;
+
+  if (res && res.ok) {
+    if (res.needSetPin) {
+      // PIN belum diset, minta buat PIN dulu
+      tempWA = wa;
+      session.staffId = res.staffId;
+      session.nama = res.nama;
+      document.getElementById('step-wa').style.display = 'none';
+      document.getElementById('step-setpin').style.display = 'block';
+    } else {
+      // Sudah ada data tapi butuh PIN
+      tempWA = wa;
+      document.getElementById('pin-greeting').textContent = 'Halo! Masukkan PIN kamu.';
+      document.getElementById('step-wa').style.display = 'none';
+      document.getElementById('step-pin').style.display = 'block';
+      document.getElementById('login-pin').focus();
+    }
+  } else if (res && res.needPin) {
+    tempWA = wa;
+    document.getElementById('pin-greeting').textContent = 'Masukkan PIN kamu.';
+    document.getElementById('step-wa').style.display = 'none';
+    document.getElementById('step-pin').style.display = 'block';
+    document.getElementById('login-pin').focus();
+  } else {
+    const err = document.getElementById('login-error');
+    err.textContent = (res && res.error) || 'Nomor tidak terdaftar';
+    err.style.display = 'block';
+  }
+}
+
+async function doLoginPin() {
+  const pin = document.getElementById('login-pin').value.trim();
+  if (!pin) return;
+  const btn = document.getElementById('step-pin').querySelector('.login-btn');
+  btn.textContent = 'Memeriksa...'; btn.disabled = true;
+
+  const res = await apiGet({ action: 'loginStaff', wa: tempWA, pin }).catch(() => null);
   btn.textContent = 'Masuk'; btn.disabled = false;
 
   if (res && res.ok) {
@@ -360,9 +443,52 @@ async function doLogin() {
     localStorage.setItem('gracie_staff', JSON.stringify(session));
     showApp();
   } else {
-    const err = document.getElementById('login-error');
-    err.textContent = (res && res.error) || 'Nomor tidak terdaftar';
+    const err = document.getElementById('pin-error');
+    err.textContent = (res && res.error) || 'PIN salah';
     err.style.display = 'block';
+    document.getElementById('login-pin').value = '';
+  }
+}
+
+async function doSetPin() {
+  const pin1 = document.getElementById('new-pin1').value.trim();
+  const pin2 = document.getElementById('new-pin2').value.trim();
+  const err  = document.getElementById('setpin-error');
+  if (!pin1 || pin1.length < 4) { err.textContent = 'PIN minimal 4 digit'; err.style.display = 'block'; return; }
+  if (pin1 !== pin2) { err.textContent = 'PIN tidak cocok'; err.style.display = 'block'; return; }
+
+  const res = await api({ action: 'changePin', staffId: session.staffId, pinBaru: pin1 });
+  if (res && res.ok !== false) {
+    localStorage.setItem('gracie_staff', JSON.stringify(session));
+    showApp();
+    showToast('PIN berhasil dibuat! 🔐');
+  } else {
+    err.textContent = (res && res.error) || 'Gagal menyimpan PIN';
+    err.style.display = 'block';
+  }
+}
+
+function backToWA() {
+  document.getElementById('step-pin').style.display = 'none';
+  document.getElementById('step-wa').style.display = 'block';
+  document.getElementById('login-pin').value = '';
+  document.getElementById('pin-error').style.display = 'none';
+}
+
+async function doChangePin() {
+  const lama   = document.getElementById('cp-lama').value.trim();
+  const baru   = document.getElementById('cp-baru').value.trim();
+  const konfirm = document.getElementById('cp-konfirm').value.trim();
+  if (baru !== konfirm) { showToast('PIN baru tidak cocok'); return; }
+  if (baru.length < 4)  { showToast('PIN minimal 4 digit'); return; }
+  const res = await api({ action: 'changePin', staffId: session.staffId, pinLama: lama, pinBaru: baru });
+  if (res && res.ok !== false) {
+    showToast('PIN berhasil diganti! 🔐');
+    document.getElementById('cp-lama').value = '';
+    document.getElementById('cp-baru').value = '';
+    document.getElementById('cp-konfirm').value = '';
+  } else {
+    showToast((res && res.error) || 'Gagal ganti PIN');
   }
 }
 
@@ -650,8 +776,12 @@ function navigate(page, btn) {
 }
 
 // ── INIT ──────────────────────────────────────────
-document.getElementById('login-wa').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
+document.getElementById('login-wa').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('step-pin').style.display !== 'none') doLoginPin();
+    if (document.getElementById('step-setpin').style.display !== 'none') doSetPin();
+  }
 });
 
 const saved = localStorage.getItem('gracie_staff');
