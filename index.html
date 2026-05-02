@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gracie — Staff Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE6;
+    --border: #E0DBD0; --border2: #CCC8BE;
+    --text: #1A1814; --text2: #6B6660; --text3: #9B978F;
+    --accent: #2D5016; --accent-light: #E8F0DE; --accent-mid: #4A7C28;
+    --amber: #8B5E0A; --amber-light: #FDF3E0;
+    --red: #8B1A1A; --red-light: #FDE8E8;
+    --sans: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+    --radius: 10px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+  /* LOGIN */
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px 36px; width: 100%; max-width: 380px; }
+  .login-logo { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .login-sub { font-size: 12px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.5px; margin-bottom: 32px; }
+  .login-label { font-size: 11px; font-family: var(--mono); color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+  .login-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; font-family: var(--sans); background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s; }
+  .login-input:focus { border-color: var(--accent-mid); }
+  .login-btn { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 16px; font-family: var(--sans); transition: background 0.15s; }
+  .login-btn:hover { background: var(--accent-mid); }
+  .login-hint { font-size: 12px; color: var(--text3); margin-top: 12px; text-align: center; }
+  .login-error { background: var(--red-light); color: var(--red); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+
+  /* APP */
+  .app { display: none; }
+  .header { background: var(--text); color: #fff; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .header-brand { font-size: 15px; font-weight: 600; }
+  .header-user { font-size: 12px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 10px; }
+  .header-logout { background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: var(--sans); }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 10; }
+  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px; cursor: pointer; color: var(--text3); font-size: 10px; font-family: var(--mono); letter-spacing: 0.3px; border: none; background: none; font-family: var(--sans); transition: color 0.15s; }
+  .bnav-item.active { color: var(--accent); }
+  .bnav-item svg { width: 20px; height: 20px; }
+
+  .content { padding: 20px 16px 90px; max-width: 540px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; }
+  .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-header h3 { font-size: 13px; font-weight: 600; }
+  .card-body { padding: 16px; }
+
+  /* Profile fields */
+  .field-row { display: flex; align-items: flex-start; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { font-size: 12px; color: var(--text3); min-width: 120px; padding-top: 2px; }
+  .field-value { font-size: 13.5px; color: var(--text); text-align: right; flex: 1; word-break: break-all; }
+  .field-edit { font-size: 12px; color: var(--accent-mid); cursor: pointer; white-space: nowrap; padding: 2px 0; }
+
+  /* Form */
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 11px; font-family: var(--mono); color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: var(--sans); background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent-mid); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Buttons */
+  .btn { padding: 10px 18px; border-radius: 8px; font-size: 13.5px; cursor: pointer; border: none; font-family: var(--sans); font-weight: 500; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; margin-top: 4px; }
+  .btn-primary:hover { background: var(--accent-mid); }
+  .btn-secondary { background: var(--surface); border: 1px solid var(--border2); color: var(--text2); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* Badge */
+  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; font-family: var(--mono); }
+  .badge-pending { background: #FEF3C7; color: #92400E; }
+  .badge-approved { background: var(--accent-light); color: var(--accent); }
+  .badge-rejected { background: var(--red-light); color: var(--red); }
+
+  /* History item */
+  .history-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .history-item:last-child { border-bottom: none; }
+  .history-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .history-title { font-size: 13.5px; font-weight: 500; }
+  .history-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .history-amount { font-size: 14px; font-weight: 600; font-family: var(--mono); }
+
+  /* Stat cards */
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .stat-label { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+  .stat-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+  /* Cuti bar */
+  .cuti-bar-wrap { margin: 12px 0 16px; }
+  .bar-bg { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .bar-fill { height: 100%; background: var(--accent-mid); border-radius: 4px; transition: width 0.4s; }
+
+  /* Section title */
+  .section-title { font-size: 12px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+  .empty { text-align: center; padding: 28px 16px; color: var(--text3); font-size: 13px; }
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; display: none; white-space: nowrap; z-index: 200; }
+  .toast.show { display: block; }
+  .loading { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+
+  .locked-field { display: flex; align-items: center; gap: 6px; color: var(--text3); font-size: 13px; }
+  .locked-icon { width: 14px; height: 14px; }
+
+  .inline-edit { display: none; margin-top: 8px; }
+  .inline-edit.open { display: block; }
+  .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+  .tg-guide { background: var(--amber-light); border: 1px solid #FDE68A; border-radius: var(--radius); padding: 14px; margin-top: 12px; font-size: 13px; color: #78350F; }
+  .tg-guide strong { color: var(--amber); display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">Gracie</div>
+    <div class="login-sub">STAFF PORTAL</div>
+    <label class="login-label">Nomor WhatsApp</label>
+    <input type="tel" class="login-input" id="login-wa" placeholder="08xxxxxxxxxx" autocomplete="tel">
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">Masuk</button>
+    <div class="login-hint">Gunakan nomor WA yang terdaftar di HR</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-brand">Gracie Staff Portal</div>
+    <div class="header-user">
+      <span id="header-nama"></span>
+      <button class="header-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- BERANDA -->
+    <div class="page active" id="page-home">
+      <div class="page-title" id="home-greeting">Halo!</div>
+      <div class="page-sub" id="home-dept"></div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Sisa Cuti</div>
+          <div class="stat-value" id="stat-cuti">—</div>
+          <div class="stat-sub">hari tersisa</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Reimb Pending</div>
+          <div class="stat-value" id="stat-reimb-pending">—</div>
+          <div class="stat-sub">menunggu</div>
+        </div>
+      </div>
+
+      <div class="section-title">Pengajuan terakhir</div>
+      <div class="card">
+        <div class="card-body" id="home-recent"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:20px">Aksi cepat</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button class="btn btn-primary" onclick="navigate('cuti')">+ Ajukan Cuti</button>
+        <button class="btn btn-primary" onclick="navigate('reimb')">+ Ajukan Reimbursement</button>
+      </div>
+    </div>
+
+    <!-- PROFIL -->
+    <div class="page" id="page-profil">
+      <div class="page-title">Profil Saya</div>
+      <div class="page-sub">Update data pribadi kamu</div>
+
+      <div class="card">
+        <div class="card-header"><h3>Data Pribadi</h3></div>
+        <div class="card-body" id="profil-data"></div>
+      </div>
+
+      <div class="card" style="margin-top:4px">
+        <div class="card-header"><h3>Data Pekerjaan</h3><span class="locked-field"><svg class="locked-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> HR only</span></div>
+        <div class="card-body" id="profil-kerja"></div>
+      </div>
+
+      <div class="tg-guide">
+        <strong>Cara dapat Telegram ID kamu</strong>
+        Buka Telegram → cari <b>@userinfobot</b> → kirim pesan apa saja → bot balas dengan ID kamu → masukkan di atas.
+      </div>
+    </div>
+
+    <!-- CUTI -->
+    <div class="page" id="page-cuti">
+      <div class="page-title">Cuti & Absensi</div>
+      <div class="page-sub">Ajukan dan pantau status cuti</div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+            <span style="color:var(--text2)">Sisa kuota cuti <span id="cuti-tahun" style="font-family:var(--mono);font-size:11px"></span></span>
+            <span style="font-family:var(--mono);font-weight:600"><span id="cuti-sisa-num">—</span> / <span id="cuti-jatah-num">12</span> hari</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="cuti-bar" style="width:0%"></div></div>
+          <div id="cuti-summary-detail" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Ajukan Cuti</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Jenis Cuti</label>
+            <select class="form-select" id="c-jenis">
+              <option>Cuti Tahunan</option><option>Cuti Sakit</option><option>Cuti Melahirkan</option><option>Cuti Darurat</option><option>Izin</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Tanggal Mulai</label><input type="date" class="form-input" id="c-start"></div>
+            <div class="form-group"><label class="form-label">Tanggal Selesai</label><input type="date" class="form-input" id="c-end"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="c-ket" placeholder="Jelaskan keperluan..."></textarea></div>
+          <button class="btn btn-primary btn-full" onclick="submitCuti()">Kirim Pengajuan</button>
+        </div>
+      </div>
+
+      <div class="section-title">Riwayat Pengajuan</div>
+      <div class="card">
+        <div class="card-body" id="cuti-history"></div>
+      </div>
+    </div>
+
+    <!-- REIMB -->
+    <div class="page" id="page-reimb">
+      <div class="page-title">Reimbursement</div>
+      <div class="page-sub">Ajukan dan pantau status reimb</div>
+
+      <div class="card">
+        <div class="card-header"><h3>Ajukan Reimb</h3></div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Kategori</label>
+              <select class="form-select" id="r-kat">
+                <option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="r-tgl"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Jumlah (Rp)</label><input type="number" class="form-input" id="r-jml" placeholder="0"></div>
+          <div class="form-group"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="r-ket" placeholder="Jelaskan keperluan..."></textarea></div>
+          <div class="form-group">
+            <label class="form-label">Upload Receipt</label>
+            <div id="receipt-drop" style="border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;background:var(--surface2)" onclick="document.getElementById('r-receipt').click()">
+              <div id="receipt-preview" style="display:none;margin-bottom:8px"><img id="receipt-img" style="max-height:120px;border-radius:6px;object-fit:contain"/></div>
+              <div id="receipt-label" style="font-size:13px;color:var(--text3)">Tap untuk pilih foto receipt</div>
+            </div>
+            <input type="file" id="r-receipt" accept="image/*" style="display:none" onchange="previewReceipt(this)">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="submitReimb()">Kirim Pengajuan</button>
+        </div>
+      </div>
+
+      <div class="section-title">Riwayat Pengajuan</div>
+      <div class="card">
+        <div class="card-body" id="reimb-history"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="bnav-item active" onclick="navigate('home', this)" id="bnav-home">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Beranda
+    </button>
+    <button class="bnav-item" onclick="navigate('profil', this)" id="bnav-profil">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </button>
+    <button class="bnav-item" onclick="navigate('cuti', this)" id="bnav-cuti">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Cuti
+    </button>
+    <button class="bnav-item" onclick="navigate('reimb', this)" id="bnav-reimb">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Reimb
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────
+const API_URL = 'https://script.google.com/macros/s/AKfycbyeT_G6yv78bVMWS0pOzP4phsUFgVn3-tLrvBvRxXsKbRmxUFXLT3JiSCfsomMngPfeCw/exec';
+// ────────────────────────────────────────────────
+
+let session = { staffId: null, nama: null, data: null };
+
+function api(params) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+    mode: 'no-cors'
+  }).then(r => {
+    try { return r.json(); } catch(e) { return { ok: true }; }
+  }).catch(() => ({ ok: true }));
+}
+
+function apiGet(params) {
+  const qs = new URLSearchParams(params).toString();
+  return fetch(API_URL + '?' + qs).then(r => r.json());
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
+function daysBetween(a, b) {
+  if (!a || !b) return 1;
+  return Math.max(1, Math.round((new Date(b) - new Date(a)) / 86400000) + 1);
+}
+
+// ── AUTH ─────────────────────────────────────────
+async function doLogin() {
+  const wa = document.getElementById('login-wa').value.trim();
+  if (!wa) return;
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Memeriksa...'; btn.disabled = true;
+
+  const res = await apiGet({ action: 'loginStaff', wa }).catch(() => null);
+  btn.textContent = 'Masuk'; btn.disabled = false;
+
+  if (res && res.ok) {
+    session.staffId = res.staffId;
+    session.nama = res.nama;
+    localStorage.setItem('gracie_staff', JSON.stringify(session));
+    showApp();
+  } else {
+    const err = document.getElementById('login-error');
+    err.textContent = (res && res.error) || 'Nomor tidak terdaftar';
+    err.style.display = 'block';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('gracie_staff');
+  session = { staffId: null, nama: null, data: null };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+}
+
+async function showApp() {
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('header-nama').textContent = session.nama;
+  await loadAllData();
+}
+
+// ── DATA LOADING ─────────────────────────────────
+async function loadAllData() {
+  const [staffRes, cutiRes, reimbRes] = await Promise.all([
+    apiGet({ action: 'getStaff', staffId: session.staffId }),
+    apiGet({ action: 'getCuti',  staffId: session.staffId }),
+    apiGet({ action: 'getReimb', staffId: session.staffId }),
+  ]);
+
+  session.data = staffRes.ok ? staffRes.data : {};
+  session.cuti  = cutiRes.ok  ? cutiRes.data  : [];
+  session.reimb = reimbRes.ok ? reimbRes.data  : [];
+
+  renderHome();
+  renderProfil();
+  renderCuti();
+  renderReimb();
+}
+
+// ── RENDER HOME ───────────────────────────────────
+function renderHome() {
+  const s = session.data;
+  document.getElementById('home-greeting').textContent = `Halo, ${s.NamaLengkap || session.nama}! 👋`;
+  document.getElementById('home-dept').textContent = `${s.JobTitle || ''} · ${s.Departemen || ''}`;
+  // Stat cuti dari summary API
+  apiGet({ action: 'getCutiSummary', staffId: session.staffId }).then(res => {
+    if (res && res.ok) {
+      session.cutiSummary = res;
+      document.getElementById('stat-cuti').textContent = res.sisa;
+      // Update cuti page bar juga
+      document.getElementById('cuti-sisa-num').textContent = res.sisa;
+      const pct = Math.round(res.sisa / res.jatah * 100);
+      document.getElementById('cuti-bar').style.width = pct + '%';
+      document.getElementById('cuti-bar').style.background = res.sisa <= 2 ? '#B91C1C' : res.sisa <= 5 ? '#D97706' : '';
+      renderCutiSummaryCard(res);
+    }
+  });
+  const reimbPending = (session.reimb || []).filter(r => r.Status === 'Pending').length;
+  document.getElementById('stat-reimb-pending').textContent = reimbPending;
+
+  const recent = [...(session.cuti || []), ...(session.reimb || [])]
+    .sort((a, b) => new Date(b.TanggalAjukan) - new Date(a.TanggalAjukan))
+    .slice(0, 4);
+
+  document.getElementById('home-recent').innerHTML = recent.length ? recent.map(item => {
+    const isCuti = !!item.Jenis;
+    const title = isCuti ? item.Jenis : item.Kategori;
+    const sub = isCuti
+      ? `${fmtDate(item.TanggalMulai)} · ${item.Durasi} hari`
+      : `${fmtDate(item.Tanggal)} · ${fmtRp(item.Jumlah)}`;
+    return `<div class="history-item">
+      <div class="history-top"><span class="history-title">${title}</span><span class="badge badge-${(item.Status||'').toLowerCase()}">${item.Status}</span></div>
+      <div class="history-meta">${sub}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Belum ada pengajuan</div>';
+}
+
+// ── RENDER PROFIL ─────────────────────────────────
+function renderProfil() {
+  const s = session.data || {};
+
+  const editableFields = [
+    { key: 'NamaLengkap', label: 'Nama Lengkap', type: 'text' },
+    { key: 'TanggalLahir', label: 'Tanggal Lahir', type: 'date' },
+    { key: 'WA', label: 'No. WhatsApp', type: 'tel' },
+    { key: 'Email', label: 'Email', type: 'email' },
+    { key: 'Alamat', label: 'Alamat', type: 'text' },
+    { key: 'NoRekening', label: 'No. Rekening', type: 'text' },
+    { key: 'NamaBank', label: 'Nama Bank', type: 'text' },
+    { key: 'TelegramID', label: 'Telegram ID', type: 'text', hint: 'Dari @userinfobot' },
+  ];
+
+  document.getElementById('profil-data').innerHTML = editableFields.map(f => `
+    <div class="field-row">
+      <div class="field-label">${f.label}</div>
+      <div style="flex:1;text-align:right">
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+          <span class="field-value" id="fv-${f.key}">${s[f.key] || '—'}</span>
+          <span class="field-edit" onclick="toggleEdit('${f.key}')">Edit</span>
+        </div>
+        <div class="inline-edit" id="fe-${f.key}">
+          <input type="${f.type}" class="form-input" id="fi-${f.key}" value="${s[f.key] || ''}" placeholder="${f.hint || f.label}" style="text-align:left;margin-top:6px">
+          <div class="edit-actions">
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveField('${f.key}')">Simpan</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleEdit('${f.key}')">Batal</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const readonlyFields = [
+    { label: 'Departemen', value: s.Departemen },
+    { label: 'Job Title', value: s.JobTitle },
+    { label: 'Tipe Kerja', value: s.TipeKerja },
+    { label: 'Lokasi', value: s.LokasiKerja },
+    { label: 'Tanggal Mulai', value: fmtDate(s.TanggalMulai) },
+  ];
+
+  document.getElementById('profil-kerja').innerHTML = readonlyFields.map(f => `
+    <div class="field-row">
+      <div class="field-label">${f.label}</div>
+      <div class="field-value">${f.value || '—'}</div>
+    </div>`).join('');
+}
+
+function toggleEdit(key) {
+  const el = document.getElementById(`fe-${key}`);
+  el.classList.toggle('open');
+}
+
+async function saveField(key) {
+  const val = document.getElementById(`fi-${key}`).value.trim();
+  const res = await api({
+    action: 'updateStaff', staffId: session.staffId,
+    nama: session.nama, [key]: val
+  });
+  if (res && res.ok !== false) {
+    session.data[key] = val;
+    document.getElementById(`fv-${key}`).textContent = val || '—';
+    toggleEdit(key);
+    showToast('Tersimpan ✓');
+  } else {
+    showToast('Gagal menyimpan');
+  }
+}
+
+// ── RENDER CUTI ───────────────────────────────────
+function renderCutiSummaryCard(s) {
+  if (!s) return;
+  document.getElementById('cuti-tahun').textContent = s.tahun;
+  document.getElementById('cuti-sisa-num').textContent = s.sisa;
+  document.getElementById('cuti-jatah-num').textContent = s.jatah;
+  const pct = Math.round(s.sisa / s.jatah * 100);
+  document.getElementById('cuti-bar').style.width = pct + '%';
+  document.getElementById('cuti-bar').style.background = s.sisa <= 2 ? '#B91C1C' : s.sisa <= 5 ? '#D97706' : '';
+
+  document.getElementById('cuti-summary-detail').innerHTML = `
+    <div style="text-align:center;padding:10px;background:var(--surface2);border-radius:8px">
+      <div style="font-size:20px;font-weight:600;font-family:var(--mono)">${s.jatah}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">Jatah</div>
+    </div>
+    <div style="text-align:center;padding:10px;background:var(--red-light);border-radius:8px">
+      <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--red)">${s.dipakai}</div>
+      <div style="font-size:11px;color:var(--red);margin-top:2px">Terpakai</div>
+    </div>
+    <div style="text-align:center;padding:10px;background:${s.sisa<=2?'var(--red-light)':s.sisa<=5?'var(--amber-light)':'var(--accent-light)'};border-radius:8px">
+      <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:${s.sisa<=2?'var(--red)':s.sisa<=5?'var(--amber)':'var(--accent)'}">${s.sisa}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">Sisa</div>
+    </div>
+    ${s.pending > 0 ? `<div style="grid-column:1/-1;text-align:center;font-size:12px;color:var(--amber);background:var(--amber-light);padding:6px;border-radius:6px">⏳ ${s.pending} hari sedang pending approval</div>` : ''}
+  `;
+}
+
+function renderCuti() {
+  const list = session.cuti || [];
+  document.getElementById('cuti-history').innerHTML = list.length ? list.map(c => `
+    <div class="history-item">
+      <div class="history-top">
+        <span class="history-title">${c.Jenis}</span>
+        <span class="badge badge-${(c.Status||'').toLowerCase()}">${c.Status}</span>
+      </div>
+      <div class="history-meta">${fmtDate(c.TanggalMulai)} – ${fmtDate(c.TanggalSelesai)} · ${c.Durasi} hari</div>
+      ${c.Status==='Rejected' && c.CatatanHR ? `<div style="font-size:12px;color:var(--red);margin-top:4px">Alasan: ${c.CatatanHR}</div>` : ''}
+    </div>`).join('') : '<div class="empty">Belum ada riwayat cuti</div>';
+}
+
+async function submitCuti() {
+  const start = document.getElementById('c-start').value;
+  const end   = document.getElementById('c-end').value || start;
+  if (!start) { showToast('Pilih tanggal dulu'); return; }
+
+  const durasi = daysBetween(start, end);
+  const res = await api({
+    action: 'addCuti', staffId: session.staffId,
+    Jenis: document.getElementById('c-jenis').value,
+    TanggalMulai: start, TanggalSelesai: end, Durasi: durasi,
+    Keterangan: document.getElementById('c-ket').value,
+  });
+
+  if (res && res.ok !== false) {
+    showToast('Pengajuan terkirim! HR akan segera memproses 🙏');
+    document.getElementById('c-start').value = '';
+    document.getElementById('c-end').value = '';
+    document.getElementById('c-ket').value = '';
+    await loadAllData();
+  } else {
+    showToast((res && res.error) || 'Gagal mengirim');
+  }
+}
+
+// ── RENDER REIMB ──────────────────────────────────
+function renderReimb() {
+  const list = session.reimb || [];
+  document.getElementById('reimb-history').innerHTML = list.length ? list.map(r => `
+    <div class="history-item">
+      <div class="history-top">
+        <div>
+          <div class="history-title">${r.Kategori}</div>
+          <div class="history-meta">${fmtDate(r.Tanggal)} · ${r.Keterangan || ''}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="history-amount">${fmtRp(r.Jumlah)}</div>
+          <span class="badge badge-${(r.Status||'').toLowerCase()}">${r.Status}</span>
+        </div>
+      </div>
+      ${r.Status==='Rejected' && r.CatatanHR ? `<div style="font-size:12px;color:var(--red);margin-top:4px">Alasan: ${r.CatatanHR}</div>` : ''}
+    </div>`).join('') : '<div class="empty">Belum ada riwayat reimb</div>';
+}
+
+function previewReceipt(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('receipt-img').src = e.target.result;
+    document.getElementById('receipt-preview').style.display = 'block';
+    document.getElementById('receipt-label').textContent = file.name;
+    document.getElementById('receipt-drop').style.borderColor = 'var(--accent-mid)';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function getReceiptBase64() {
+  const file = document.getElementById('r-receipt').files[0];
+  if (!file) return null;
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.readAsDataURL(file);
+  });
+}
+
+async function submitReimb() {
+  const tgl = document.getElementById('r-tgl').value;
+  const jml = document.getElementById('r-jml').value;
+  if (!tgl || !jml) { showToast('Lengkapi form dulu'); return; }
+
+  const receiptB64 = await getReceiptBase64();
+  const res = await api({
+    action: 'addReimb', staffId: session.staffId,
+    Kategori: document.getElementById('r-kat').value,
+    Tanggal: tgl, Jumlah: jml,
+    Keterangan: document.getElementById('r-ket').value,
+    Receipt: receiptB64 || '',
+  });
+
+  if (res && res.ok !== false) {
+    showToast('Reimb terkirim! Menunggu approval HR 🙏');
+    document.getElementById('r-tgl').value = '';
+    document.getElementById('r-jml').value = '';
+    document.getElementById('r-ket').value = '';
+    document.getElementById('r-receipt').value = '';
+    document.getElementById('receipt-preview').style.display = 'none';
+    document.getElementById('receipt-label').textContent = 'Tap untuk pilih foto receipt';
+    document.getElementById('receipt-drop').style.borderColor = '';
+    await loadAllData();
+  } else {
+    showToast((res && res.error) || 'Gagal mengirim');
+  }
+}
+
+// ── NAVIGATION ────────────────────────────────────
+function navigate(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const navBtn = btn || document.getElementById('bnav-' + page);
+  if (navBtn) navBtn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────
+document.getElementById('login-wa').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+const saved = localStorage.getItem('gracie_staff');
+if (saved) {
+  session = JSON.parse(saved);
+  showApp();
+}
+</script>
+</body>
+</html>
