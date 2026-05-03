@@ -6,6 +6,7 @@
 <title>Gracie Management</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ── GLOBAL ─────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2063,19 +2064,25 @@ if (savedSession) {
 
     window.importPayrollXlsxRows = async function() {
       if(!payrollImportRows||!payrollImportRows.length){showToast('Preview dulu sebelum import');return;}
-      if(!confirm(`Import ${payrollImportRows.length} rows ke Payroll?`))return;
-      const BATCH=50;let ins=0,upd=0;
+      if(!confirm('Import '+payrollImportRows.length+' rows ke Payroll?'))return;
+      const BATCH=5; let ins=0,upd=0,failed=0;
       for(let i=0;i<payrollImportRows.length;i+=BATCH){
-        showToast(`Mengimport ${Math.min(i+BATCH,payrollImportRows.length)}/${payrollImportRows.length}...`);
-        const res=await apiPost({action:'importPayrollRows',token:HR_PASSWORD,rows:payrollImportRows.slice(i,i+BATCH)});
-        if(res&&res.ok){ins+=(res.inserted||0);upd+=(res.updated||0);}
-        else{showToast('Error: '+(res&&res.error||'Cek Apps Script deployment'));return;}
+        showToast((Math.min(i+BATCH,payrollImportRows.length))+'/'+payrollImportRows.length+'...');
+        const qs=new URLSearchParams({action:'importPayrollRows',token:HR_PASSWORD,rows:JSON.stringify(payrollImportRows.slice(i,i+BATCH))});
+        try {
+          const res=await fetch(API_URL+'?'+qs.toString()).then(r=>r.json());
+          if(res&&res.ok){ins+=(res.inserted||0);upd+=(res.updated||0);}
+          else{showToast('Error: '+(res&&res.error||'unknown'));failed++;break;}
+        } catch(e){showToast('Fetch error: '+e.message);failed++;break;}
       }
-      const sumEl=document.getElementById('payroll-import-summary');
-      if(sumEl)sumEl.textContent=`Selesai: ${ins} ditambah, ${upd} diupdate`;
-      showToast('Import selesai ✓');
-      if(typeof loadPayroll==='function')await loadPayroll();
+      if(!failed){
+        const s=document.getElementById('payroll-import-summary');
+        if(s)s.textContent='Selesai: '+ins+' ditambah, '+upd+' diupdate';
+        showToast('Import selesai ✓ ('+ins+' baru, '+upd+' update)');
+        if(typeof loadPayroll==='function')await loadPayroll();
+      }
     };
+};
 
     console.log('XLSX parser patch applied ✓');
   }
