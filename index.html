@@ -9,7 +9,7 @@
 <style>
 /* ── GLOBAL ─────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+html, body { margin: 0; padding: 0; width: 100%; }
 :root {
   --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE6;
   --border: #E0DBD0; --border2: #CCC8BE;
@@ -54,7 +54,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .sp-page.active { display: block; }
 
 /* ── HR DASHBOARD ───────────────────────────── */
-#view-hr { display: none; min-height: 100vh; }
+#view-hr { display: none; width: 100%; min-height: 100vh; }
 .hr-app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
 .sidebar { background: #1A1814; color: #fff; padding: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
 .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -807,13 +807,27 @@ function backToWA() {
 }
 
 function enterApp() {
-  if (session.role === 'hr') {
-    showView('hr');
-    initHR();
-  } else {
-    showView('staff');
-    document.getElementById('sp-nama').textContent = session.nama;
-    loadStaffData();
+  try {
+    if (session.role === 'hr') {
+      showView('hr');
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        try {
+          initHR();
+        } catch(e) {
+          console.error('initHR error:', e);
+          showToast('Error memuat HR dashboard: ' + e.message);
+        }
+      }, 100);
+    } else {
+      showView('staff');
+      document.getElementById('sp-nama').textContent = session.nama;
+      loadStaffData();
+    }
+  } catch(e) {
+    console.error('enterApp error:', e);
+    showView('login');
+    showToast('Error: ' + e.message);
   }
 }
 
@@ -853,6 +867,7 @@ function initHR() {
 }
 
 async function syncFromSheets() {
+  try {
   showToast('Memuat data...');
   const [sRes, cRes, rRes] = await Promise.all([
     apiGet({ action: 'getAllStaff', token: HR_PASSWORD }),
@@ -890,6 +905,10 @@ async function syncFromSheets() {
   updateBadges();
   renderHRDashboard();
   showToast('Data berhasil dimuat ✓');
+  } catch(e) {
+    console.error('syncFromSheets error:', e);
+    showToast('Error sync: ' + e.message);
+  }
 }
 
 function updateBadges() {
