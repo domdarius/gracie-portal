@@ -9,7 +9,7 @@
 <style>
 /* ── GLOBAL ─────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { margin: 0; padding: 0; width: 100%; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
 :root {
   --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE6;
   --border: #E0DBD0; --border2: #CCC8BE;
@@ -24,8 +24,8 @@ html, body { margin: 0; padding: 0; width: 100%; }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; width: 100%; }
 
 /* ── LOGIN ──────────────────────────────────── */
-#view-login { min-height: 100vh; background: #F7F5F0; display: grid; place-items: center; padding: 20px; }
-.login-card { width: 100%; max-width: 380px; background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; padding: 40px 36px; }
+#view-login { width: 100%; height: 100%; min-height: 100vh; background: #F7F5F0; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+.login-card { width: 380px; max-width: calc(100vw - 40px); background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; padding: 40px 36px; box-sizing: border-box; }
 .login-card-inner { width: 100%; }
 .login-brand { font-size: 22px; font-weight: 600; color: #1A1814; margin-bottom: 4px; }
 .login-sub { font-size: 12px; font-family: var(--mono); color: #9B978F; letter-spacing: 0.5px; margin-bottom: 32px; }
@@ -196,6 +196,7 @@ tr:hover td { background: #F7F5F0; }
      LOGIN VIEW
 ══════════════════════════════════════════ -->
 <div id="view-login">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
   <div class="login-card">
     <div class="login-card-inner">
     <div class="login-brand">Gracie</div>
@@ -227,6 +228,7 @@ tr:hover td { background: #F7F5F0; }
       <div class="l-error" id="setpin-error"></div>
       <button class="l-btn" onclick="doSetPin()">Simpan & Masuk →</button>
     </div>
+  </div>
   </div>
 </div>
 
@@ -405,6 +407,10 @@ tr:hover td { background: #F7F5F0; }
           <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           Reimbursement <span class="nav-badge" id="reimb-badge">0</span>
         </button>
+        <button class="nav-item" onclick="hrNavigate('gaji',this)">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Gaji & Payroll
+        </button>
       </nav>
       <div class="sidebar-footer">
         <button onclick="doLogout()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:0;font-family:var(--sans)">Keluar</button>
@@ -493,6 +499,40 @@ tr:hover td { background: #F7F5F0; }
           </div>
         </div>
 
+        <!-- GAJI -->
+        <div class="hr-page" id="hr-gaji">
+          <div class="section-header">
+            <h2>Gaji & Payroll</h2>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" id="gaji-periode" style="padding:6px 12px;font-size:13px;width:150px">
+                <option value="">Semua periode</option>
+              </select>
+              <button class="btn btn-primary" onclick="openInputGaji()">+ Input Gaji</button>
+              <button class="btn btn-secondary" onclick="openInputLive()">+ Sesi Live</button>
+            </div>
+          </div>
+
+          <div class="stats-grid" id="gaji-stats" style="margin-bottom:20px"></div>
+
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header"><h3>Rekap per rekening pengirim</h3></div>
+            <div style="padding:16px" id="gaji-rekening"></div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab active" onclick="filterGaji('semua',this)">Semua</button>
+            <button class="tab" onclick="filterGaji('Belum',this)">Belum Transfer</button>
+            <button class="tab" onclick="filterGaji('Sudah',this)">Sudah Transfer</button>
+            <button class="tab" onclick="filterGaji('live',this)">Live Host</button>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Nama</th><th>Tipe</th><th>Bank</th><th>No. Rekening</th><th>Dari Rekening</th><th>Total</th><th>Status</th><th></th></tr></thead>
+              <tbody id="gaji-table"></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -559,6 +599,62 @@ tr:hover td { background: #F7F5F0; }
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-reimb')">Batal</button>
       <button class="btn btn-primary" onclick="hrAddReimb()">Ajukan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Input Gaji -->
+<div class="modal-overlay" id="modal-gaji">
+  <div class="modal">
+    <h3>Input Gaji Bulanan</h3>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="mg-staff"></select></div>
+      <div class="form-group"><label class="form-label">Periode (YYYY-MM)</label><input type="text" class="form-input" id="mg-periode" placeholder="2026-05"></div>
+      <div class="form-group"><label class="form-label">Gaji Pokok (Rp)</label><input type="number" class="form-input" id="mg-pokok" placeholder="0" oninput="hitungGajiTotal()"></div>
+      <div class="form-group"><label class="form-label">Bonus / Lembur (Rp)</label><input type="number" class="form-input" id="mg-bonus" placeholder="0" oninput="hitungGajiTotal()"></div>
+      <div class="form-group"><label class="form-label">THR (Rp)</label><input type="number" class="form-input" id="mg-thr" placeholder="0" oninput="hitungGajiTotal()"></div>
+      <div class="form-group"><label class="form-label">Bazaar (Rp)</label><input type="number" class="form-input" id="mg-bazaar" placeholder="0" oninput="hitungGajiTotal()"></div>
+      <div class="form-group full">
+        <div style="background:#F7F5F0;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:#6B6660">Total dibayar</span>
+          <span style="font-size:18px;font-weight:600;font-family:var(--mono)" id="mg-total-display">Rp 0</span>
+        </div>
+        <div style="font-size:12px;color:#9B978F;margin-top:6px" id="mg-dari-rek">Dari rekening: —</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gaji')">Batal</button>
+      <button class="btn btn-primary" onclick="submitGaji()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Input Sesi Live -->
+<div class="modal-overlay" id="modal-live">
+  <div class="modal">
+    <h3>Input Sesi Live Host</h3>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="ml-staff"></select></div>
+      <div class="form-group"><label class="form-label">Periode (YYYY-MM)</label><input type="text" class="form-input" id="ml-periode" placeholder="2026-05"></div>
+      <div class="form-group"><label class="form-label">Gaji per Sesi (Rp)</label><input type="number" class="form-input" id="ml-persesi" placeholder="0" oninput="hitungLiveTotal()"></div>
+      <div class="form-group"><label class="form-label">Jumlah Sesi</label><input type="number" class="form-input" id="ml-sesi" placeholder="0" oninput="hitungLiveTotal()"></div>
+      <div class="form-group"><label class="form-label">Total Omzet (Rp)</label><input type="number" class="form-input" id="ml-omzet" placeholder="0" oninput="hitungLiveTotal()"></div>
+      <div class="form-group"><label class="form-label">% Komisi</label><input type="number" class="form-input" id="ml-pct" placeholder="0" oninput="hitungLiveTotal()"></div>
+      <div class="form-group full">
+        <div style="background:#F7F5F0;border-radius:10px;padding:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:#6B6660">Flat (sesi × gaji)</span><span style="font-size:12px;font-family:var(--mono)" id="ml-flat-display">Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:#6B6660">Komisi</span><span style="font-size:12px;font-family:var(--mono)" id="ml-komisi-display">Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #E0DBD0;padding-top:8px">
+            <span style="font-size:13px;font-weight:500">Total dibayar</span>
+            <span style="font-size:16px;font-weight:600;font-family:var(--mono)" id="ml-total-display">Rp 0</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#9B978F;margin-top:6px">Dari rekening: BCA Personal</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-live')">Batal</button>
+      <button class="btn btn-primary" onclick="submitLive()">Simpan</button>
     </div>
   </div>
 </div>
@@ -865,11 +961,12 @@ function hrNavigate(page, btn) {
   document.getElementById('hr-' + page).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  const titles = {dashboard:'Dashboard',staff:'Data Staff',cuti:'Cuti & Absensi',reimb:'Reimbursement'};
+  const titles = {dashboard:'Dashboard',staff:'Data Staff',cuti:'Cuti & Absensi',reimb:'Reimbursement',gaji:'Gaji & Payroll'};
   document.getElementById('hr-page-title').textContent = titles[page]||page;
   if (page === 'staff')  renderStaff();
   if (page === 'cuti')   renderCuti();
   if (page === 'reimb')  renderReimb();
+  if (page === 'gaji')   { populatePeriode(); loadGaji(); }
 }
 
 // Staff table
@@ -1288,19 +1385,228 @@ async function doChangePin() {
 }
 
 // ══════════════════════════════════════════════
+// GAJI & PAYROLL
+// ══════════════════════════════════════════════
+let gajiData = [];
+let gajiFilter = 'semua';
+
+function getRekeningPengirim(tipe, pokok) {
+  const g = parseFloat(pokok) || 0;
+  if (tipe === 'Part-Time' || tipe === 'Freelance') return 'BCA Personal';
+  return g >= 4500000 ? 'PT Gracie Royal Sejahtera' : 'CV Gracie Royal Sentosa';
+}
+
+async function loadGaji() {
+  const periode = document.getElementById('gaji-periode')?.value || '';
+  // Load from Sheets via Apps Script
+  const [gRes, lRes] = await Promise.all([
+    apiGet({ action: 'getGaji', token: HR_PASSWORD, periode }),
+    apiGet({ action: 'getSesiLive', token: HR_PASSWORD, periode }),
+  ]);
+
+  const gajiRows  = (gRes.ok && gRes.data)  ? gRes.data  : [];
+  const liveRows  = (lRes.ok && lRes.data)  ? lRes.data  : [];
+
+  gajiData = [
+    ...gajiRows.map(g => ({
+      id: g.ID, staffId: g.StaffID, nama: g.NamaStaff, tipe: 'Gaji',
+      total: parseFloat(g.Total)||0, bank: g.NamaBank||'—',
+      noRek: g.NoRekening||'—', dari: g.DariRekening||'—',
+      status: g.StatusTransfer||'Belum', tglTransfer: g.TanggalTransfer||'',
+    })),
+    ...liveRows.map(l => ({
+      id: l.ID, staffId: l.StaffID, nama: l.NamaStaff, tipe: 'Live Host',
+      total: parseFloat(l.TotalDibayar)||0, bank: l.NamaBank||'—',
+      noRek: l.NoRekening||'—', dari: l.DariRekening||'BCA Personal',
+      status: l.StatusTransfer||'Belum', tglTransfer: l.TanggalTransfer||'',
+    })),
+  ];
+
+  renderGajiStats();
+  renderGajiTable();
+}
+
+function renderGajiStats() {
+  const total  = gajiData.reduce((s,r) => s + r.total, 0);
+  const belum  = gajiData.filter(r => r.status === 'Belum').length;
+  const sudah  = gajiData.filter(r => r.status === 'Sudah').length;
+
+  const byRek = {};
+  gajiData.forEach(r => { byRek[r.dari] = (byRek[r.dari]||0) + r.total; });
+
+  document.getElementById('gaji-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px">${fmtRp(total)}</div></div>
+    <div class="stat-card amber"><div class="label">Belum Transfer</div><div class="value">${belum}</div></div>
+    <div class="stat-card green"><div class="label">Sudah Transfer</div><div class="value">${sudah}</div></div>
+    <div class="stat-card"><div class="label">Total Staff</div><div class="value">${gajiData.length}</div></div>`;
+
+  document.getElementById('gaji-rekening').innerHTML = Object.entries(byRek).map(([rek, jml]) => `
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid #E0DBD0">
+      <span style="font-size:13px">${rek}</span>
+      <span style="font-family:var(--mono);font-weight:500">${fmtRp(jml)}</span>
+    </div>`).join('') || '<div class="empty">Belum ada data</div>';
+}
+
+function renderGajiTable() {
+  let list = gajiData;
+  if (gajiFilter === 'Belum')  list = list.filter(r => r.status === 'Belum');
+  if (gajiFilter === 'Sudah')  list = list.filter(r => r.status === 'Sudah');
+  if (gajiFilter === 'live')   list = list.filter(r => r.tipe === 'Live Host');
+
+  document.getElementById('gaji-table').innerHTML = list.length ? list.map(r => `
+    <tr>
+      <td><span style="font-weight:500">${r.nama}</span></td>
+      <td><span class="reimb-category">${r.tipe}</span></td>
+      <td>${r.bank}</td>
+      <td style="font-family:var(--mono);font-size:12px">${r.noRek}</td>
+      <td style="font-size:12px;color:#6B6660">${r.dari}</td>
+      <td style="font-family:var(--mono);font-weight:500">${fmtRp(r.total)}</td>
+      <td>${r.status === 'Sudah' ? '<span class="badge badge-approved">Sudah</span>' : '<span class="badge badge-pending">Belum</span>'}</td>
+      <td>${r.status === 'Belum' ? `<button class="btn btn-approve btn-sm" onclick="markTransfer('${r.id}','${r.tipe}')">Tandai Transfer</button>` : `<span style="font-size:11px;color:#9B978F">${r.tglTransfer}</span>`}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">Belum ada data gaji</td></tr>';
+}
+
+function filterGaji(f, btn) {
+  gajiFilter = f;
+  document.querySelectorAll('#hr-gaji .tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGajiTable();
+}
+
+async function markTransfer(id, tipe) {
+  const today = new Date().toLocaleDateString('id-ID');
+  const action = tipe === 'Live Host' ? 'updateSesiLive' : 'updateGaji';
+  await apiPost({ action, token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
+  showToast('Ditandai sudah transfer ✓');
+  await loadGaji();
+}
+
+function populatePeriode() {
+  const sel = document.getElementById('gaji-periode');
+  if (!sel) return;
+  const now = new Date();
+  let opts = '<option value="">Semua periode</option>';
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.toISOString().slice(0,7);
+    const lbl = d.toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+    opts += `<option value="${val}">${lbl}</option>`;
+  }
+  sel.innerHTML = opts;
+}
+
+function openInputGaji() {
+  const aktif = hrState.staff.filter(s => s.status === 'aktif' && !s.jobTitle.toLowerCase().includes('live'));
+  document.getElementById('mg-staff').innerHTML = aktif.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
+  document.getElementById('mg-periode').value = new Date().toISOString().slice(0,7);
+  document.getElementById('mg-pokok').value = '';
+  document.getElementById('mg-bonus').value = '';
+  document.getElementById('mg-thr').value = '';
+  document.getElementById('mg-bazaar').value = '';
+  document.getElementById('mg-total-display').textContent = 'Rp 0';
+  document.getElementById('mg-dari-rek').textContent = 'Dari rekening: —';
+  document.getElementById('modal-gaji').classList.add('open');
+}
+
+function openInputLive() {
+  const live = hrState.staff.filter(s => s.status === 'aktif' && s.jobTitle.toLowerCase().includes('live'));
+  const all  = hrState.staff.filter(s => s.status === 'aktif');
+  document.getElementById('ml-staff').innerHTML = (live.length ? live : all).map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
+  document.getElementById('ml-periode').value = new Date().toISOString().slice(0,7);
+  document.getElementById('modal-live').classList.add('open');
+}
+
+function hitungGajiTotal() {
+  const pokok  = parseFloat(document.getElementById('mg-pokok').value)  || 0;
+  const bonus  = parseFloat(document.getElementById('mg-bonus').value)  || 0;
+  const thr    = parseFloat(document.getElementById('mg-thr').value)    || 0;
+  const bazaar = parseFloat(document.getElementById('mg-bazaar').value) || 0;
+  const total  = pokok + bonus + thr + bazaar;
+  document.getElementById('mg-total-display').textContent = fmtRp(total);
+  const staffId = document.getElementById('mg-staff').value;
+  const staff   = hrState.staff.find(s => String(s.id) === String(staffId));
+  const dari    = staff ? getRekeningPengirim(staff.tipe, pokok) : '—';
+  document.getElementById('mg-dari-rek').textContent = 'Dari rekening: ' + dari;
+}
+
+function hitungLiveTotal() {
+  const persesi = parseFloat(document.getElementById('ml-persesi').value) || 0;
+  const sesi    = parseFloat(document.getElementById('ml-sesi').value)    || 0;
+  const omzet   = parseFloat(document.getElementById('ml-omzet').value)   || 0;
+  const pct     = parseFloat(document.getElementById('ml-pct').value)     || 0;
+  const flat    = persesi * sesi;
+  const komisi  = Math.round(omzet * pct / 100);
+  document.getElementById('ml-flat-display').textContent   = fmtRp(flat);
+  document.getElementById('ml-komisi-display').textContent = fmtRp(komisi);
+  document.getElementById('ml-total-display').textContent  = fmtRp(flat + komisi);
+}
+
+async function submitGaji() {
+  const staffId = document.getElementById('mg-staff').value;
+  const pokok   = parseFloat(document.getElementById('mg-pokok').value) || 0;
+  if (!pokok) { showToast('Gaji pokok wajib diisi'); return; }
+  const staff = hrState.staff.find(s => String(s.id) === String(staffId));
+  const res = await apiPost({
+    action: 'addGaji', token: HR_PASSWORD,
+    StaffID: staffId,
+    Periode: document.getElementById('mg-periode').value,
+    GajiPokok: pokok,
+    Bonus: document.getElementById('mg-bonus').value || 0,
+    THR: document.getElementById('mg-thr').value || 0,
+    Bazaar: document.getElementById('mg-bazaar').value || 0,
+    NamaBank: staff?.namaBank || '',
+    NoRekening: staff?.noRekening || '',
+  });
+  if (res && res.ok !== false) {
+    closeModal('modal-gaji');
+    showToast('Gaji disimpan ✓');
+    await loadGaji();
+  } else showToast('Gagal: ' + (res?.error||''));
+}
+
+async function submitLive() {
+  const staffId = document.getElementById('ml-staff').value;
+  const persesi = parseFloat(document.getElementById('ml-persesi').value) || 0;
+  if (!persesi) { showToast('Gaji per sesi wajib diisi'); return; }
+  const staff = hrState.staff.find(s => String(s.id) === String(staffId));
+  const res = await apiPost({
+    action: 'addSesiLive', token: HR_PASSWORD,
+    StaffID: staffId,
+    Periode: document.getElementById('ml-periode').value,
+    GajiPerSesi: persesi,
+    JumlahSesi: document.getElementById('ml-sesi').value || 0,
+    TotalOmzet: document.getElementById('ml-omzet').value || 0,
+    PctKomisi: document.getElementById('ml-pct').value || 0,
+    NamaBank: staff?.namaBank || '',
+    NoRekening: staff?.noRekening || '',
+  });
+  if (res && res.ok !== false) {
+    closeModal('modal-live');
+    showToast('Sesi live disimpan ✓');
+    await loadGaji();
+  } else showToast('Gagal: ' + (res?.error||''));
+}
+
+// ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
 const savedSession = localStorage.getItem('gracie_staff');
 if (savedSession) {
   try {
     const s = JSON.parse(savedSession);
-    if (s && s.staffId) {
+    if (s && s.staffId && s.role) {
       session.staffId = s.staffId;
       session.nama    = s.nama;
-      session.role    = s.role || 'staff';
+      session.role    = s.role;
       enterApp();
-    } else { showView('login'); }
-  } catch(e) { showView('login'); }
+    } else {
+      localStorage.removeItem('gracie_staff');
+      showView('login');
+    }
+  } catch(e) {
+    localStorage.removeItem('gracie_staff');
+    showView('login');
+  }
 } else {
   showView('login');
 }
