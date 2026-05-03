@@ -189,6 +189,75 @@ tr:hover td { background: #F7F5F0; }
 .receipt-drop { border: 1.5px dashed #CCC8BE; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #F0EDE6; }
 .tg-guide { background: #FDF3E0; border: 1px solid #FDE68A; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 13px; color: #78350F; }
 .tg-guide strong { color: #8B5E0A; display: block; margin-bottom: 4px; }
+
+
+/* ── FIX: HR Cuti layout + compact quota ───────────────── */
+#hr-cuti .grid-2 {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+#hr-cuti .card {
+  overflow-x: auto;
+}
+#hr-cuti table {
+  table-layout: fixed;
+  min-width: 980px;
+}
+#hr-cuti th,
+#hr-cuti td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+#hr-cuti th:nth-child(1), #hr-cuti td:nth-child(1) { width: 22%; }
+#hr-cuti th:nth-child(2), #hr-cuti td:nth-child(2) { width: 15%; }
+#hr-cuti th:nth-child(3), #hr-cuti td:nth-child(3) { width: 17%; }
+#hr-cuti th:nth-child(4), #hr-cuti td:nth-child(4) { width: 10%; }
+#hr-cuti th:nth-child(5), #hr-cuti td:nth-child(5) { width: 18%; }
+#hr-cuti th:nth-child(6), #hr-cuti td:nth-child(6) { width: 10%; }
+#hr-cuti th:nth-child(7), #hr-cuti td:nth-child(7) { width: 14%; }
+#hr-cuti .staff-info { min-width: 0; }
+#hr-cuti .staff-name { line-height: 1.25; }
+#hr-cuti .badge { white-space: nowrap; }
+#hr-cuti-quota {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 18px;
+}
+.leave-quota-item {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 120px 44px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #F0EDE6;
+}
+.leave-quota-name {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.leave-quota-value {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: #9B978F;
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .hr-app { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  #hr-cuti table { min-width: 860px; }
+}
+
+
+/* ── PAYROLL XLSX IMPORT ───────────────────── */
+.import-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.import-toolbar .form-input { max-width:360px; }
+.import-toolbar .form-select { max-width:220px; }
+.import-summary { margin-top:12px; font-size:13px; color:#6B6660; }
+.import-preview-wrap { overflow:auto; margin-top:12px; max-height:320px; border:1px solid #E0DBD0; border-radius:10px; }
+.import-preview-wrap table { min-width:900px; }
+
 </style>
 </head>
 <body>
@@ -409,16 +478,103 @@ tr:hover td { background: #F7F5F0; }
           <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           Reimbursement <span class="nav-badge" id="reimb-badge">0</span>
         </button>
-        
+        <button class="nav-item" onclick="hrNavigate('gaji',this)">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 14c0-1.1-1.8-2-4-2s-4 .9-4 2 1.8 2 4 2 4-.9 4-2z"/></svg>
+          Gaji & Payroll
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sp-logout" onclick="doLogout()">Keluar</button>
+      </div>
+    </aside>
+
+    <main class="hr-main">
+      <div class="topbar">
+        <div class="topbar-title" id="hr-page-title">Dashboard</div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary btn-sm" onclick="syncFromSheets()">Refresh</button>
+        </div>
+      </div>
+      <div class="hr-content">
+
+        <section class="hr-page active" id="hr-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card green"><div class="label">Staff Aktif</div><div class="value" id="stat-aktif">0</div></div>
+            <div class="stat-card"><div class="label">Join Tahun Ini</div><div class="value" id="stat-join">0</div></div>
+            <div class="stat-card amber"><div class="label">Cuti Pending</div><div class="value" id="stat-cuti-pending">0</div></div>
+            <div class="stat-card amber"><div class="label">Reimb Pending</div><div class="value" id="stat-reimb-pending">0</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-header"><h3>Cuti Pending</h3></div><div id="dash-cuti"></div></div>
+            <div class="card"><div class="card-header"><h3>Reimbursement Pending</h3></div><div id="dash-reimb"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Staff Terbaru</h3></div>
+            <table><thead><tr><th>Staff</th><th>Job Title</th><th>Join</th><th>Status</th></tr></thead><tbody id="dash-staff"></tbody></table>
+          </div>
+        </section>
+
+        <section class="hr-page" id="hr-staff">
+          <div class="section-header"><h2>Data Staff</h2><button class="btn btn-primary" onclick="openAddStaff()">+ Tambah Staff</button></div>
+          <div class="tabs"><button class="tab active" onclick="filterStaff('semua',this)">Semua</button><button class="tab" onclick="filterStaff('aktif',this)">Aktif</button><button class="tab" onclick="filterStaff('resign',this)">Resign</button></div>
+          <div class="card"><table><thead><tr><th>Nama</th><th>Departemen</th><th>Job Title</th><th>Tipe</th><th>Join</th><th>Status</th><th>Sisa Cuti</th><th></th></tr></thead><tbody id="hr-staff-table"></tbody></table></div>
+        </section>
+
+        <section class="hr-page" id="hr-cuti">
+          <div class="section-header"><h2>Cuti & Absensi</h2><button class="btn btn-primary" onclick="openAddCuti()">+ Ajukan Cuti</button></div>
+          <div class="tabs"><button class="tab active" onclick="filterCuti('semua',this)">Semua</button><button class="tab" onclick="filterCuti('pending',this)">Pending</button><button class="tab" onclick="filterCuti('approved',this)">Approved</button><button class="tab" onclick="filterCuti('rejected',this)">Rejected</button></div>
+          <div class="grid-2">
+            <div class="card"><div class="card-header"><h3>Pengajuan Cuti</h3></div><table><thead><tr><th>Staff</th><th>Jenis</th><th>Tanggal</th><th>Durasi</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="hr-cuti-table"></tbody></table></div>
+            <div class="card"><div class="card-header"><h3>Sisa Cuti Staff</h3></div><div style="padding:16px" id="hr-cuti-quota"></div></div>
+          </div>
+        </section>
+
+        <section class="hr-page" id="hr-reimb">
+          <div class="section-header"><h2>Reimbursement</h2><button class="btn btn-primary" onclick="openAddReimb()">+ Ajukan Reimb</button></div>
+          <div class="tabs"><button class="tab active" onclick="filterReimb('semua',this)">Semua</button><button class="tab" onclick="filterReimb('pending',this)">Pending</button><button class="tab" onclick="filterReimb('approved',this)">Approved</button><button class="tab" onclick="filterReimb('rejected',this)">Rejected</button></div>
+          <div class="card"><table><thead><tr><th>Staff</th><th>Kategori</th><th>Tanggal</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="hr-reimb-table"></tbody></table></div>
+        </section>
+
+        <section class="hr-page" id="hr-gaji">
+          <div class="section-header"><h2>Gaji & Payroll</h2><button class="btn btn-primary" onclick="openInputGaji()">+ Input Gaji</button></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px"><label class="form-label">Periode</label><select class="form-select" id="gaji-periode" onchange="loadPayroll()" style="width:auto"></select></div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Import Payroll dari XLSX Lama</h3>
+              <span style="font-size:12px;color:#9B978F">Upload file gaji lama, preview, lalu import semua periode</span>
+            </div>
+            <div style="padding:16px">
+              <div class="import-toolbar">
+                <input type="file" id="payroll-xlsx-file" accept=".xlsx,.xls" class="form-input">
+                <select id="payroll-xlsx-sheet" class="form-select"></select>
+                <button class="btn btn-secondary" onclick="previewPayrollXlsx()">Preview</button>
+                <button class="btn btn-primary" onclick="importPayrollXlsxRows()">Import ke Payroll</button>
+              </div>
+              <div id="payroll-import-summary" class="import-summary">Pilih file XLSX gaji lama untuk mulai import.</div>
+              <div class="import-preview-wrap">
+                <table>
+                  <thead><tr><th>Staff</th><th>Periode</th><th>Gaji</th><th>Live</th><th>Bonus</th><th>THR</th><th>Bazaar</th><th>Total</th></tr></thead>
+                  <tbody id="payroll-import-preview"><tr><td colspan="8" class="empty">Belum ada preview</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px" id="gs-total">Rp 0</div></div>
+            <div class="stat-card amber"><div class="label">Belum Transfer</div><div class="value" id="gs-belum">0</div></div>
+            <div class="stat-card green"><div class="label">Sudah Transfer</div><div class="value" id="gs-sudah">0</div></div>
+            <div class="stat-card"><div class="label">Total Staff</div><div class="value" id="gs-count">0</div></div>
+          </div>
+          <div class="tabs"><button class="tab active" onclick="filterPayroll('semua',this)">Semua</button><button class="tab" onclick="filterPayroll('Belum',this)">Belum</button><button class="tab" onclick="filterPayroll('Sudah',this)">Sudah</button><button class="tab" onclick="filterPayroll('live',this)">Live Host</button></div>
+          <div class="grid-2">
+            <div class="card"><div class="card-header"><h3>Payroll</h3></div><table><thead><tr><th>Nama</th><th>Tipe</th><th>Bank</th><th>No Rek</th><th>Dari</th><th>Pokok</th><th>Tambahan</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="gaji-table"></tbody></table></div>
+            <div class="card"><div class="card-header"><h3>Total per Rekening</h3></div><div style="padding:16px" id="gaji-rekening"></div></div>
           </div>
           <div class="card">
             <div class="card-header"><h3>Gaji Pokok per Staff</h3><span style="font-size:12px;color:#9B978F">Diisi sekali, berlaku tiap bulan</span></div>
-            <table>
-              <thead><tr><th>Nama</th><th>Job Title</th><th>Tipe</th><th>Gaji Pokok / Per Sesi</th><th>% Komisi</th><th>Threshold</th><th></th></tr></thead>
-              <tbody id="template-table"></tbody>
-            </table>
+            <table><thead><tr><th>Nama</th><th>Job Title</th><th>Tipe</th><th>Gaji Pokok / Per Sesi</th><th>% Komisi</th><th>Threshold</th><th></th></tr></thead><tbody id="template-table"></tbody></table>
           </div>
-        </div>
+        </section>
 
       </div>
     </main>
@@ -475,7 +631,7 @@ tr:hover td { background: #F7F5F0; }
   <div class="modal">
     <h3>Ajukan Reimbursement</h3>
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="hr-staff"></select></div>
+      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="hr-reimb-staff"></select></div>
       <div class="form-group"><label class="form-label">Kategori</label>
         <select class="form-select" id="hr-kat"><option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option></select>
       </div>
@@ -486,32 +642,6 @@ tr:hover td { background: #F7F5F0; }
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-reimb')">Batal</button>
       <button class="btn btn-primary" onclick="hrAddReimb()">Ajukan</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Input Gaji -->
-<div class="modal-overlay" id="modal-gaji">
-  <div class="modal">
-    <h3>Input Gaji Bulanan</h3>
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="mg-staff"></select></div>
-      <div class="form-group"><label class="form-label">Periode (YYYY-MM)</label><input type="text" class="form-input" id="mg-periode" placeholder="2026-05"></div>
-      <div class="form-group"><label class="form-label">Gaji Pokok (Rp)</label><input type="number" class="form-input" id="mg-pokok" placeholder="0" oninput="hitungGajiTotal()"></div>
-      <div class="form-group"><label class="form-label">Bonus / Lembur (Rp)</label><input type="number" class="form-input" id="mg-bonus" placeholder="0" oninput="hitungGajiTotal()"></div>
-      <div class="form-group"><label class="form-label">THR (Rp)</label><input type="number" class="form-input" id="mg-thr" placeholder="0" oninput="hitungGajiTotal()"></div>
-      <div class="form-group"><label class="form-label">Bazaar (Rp)</label><input type="number" class="form-input" id="mg-bazaar" placeholder="0" oninput="hitungGajiTotal()"></div>
-      <div class="form-group full">
-        <div style="background:#F7F5F0;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;color:#6B6660">Total dibayar</span>
-          <span style="font-size:18px;font-weight:600;font-family:var(--mono)" id="mg-total-display">Rp 0</span>
-        </div>
-        <div style="font-size:12px;color:#9B978F;margin-top:6px" id="mg-dari-rek">Dari rekening: —</div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-gaji')">Batal</button>
-      <button class="btn btn-primary" onclick="submitGaji()">Simpan</button>
     </div>
   </div>
 </div>
@@ -588,6 +718,37 @@ tr:hover td { background: #F7F5F0; }
   </div>
 </div>
 
+
+
+<!-- MODAL: Edit Staff -->
+<div class="modal-overlay" id="modal-edit-staff">
+  <div class="modal">
+    <h3>Edit Staff</h3>
+    <input type="hidden" id="edit-staff-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="edit-nama"></div>
+      <div class="form-group"><label class="form-label">Job Title</label><input type="text" class="form-input" id="edit-jobtitle"></div>
+      <div class="form-group"><label class="form-label">Departemen</label><input type="text" class="form-input" id="edit-dept"></div>
+      <div class="form-group"><label class="form-label">Tipe Kerja</label><select class="form-select" id="edit-tipe"><option>Full-Time</option><option>Part-Time</option><option>Freelance</option></select></div>
+      <div class="form-group"><label class="form-label">Lokasi</label><input type="text" class="form-input" id="edit-lokasi"></div>
+      <div class="form-group"><label class="form-label">Tanggal Join</label><input type="date" class="form-input" id="edit-join"></div>
+      <div class="form-group"><label class="form-label">Tanggal Resign</label><input type="date" class="form-input" id="edit-resign"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="edit-status"><option>Aktif</option><option>Resign</option></select></div>
+      <div class="form-group"><label class="form-label">Jatah Cuti</label><input type="number" class="form-input" id="edit-cuti-jatah" min="0" step="0.5"></div>
+      <div class="form-group"><label class="form-label">Sisa Cuti</label><input type="number" class="form-input" id="edit-cuti" min="0" step="0.5"></div>
+      <div class="form-group"><label class="form-label">WhatsApp</label><input type="text" class="form-input" id="edit-wa"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="edit-email"></div>
+      <div class="form-group"><label class="form-label">No. Rekening</label><input type="text" class="form-input" id="edit-norek"></div>
+      <div class="form-group"><label class="form-label">Nama Bank</label><input type="text" class="form-input" id="edit-bank"></div>
+      <div class="form-group full"><label class="form-label">Catatan HR</label><textarea class="form-textarea" id="edit-catatan"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-staff')">Batal</button>
+      <button class="btn btn-primary" onclick="saveEditStaff()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -617,6 +778,171 @@ function apiPost(params) {
   }).then(r => r.json()).catch(() => ({ok: false}));
 }
 function api(p) { return apiPost(p); }
+
+// ══════════════════════════════════════════════
+// PAYROLL XLSX IMPORT
+// ══════════════════════════════════════════════
+let payrollImportWorkbook = null;
+let payrollImportRows = [];
+
+document.addEventListener('change', async function(e) {
+  if (!e.target || e.target.id !== 'payroll-xlsx-file') return;
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  try {
+    showToast('Membaca file XLSX...');
+    payrollImportWorkbook = await readXlsxWorkbook(file);
+    const sel = document.getElementById('payroll-xlsx-sheet');
+    sel.innerHTML = payrollImportWorkbook.SheetNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    document.getElementById('payroll-import-summary').textContent = 'File terbaca. Pilih sheet lalu klik Preview.';
+    document.getElementById('payroll-import-preview').innerHTML = '<tr><td colspan="8" class="empty">Klik Preview untuk melihat data</td></tr>';
+    payrollImportRows = [];
+  } catch (err) {
+    console.error(err);
+    showToast('Gagal membaca XLSX: ' + err.message);
+  }
+});
+
+function readXlsxWorkbook(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        resolve(XLSX.read(data, { type:'array', cellDates:false }));
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function previewPayrollXlsx() {
+  if (!payrollImportWorkbook) { showToast('Pilih file XLSX dulu'); return; }
+  const sheetName = document.getElementById('payroll-xlsx-sheet').value;
+  payrollImportRows = parseLegacyPayrollSheet(payrollImportWorkbook, sheetName);
+  renderPayrollImportPreview(payrollImportRows);
+}
+
+function parseLegacyPayrollSheet(workbook, sheetName) {
+  const ws = workbook.Sheets[sheetName];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+  if (!aoa.length) return [];
+
+  const monthCols = findMonthColumns(aoa);
+  const rows = [];
+
+  for (let r = 0; r < aoa.length; r++) {
+    const name = cleanCell(aoa[r][0]);
+    if (!name || isPayrollLineLabel(name) || isMonthLabel(name)) continue;
+
+    const block = { totalRow:r, gajiRow:-1, liveRow:-1, bonusRow:-1, thrRow:-1, bazaarRow:-1 };
+    for (let k = 1; k <= 8 && r + k < aoa.length; k++) {
+      const label = cleanCell(aoa[r+k][0]).toLowerCase();
+      if (label === 'gaji') block.gajiRow = r+k;
+      else if (label === 'live') block.liveRow = r+k;
+      else if (label.includes('bonus')) block.bonusRow = r+k;
+      else if (label.includes('thr')) block.thrRow = r+k;
+      else if (label.includes('bazaar')) block.bazaarRow = r+k;
+    }
+
+    if (block.gajiRow === -1 && block.liveRow === -1 && block.bonusRow === -1 && block.thrRow === -1 && block.bazaarRow === -1) continue;
+
+    monthCols.forEach(m => {
+      const gaji = readNum(aoa[block.gajiRow]?.[m.col]);
+      const live = readNum(aoa[block.liveRow]?.[m.col]);
+      const bonus = readNum(aoa[block.bonusRow]?.[m.col]);
+      const thr = readNum(aoa[block.thrRow]?.[m.col]);
+      const bazaar = readNum(aoa[block.bazaarRow]?.[m.col]);
+      const totalFromHeaderRow = readNum(aoa[block.totalRow]?.[m.col]);
+      const total = totalFromHeaderRow || (gaji + live + bonus + thr + bazaar);
+      if (!total && !gaji && !live && !bonus && !thr && !bazaar) return;
+      rows.push({
+        NamaStaff: name,
+        Periode: m.periode,
+        GajiPokok: gaji,
+        Live: live,
+        Bonus: bonus,
+        THR: thr,
+        Bazaar: bazaar,
+        Total: total,
+        Source: 'XLSX Upload - ' + sheetName
+      });
+    });
+  }
+  return rows;
+}
+
+function findMonthColumns(aoa) {
+  const out = [];
+  const maxRows = Math.min(12, aoa.length);
+  for (let r = 0; r < maxRows; r++) {
+    for (let c = 0; c < aoa[r].length; c++) {
+      const label = cleanCell(aoa[r][c]);
+      const periode = parseMonthLabelToPeriod(label);
+      if (periode) out.push({ row:r, col:c, label, periode });
+    }
+    if (out.length >= 2) return out;
+  }
+  return out;
+}
+
+function parseMonthLabelToPeriod(label) {
+  const s = String(label || '').trim().toLowerCase();
+  const m = s.match(/^(jan|feb|mar|apr|may|mei|jun|jul|aug|agu|sep|oct|okt|nov|dec|des)\s+(20\d{2})$/i);
+  if (!m) return '';
+  const monthMap = { jan:'01', feb:'02', mar:'03', apr:'04', may:'05', mei:'05', jun:'06', jul:'07', aug:'08', agu:'08', sep:'09', oct:'10', okt:'10', nov:'11', dec:'12', des:'12' };
+  return m[2] + '-' + monthMap[m[1].toLowerCase()];
+}
+
+function isMonthLabel(v) { return !!parseMonthLabelToPeriod(v); }
+function isPayrollLineLabel(v) {
+  const s = String(v || '').trim().toLowerCase();
+  return ['gaji','live','bonus/lembur','thr tahunan','bazaar'].includes(s) || s.includes('bonus') || s.includes('thr');
+}
+function cleanCell(v) { return String(v === undefined || v === null ? '' : v).replace(/\s+/g,' ').trim(); }
+function readNum(v) {
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  const n = Number(String(v || '').replace(/[^0-9.-]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function renderPayrollImportPreview(rows) {
+  const tbody = document.getElementById('payroll-import-preview');
+  const sum = document.getElementById('payroll-import-summary');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Tidak ada data terdeteksi. Cek sheet yang dipilih.</td></tr>';
+    sum.textContent = '0 rows terdeteksi.';
+    return;
+  }
+  const total = rows.reduce((a,b)=>a + Number(b.Total || 0), 0);
+  const staffCount = new Set(rows.map(r => r.NamaStaff)).size;
+  const periodCount = new Set(rows.map(r => r.Periode)).size;
+  sum.textContent = `${rows.length} rows terdeteksi · ${staffCount} staff · ${periodCount} periode · total ${fmtRp(total)}`;
+  tbody.innerHTML = rows.slice(0, 200).map(r => `
+    <tr>
+      <td>${escapeHtml(r.NamaStaff)}</td><td>${r.Periode}</td>
+      <td>${fmtRp(r.GajiPokok)}</td><td>${fmtRp(r.Live)}</td><td>${fmtRp(r.Bonus)}</td>
+      <td>${fmtRp(r.THR)}</td><td>${fmtRp(r.Bazaar)}</td><td><strong>${fmtRp(r.Total)}</strong></td>
+    </tr>`).join('') + (rows.length > 200 ? '<tr><td colspan="8" class="empty">Preview hanya menampilkan 200 rows pertama</td></tr>' : '');
+}
+
+async function importPayrollXlsxRows() {
+  if (!payrollImportRows.length) { showToast('Preview dulu sebelum import'); return; }
+  if (!confirm(`Import ${payrollImportRows.length} rows ke Payroll? Data periode/staff yang sama akan di-update.`)) return;
+  showToast('Mengimport payroll...');
+  const res = await apiPost({ action:'importPayrollRows', token: HR_PASSWORD, rows: payrollImportRows });
+  if (res && res.ok) {
+    const skippedText = res.skipped ? ` · skipped ${res.skipped}` : '';
+    document.getElementById('payroll-import-summary').textContent = `Import selesai: inserted ${res.inserted}, updated ${res.updated}${skippedText}`;
+    showToast('Import payroll selesai ✓');
+    if (typeof loadPayroll === 'function') await loadPayroll();
+  } else {
+    showToast('Import gagal: ' + (res?.error || 'unknown'));
+  }
+}
+
 
 // ══════════════════════════════════════════════
 // UI HELPERS
@@ -808,9 +1134,10 @@ async function syncFromSheets() {
     hrState.staff = sRes.data.map(s => ({
       id: s.ID, nama: s.NamaLengkap || '', dept: s.Departemen || '',
       jobTitle: s.JobTitle || '', tipe: s.TipeKerja || '',
-      lokasi: s.LokasiKerja || '', join: s.TanggalMulai || '',
+      lokasi: s.LokasiKerja || '', join: s.TanggalMulai || '', resign: s.TanggalSelesai || '',
       status: String(s.Status||'').toLowerCase() === 'aktif' ? 'aktif' : 'resign',
-      wa: s.WA || '', email: s.Email || '', cutiSisa: parseFloat(s.CutiSisa)||0,
+      wa: s.WA || '', email: s.Email || '', cutiJatah: parseFloat(s.CutiJatah)||12, cutiSisa: parseFloat(s.CutiSisa)||0,
+      noRekening: s.NoRekening || '', namaBank: s.NamaBank || '', catatanHR: s.CatatanHR || '',
       tgId: s.TelegramID || '', isDeptHead: s.IsDeptHead === 'TRUE' || s.IsDeptHead === true,
     }));
   }
@@ -843,9 +1170,10 @@ async function syncFromSheets() {
 function updateBadges() {
   const cp = hrState.cuti.filter(c=>c.status==='pending').length;
   const rp = hrState.reimb.filter(r=>r.status==='pending').length;
-  const s = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  s('cuti-badge', cp); s('reimb-badge', rp);
-  s('stat-cuti-pending', cp); s('stat-reimb-pending', rp);
+  document.getElementById('cuti-badge').textContent = cp;
+  document.getElementById('reimb-badge').textContent = rp;
+  document.getElementById('stat-cuti-pending').textContent = cp;
+  document.getElementById('stat-reimb-pending').textContent = rp;
 }
 
 function getStaffById(id) { return hrState.staff.find(s => String(s.id) === String(id)); }
@@ -919,6 +1247,72 @@ function hrNavigate(page, btn) {
 }
 
 // Staff table
+
+function openEditStaff(id) {
+  const s = hrState.staff.find(x => String(x.id) === String(id));
+  if (!s) { showToast('Staff tidak ditemukan'); return; }
+  document.getElementById('edit-staff-id').value = s.id;
+  document.getElementById('edit-nama').value = s.nama || '';
+  document.getElementById('edit-jobtitle').value = s.jobTitle || '';
+  document.getElementById('edit-dept').value = s.dept || '';
+  document.getElementById('edit-tipe').value = s.tipe || 'Full-Time';
+  document.getElementById('edit-lokasi').value = s.lokasi || '';
+  document.getElementById('edit-join').value = toDateInput(s.join);
+  document.getElementById('edit-resign').value = toDateInput(s.resign || '');
+  document.getElementById('edit-status').value = s.status === 'aktif' ? 'Aktif' : 'Resign';
+  document.getElementById('edit-cuti-jatah').value = s.cutiJatah ?? 12;
+  document.getElementById('edit-cuti').value = s.cutiSisa ?? 0;
+  document.getElementById('edit-wa').value = s.wa || '';
+  document.getElementById('edit-email').value = s.email || '';
+  document.getElementById('edit-norek').value = s.noRekening || '';
+  document.getElementById('edit-bank').value = s.namaBank || '';
+  document.getElementById('edit-catatan').value = s.catatanHR || '';
+  document.getElementById('modal-edit-staff').classList.add('open');
+}
+
+function toDateInput(v) {
+  if (!v) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(v))) return String(v);
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0,10);
+}
+
+async function saveEditStaff() {
+  const staffId = document.getElementById('edit-staff-id').value;
+  const payload = {
+    action: 'updateStaffHR',
+    token: HR_PASSWORD,
+    staffId,
+    NamaLengkap: document.getElementById('edit-nama').value.trim(),
+    JobTitle: document.getElementById('edit-jobtitle').value.trim(),
+    Departemen: document.getElementById('edit-dept').value.trim(),
+    TipeKerja: document.getElementById('edit-tipe').value,
+    LokasiKerja: document.getElementById('edit-lokasi').value.trim(),
+    TanggalMulai: document.getElementById('edit-join').value,
+    TanggalSelesai: document.getElementById('edit-resign').value,
+    Status: document.getElementById('edit-status').value,
+    CutiJatah: document.getElementById('edit-cuti-jatah').value,
+    CutiSisa: document.getElementById('edit-cuti').value,
+    WA: document.getElementById('edit-wa').value.trim(),
+    Email: document.getElementById('edit-email').value.trim(),
+    NoRekening: document.getElementById('edit-norek').value.trim(),
+    NamaBank: document.getElementById('edit-bank').value.trim(),
+    CatatanHR: document.getElementById('edit-catatan').value.trim()
+  };
+  if (!payload.NamaLengkap) { showToast('Nama wajib diisi'); return; }
+  showToast('Menyimpan perubahan...');
+  const res = await apiPost(payload);
+  if (res && res.ok !== false) {
+    closeModal('modal-edit-staff');
+    showToast('Data staff berhasil diupdate ✓');
+    await syncFromSheets();
+    renderStaff();
+  } else {
+    showToast('Gagal update staff: ' + (res?.error || 'Unknown error'));
+  }
+}
+
 function renderStaff() {
   const list = hrState.staff.filter(s => hrState.staffFilter==='semua' || s.status===hrState.staffFilter);
   document.getElementById('hr-staff-table').innerHTML = list.map(s => `
@@ -935,7 +1329,7 @@ function renderStaff() {
           <span style="font-size:12px;font-family:var(--mono);color:#9B978F">${s.cutiSisa}</span>
         </div>
       </td>
-      <td><button class="btn btn-secondary btn-sm" onclick="showToast('Edit segera hadir')">Edit</button></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openEditStaff('${s.id}')">Edit</button></td>
     </tr>`).join('');
 }
 
@@ -952,29 +1346,32 @@ function renderCuti() {
   document.getElementById('hr-cuti-table').innerHTML = list.length ? list.map(c => {
     const s = getStaffById(c.staffId) || {nama:'—',id:'0'};
     const aksi = c.status==='pending' ? `
-      <div style="display:flex;gap:4px">
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.id}')">Terima</button>
         <button class="btn btn-reject btn-sm" onclick="rejectCuti('${c.id}')">Tolak</button>
-      </div>` : '—';
+      </div>` : '<span style="font-size:12px;color:#9B978F">—</span>';
     return `<tr>
       <td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><span class="staff-name">${s.nama}</span></div></td>
-      <td>${c.jenis}</td>
-      <td>${fmtDate(c.start)} – ${fmtDate(c.end)}</td>
+      <td>${c.jenis || '—'}</td>
+      <td><div style="line-height:1.35"><div>${fmtDate(c.start)}</div><div style="font-size:12px;color:#9B978F">s/d ${fmtDate(c.end)}</div></div></td>
       <td><span style="font-family:var(--mono)">${c.durasi} hari</span></td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9B978F">${c.ket}</td>
-      <td>${badgeHtml(c.status)}</td>
+      <td style="color:#6B6660;line-height:1.35;word-break:break-word">${c.ket || '—'}</td>
+      <td style="white-space:nowrap">${badgeHtml(c.status)}</td>
       <td>${aksi}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" class="empty">Tidak ada data</td></tr>';
 
-  // Quota bars
   const aktifStaff = hrState.staff.filter(s=>s.status==='aktif');
-  document.getElementById('hr-cuti-quota').innerHTML = aktifStaff.map(s => `
-    <div class="cuti-bar" style="margin-bottom:10px">
-      <div style="min-width:140px;font-size:13px">${s.nama}</div>
-      <div class="bar-bg" style="max-width:200px"><div class="bar-fill ${s.cutiSisa<=2?'empty':s.cutiSisa<=5?'low':''}" style="width:${Math.round(s.cutiSisa/12*100)}%"></div></div>
-      <span style="font-size:12px;font-family:var(--mono);min-width:50px;color:#9B978F">${s.cutiSisa}/12</span>
-    </div>`).join('');
+  document.getElementById('hr-cuti-quota').innerHTML = aktifStaff.length ? aktifStaff.map(s => {
+    const jatah = Number(s.cutiJatah) || 12;
+    const sisa = Number(s.cutiSisa) || 0;
+    const pct = Math.max(0, Math.min(100, Math.round(sisa / jatah * 100)));
+    return `<div class="leave-quota-item" title="${s.nama}">
+      <div class="leave-quota-name">${s.nama}</div>
+      <div class="bar-bg" style="max-width:120px"><div class="bar-fill ${sisa<=2?'empty':sisa<=5?'low':''}" style="width:${pct}%"></div></div>
+      <div class="leave-quota-value">${sisa}/${jatah}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Belum ada staff aktif</div>';
 }
 
 function filterCuti(f, btn) {
@@ -1064,10 +1461,10 @@ function openAddCuti() {
   document.getElementById('modal-cuti').classList.add('open');
 }
 function openAddReimb() {
-  document.getElementById('hr-staff').innerHTML = hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+  document.getElementById('hr-reimb-staff').innerHTML = hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
   document.getElementById('modal-reimb').classList.add('open');
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }); });
 
 async function addStaff() {
@@ -1108,7 +1505,7 @@ async function hrAddCuti() {
 }
 
 async function hrAddReimb() {
-  const staffId = document.getElementById('hr-staff').value;
+  const staffId = document.getElementById('hr-reimb-staff').value;
   const jml     = document.getElementById('hr-jml').value;
   const tgl     = document.getElementById('hr-tgl').value;
   if (!tgl || !jml) { showToast('Lengkapi form'); return; }
@@ -1963,131 +2360,5 @@ if (savedSession) {
   showView('login');
 }
 </script>
-
-<script>
-// ── XLSX PARSER PERMANENT FIX ─────────────────
-// Auto-runs on page load, overrides broken functions
-(function() {
-  // Wait for XLSX library to load
-  function applyPatch() {
-    if (typeof XLSX === 'undefined') { setTimeout(applyPatch, 200); return; }
-
-    window.toPeriode = function(v) {
-      if (!v) return '';
-      if (v instanceof Date) {
-        const y = v.getFullYear(), m = String(v.getMonth()+1).padStart(2,'0');
-        return (y>=2020 && y<=2030) ? y+'-'+m : '';
-      }
-      const s = String(v).trim();
-      const iso = s.match(/^(\d{4})-(\d{2})/);
-      if (iso && +iso[1]>=2020) return iso[1]+'-'+iso[2];
-      const mm = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',mei:'05',jun:'06',
-        jul:'07',aug:'08',agu:'08',sep:'09',sept:'09',oct:'10',okt:'10',nov:'11',dec:'12',des:'12',
-        january:'01',february:'02',march:'03',april:'04',june:'06',july:'07',
-        august:'08',september:'09',october:'10',november:'11',december:'12'};
-      const m1 = s.match(/^([A-Za-z]+)[\s\-]+(20\d{2})$/i);
-      if (m1 && mm[m1[1].toLowerCase()]) return m1[2]+'-'+mm[m1[1].toLowerCase()];
-      const m2 = s.match(/^([A-Za-z]+)[\s\-]+(\d{2})$/i);
-      if (m2 && mm[m2[1].toLowerCase()]) return '20'+m2[2]+'-'+mm[m2[1].toLowerCase()];
-      const m3 = s.match(/^([A-Za-z]+)[\s\-]+(\d{4})$/i);
-      if (m3 && mm[m3[1].toLowerCase()]) return m3[2]+'-'+mm[m3[1].toLowerCase()];
-      return '';
-    };
-
-    window.readXlsxWorkbook = function(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = evt => {
-          try { resolve(XLSX.read(new Uint8Array(evt.target.result), {type:'array',cellDates:true,cellText:false})); }
-          catch(e) { reject(e); }
-        };
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-      });
-    };
-
-    window.parseLegacyPayrollSheet = function(workbook, sheetName) {
-      const ws = workbook.Sheets[sheetName];
-      const aoa = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:false});
-      if (!aoa.length) return [];
-      let headerRow=-1; const monthCols=[];
-      for (let r=0; r<Math.min(10,aoa.length); r++) {
-        const found=[];
-        (aoa[r]||[]).forEach((v,c)=>{ if(c>0){const p=toPeriode(v);if(p)found.push({col:c,periode:p});}});
-        if(found.length>=2){headerRow=r;monthCols.push(...found);break;}
-      }
-      if(!monthCols.length) throw new Error('Kolom bulan tidak ditemukan. Pilih "Sheet1".');
-      const COMP={gaji:'gajiRow',live:'liveRow','bonus/lembur':'bonusRow','thr tahunan':'thrRow',bazaar:'bazaarRow',bonus:'bonusRow'};
-      const SKIP=new Set(['','gaji','live','bonus/lembur','thr tahunan','bazaar','bonus','total','bonus\nlembur','lembur']);
-      const rows=[]; let r=headerRow+1;
-      while(r<aoa.length){
-        const raw=String((aoa[r]||[])[0]||'').replace(/\s+/g,' ').trim();
-        if(!raw||SKIP.has(raw.toLowerCase())||raw.startsWith('=')||/^\d/.test(raw)){r++;continue;}
-        const block={gajiRow:-1,liveRow:-1,bonusRow:-1,thrRow:-1,bazaarRow:-1,end:r};
-        for(let k=1;k<=8&&r+k<aoa.length;k++){
-          const lbl=String((aoa[r+k]||[])[0]||'').toLowerCase().replace(/\s+/g,' ').trim();
-          if(!lbl)continue;
-          const key=Object.keys(COMP).find(c=>lbl===c||lbl.startsWith(c));
-          if(key){block[COMP[key]]=r+k;block.end=r+k;}
-          else if(!SKIP.has(lbl))break;
-        }
-        if(block.gajiRow===-1&&block.liveRow===-1){r++;continue;}
-        const cleanName=raw.replace(/\s*\(.*?\)\s*/g,'').replace(/\s+/g,' ').trim();
-        const num=(ri,col)=>{
-          if(ri===-1||!aoa[ri])return 0;
-          const v=aoa[ri][col];if(!v)return 0;
-          const n=parseFloat(String(v).replace(/[^0-9.-]/g,''));return isNaN(n)?0:n;
-        };
-        monthCols.forEach(m=>{
-          const gaji=num(block.gajiRow,m.col),live=num(block.liveRow,m.col);
-          const bonus=num(block.bonusRow,m.col),thr=num(block.thrRow,m.col),bazaar=num(block.bazaarRow,m.col);
-          const total=gaji+live+bonus+thr+bazaar;
-          if(!total)return;
-          rows.push({NamaStaff:cleanName,Periode:m.periode,GajiPokok:gaji,Live:live,Bonus:bonus,THR:thr,Bazaar:bazaar,Total:total});
-        });
-        r=block.end+1;
-      }
-      return rows;
-    };
-
-    window.renderPayrollImportPreview = function(rows) {
-      const tbody=document.getElementById('payroll-import-preview');
-      const sum=document.getElementById('payroll-import-summary');
-      if(!rows.length){if(tbody)tbody.innerHTML='<tr><td colspan="8" class="empty">Tidak ada data.</td></tr>';if(sum)sum.textContent='0 rows.';return;}
-      const total=rows.reduce((a,b)=>a+(b.Total||0),0);
-      const periodes=[...new Set(rows.map(r=>r.Periode))].sort();
-      const fR=n=>'Rp '+Number(n).toLocaleString('id-ID');
-      const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-      if(sum)sum.textContent=`${rows.length} rows · ${new Set(rows.map(r=>r.NamaStaff)).size} staff · ${periodes[0]} s/d ${periodes[periodes.length-1]} · ${fR(total)}`;
-      if(tbody)tbody.innerHTML=rows.slice(0,300).map(r=>`<tr><td>${esc(r.NamaStaff)}</td><td style="font-size:12px">${r.Periode}</td><td>${fR(r.GajiPokok)}</td><td>${fR(r.Live)}</td><td>${fR(r.Bonus)}</td><td>${fR(r.THR)}</td><td>${fR(r.Bazaar)}</td><td style="font-weight:600">${fR(r.Total)}</td></tr>`).join('');
-    };
-
-    window.importPayrollXlsxRows = async function() {
-      if(!payrollImportRows||!payrollImportRows.length){showToast('Preview dulu sebelum import');return;}
-      if(!confirm('Import '+payrollImportRows.length+' rows ke Payroll?'))return;
-      const BATCH=5; let ins=0,upd=0,failed=0;
-      for(let i=0;i<payrollImportRows.length;i+=BATCH){
-        showToast((Math.min(i+BATCH,payrollImportRows.length))+'/'+payrollImportRows.length+'...');
-        const qs=new URLSearchParams({action:'importPayrollRows',token:HR_PASSWORD,rows:JSON.stringify(payrollImportRows.slice(i,i+BATCH))});
-        try {
-          const res=await fetch(API_URL+'?'+qs.toString()).then(r=>r.json());
-          if(res&&res.ok){ins+=(res.inserted||0);upd+=(res.updated||0);}
-          else{showToast('Error: '+(res&&res.error||'unknown'));failed++;break;}
-        } catch(e){showToast('Fetch error: '+e.message);failed++;break;}
-      }
-      if(!failed){
-        const s=document.getElementById('payroll-import-summary');
-        if(s)s.textContent='Selesai: '+ins+' ditambah, '+upd+' diupdate';
-        showToast('Import selesai ✓ ('+ins+' baru, '+upd+' update)');
-        if(typeof loadPayroll==='function')await loadPayroll();
-      }
-    };
-
-    console.log('XLSX parser patch applied ✓');
-  }
-  applyPatch();
-})();
-</script>
-
 </body>
 </html>
