@@ -1949,14 +1949,19 @@ function openInputGaji() {
         const dari = getRekening(s.tipe, t.GajiPokok);
         if (isLive) return `
           <div style="padding:12px;border-bottom:1px solid #E0DBD0">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <span style="font-weight:500">${s.nama}</span>
-              <span class="reimb-category">Live Host</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="font-weight:500;font-size:14px">${s.nama}</span>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span class="reimb-category">Live Host</span>
+                <button class="btn btn-secondary btn-sm" onclick="addSesiRow('${s.id}')">+ Sesi</button>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-              <div><label class="form-label">Jumlah Sesi</label><input type="number" class="form-input" id="gf-sesi-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
-              <div><label class="form-label">Total Omzet (Rp)</label><input type="number" class="form-input" id="gf-omzet-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px" oninput="previewKomisi('${s.id}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
-              <div><label class="form-label">Est. Komisi</label><div id="gf-komisi-${s.id}" style="padding:6px 10px;background:#F0EDE6;border-radius:8px;font-size:12px;font-family:var(--mono);margin-top:5px">Rp 0</div></div>
+            <div id="sesi-container-${s.id}">
+              ${buildSesiRow(s.id, 0, t)}
+            </div>
+            <div id="gf-komisi-total-${s.id}" style="margin-top:8px;padding:8px 10px;background:#E8F0DE;border-radius:8px;font-size:12px;display:flex;justify-content:space-between">
+              <span style="color:#2D5016">Total komisi bulan ini:</span>
+              <span style="font-family:var(--mono);font-weight:600;color:#2D5016">Rp 0</span>
             </div>
           </div>`;
         return `
@@ -1977,11 +1982,70 @@ function openInputGaji() {
   document.getElementById('modal-gaji').classList.add('open');
 }
 
+// Sesi live counters per staff
+const sesiCounts = {};
+
+function buildSesiRow(staffId, idx, t) {
+  return `<div id="sesi-row-${staffId}-${idx}" style="background:#F7F5F0;border-radius:8px;padding:10px;margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:500;color:#6B6660">Sesi ${idx+1}</span>
+      ${idx > 0 ? `<button onclick="removeSesiRow('${staffId}',${idx})" style="background:none;border:none;color:#8B1A1A;cursor:pointer;font-size:12px">✕ Hapus</button>` : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+      <div><label class="form-label">Tanggal</label><input type="date" class="form-input" id="gf-tgl-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
+      <div><label class="form-label">Jam Mulai</label><input type="time" class="form-input" id="gf-jam1-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
+      <div><label class="form-label">Jam Selesai</label><input type="time" class="form-input" id="gf-jam2-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
+      <div><label class="form-label">Studio</label>
+        <select class="form-input" id="gf-studio-${staffId}-${idx}" style="font-size:12px;padding:5px 8px">
+          <option>IWG</option><option>GRC</option><option>Lainnya</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+      <div><label class="form-label">Omzet Shopee (Rp)</label><input type="number" class="form-input" id="gf-shopee-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${staffId}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
+      <div><label class="form-label">Omzet TikTok (Rp)</label><input type="number" class="form-input" id="gf-tiktok-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${staffId}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
+      <div><label class="form-label">Ads Budget (Rp)</label><input type="number" class="form-input" id="gf-ads-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px"></div>
+      <div><label class="form-label">Co-Host</label><input type="text" class="form-input" id="gf-cohost-${staffId}-${idx}" placeholder="nama co-host" style="font-size:12px;padding:5px 8px"></div>
+    </div>
+  </div>`;
+}
+
+function addSesiRow(staffId) {
+  if (!sesiCounts[staffId]) sesiCounts[staffId] = 1;
+  else sesiCounts[staffId]++;
+  const idx = sesiCounts[staffId] - 1;
+  const t = templateData.find(x => x.ID === staffId) || {};
+  const container = document.getElementById('sesi-container-'+staffId);
+  if (container) {
+    const div = document.createElement('div');
+    div.innerHTML = buildSesiRow(staffId, idx, t);
+    container.appendChild(div.firstElementChild);
+  }
+}
+
+function removeSesiRow(staffId, idx) {
+  document.getElementById('sesi-row-'+staffId+'-'+idx)?.remove();
+}
+
+function updateTotalKomisi(staffId, threshold, pct) {
+  // Sum all sesi omzet for this staff
+  let totalOmzet = 0;
+  for (let i = 0; i < 50; i++) {
+    const shopee = parseFloat(document.getElementById('gf-shopee-'+staffId+'-'+i)?.value) || 0;
+    const tiktok = parseFloat(document.getElementById('gf-tiktok-'+staffId+'-'+i)?.value) || 0;
+    if (shopee === 0 && tiktok === 0 && !document.getElementById('gf-shopee-'+staffId+'-'+i)) break;
+    totalOmzet += shopee + tiktok;
+  }
+  const totalKomisi = hitungKomisi(totalOmzet, threshold, pct);
+  const el = document.getElementById('gf-komisi-total-'+staffId);
+  if (el) {
+    const span = el.querySelector('span:last-child');
+    if (span) span.textContent = fmtRp(totalKomisi);
+  }
+}
+
 function previewKomisi(staffId, threshold, pct) {
-  const omzet = parseFloat(document.getElementById('gf-omzet-'+staffId)?.value) || 0;
-  const komisi = hitungKomisi(omzet, threshold, pct);
-  const el = document.getElementById('gf-komisi-'+staffId);
-  if (el) el.textContent = fmtRp(komisi);
+  updateTotalKomisi(staffId, threshold, pct);
 }
 
 async function submitGajiBulanan() {
@@ -1997,20 +2061,32 @@ async function submitGajiBulanan() {
     const t = template[s.id] || {};
     const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
     if (isLive) {
-      const sesi  = parseFloat(document.getElementById('gf-sesi-'+s.id)?.value) || 0;
-      const omzet = parseFloat(document.getElementById('gf-omzet-'+s.id)?.value) || 0;
-      if (sesi > 0 || omzet > 0) {
-        promises.push(apiPost({
-          action: 'addSesiLive', token: HR_PASSWORD,
-          StaffID: s.id, Periode: periode,
-          GajiPerSesi: t.GajiPerSesi || 0,
-          JumlahSesi: sesi,
-          TotalOmzet: omzet,
-          PctKomisi: t.PctKomisi || 2,
-          Threshold: t.Threshold || t.ThresholdKomisi || 5000000,
-          NamaBank: s.namaBank || '',
-          NoRekening: s.noRekening || '',
-        }));
+      // Submit each sesi individually
+      for (let i = 0; i < 50; i++) {
+        const tglEl = document.getElementById('gf-tgl-'+s.id+'-'+i);
+        if (!tglEl) break;
+        const shopee = parseFloat(document.getElementById('gf-shopee-'+s.id+'-'+i)?.value) || 0;
+        const tiktok = parseFloat(document.getElementById('gf-tiktok-'+s.id+'-'+i)?.value) || 0;
+        if (shopee > 0 || tiktok > 0) {
+          promises.push(apiPost({
+            action: 'addSesiLive', token: HR_PASSWORD,
+            StaffID: s.id, Periode: periode,
+            Tanggal: tglEl.value || periode,
+            JamMulai: document.getElementById('gf-jam1-'+s.id+'-'+i)?.value || '',
+            JamSelesai: document.getElementById('gf-jam2-'+s.id+'-'+i)?.value || '',
+            Studio: document.getElementById('gf-studio-'+s.id+'-'+i)?.value || '',
+            CoHost: document.getElementById('gf-cohost-'+s.id+'-'+i)?.value || '',
+            AdsBudget: document.getElementById('gf-ads-'+s.id+'-'+i)?.value || 0,
+            GajiPerSesi: t.GajiPerSesi || 0,
+            OmzetShopee: shopee,
+            OmzetTiktok: tiktok,
+            TotalOmzet: shopee + tiktok,
+            PctKomisi: t.PctKomisi || 2,
+            Threshold: t.Threshold || t.ThresholdKomisi || 5000000,
+            NamaBank: s.namaBank || '',
+            NoRekening: s.noRekening || '',
+          }));
+        }
       }
     } else {
       const pokok  = parseFloat(document.getElementById('gf-pokok-'+s.id)?.value) || 0;
