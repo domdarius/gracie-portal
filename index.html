@@ -8,7 +8,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-/* ── GLOBAL ─────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { margin: 0; padding: 0; width: 100%; }
 :root {
@@ -23,11 +22,8 @@ html, body { margin: 0; padding: 0; width: 100%; }
   --radius: 10px; --radius-lg: 16px;
 }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; width: 100%; }
-
-/* ── LOGIN ──────────────────────────────────── */
-#view-login { width: 100%; height: 100%; min-height: 100vh; background: #F7F5F0; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-.login-card { width: 380px; max-width: calc(100vw - 40px); background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; padding: 40px 36px; box-sizing: border-box; }
-.login-card-inner { width: 100%; }
+#view-login { width: 100%; height: 100%; min-height: 100vh; background: #F7F5F0; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-card { width: 380px; max-width: calc(100vw - 40px); background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; padding: 40px 36px; }
 .login-brand { font-size: 22px; font-weight: 600; color: #1A1814; margin-bottom: 4px; }
 .login-sub { font-size: 12px; font-family: var(--mono); color: #9B978F; letter-spacing: 0.5px; margin-bottom: 32px; }
 .l-label { display: block; font-size: 11px; font-family: var(--mono); color: #6B6660; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
@@ -39,8 +35,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .l-error { background: #FDE8E8; color: #8B1A1A; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
 .l-back { font-size: 12px; color: #9B978F; cursor: pointer; text-align: center; margin-top: 12px; }
 .l-muted { font-size: 13px; color: #6B6660; margin-bottom: 16px; }
-
-/* ── STAFF PORTAL ───────────────────────────── */
 #view-staff { display: none; }
 .sp-header { background: #1A1814; color: #fff; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
 .sp-brand { font-size: 15px; font-weight: 600; }
@@ -51,19 +45,17 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .sp-nav.active { color: #4A7C28; }
 .sp-nav svg { width: 20px; height: 20px; }
 .sp-content { padding: 20px 16px 90px; max-width: 540px; margin: 0 auto; }
-.sp-page { display: none; }
-.sp-page.active { display: block; }
-
-/* ── HR DASHBOARD ───────────────────────────── */
+.sp-page, .hr-page { display: none; }
+.sp-page.active, .hr-page.active { display: block; }
 #view-hr { display: none; width: 100%; min-height: 100vh; }
 .hr-app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
-.sidebar { background: #1A1814; color: #fff; padding: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.sidebar { background: #1A1814; color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
 .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .sidebar-logo .brand { font-size: 17px; font-weight: 600; color: #fff; }
 .sidebar-logo .sub { font-size: 11px; color: rgba(255,255,255,0.4); font-family: var(--mono); letter-spacing: 0.5px; }
 .sidebar-nav { padding: 16px 12px; flex: 1; }
 .nav-section { font-size: 10px; font-family: var(--mono); letter-spacing: 1px; color: rgba(255,255,255,0.3); padding: 16px 12px 6px; text-transform: uppercase; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.65); font-size: 13.5px; transition: all 0.15s; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.65); font-size: 13.5px; transition: all 0.15s; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; font-family: var(--sans); }
 .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
 .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 500; }
 .nav-item .icon { width: 16px; height: 16px; flex-shrink: 0; }
@@ -74,8 +66,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .topbar-title { font-size: 15px; font-weight: 600; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 .hr-content { padding: 28px 32px; }
-.hr-page { display: none; }
-.hr-page.active { display: block; }
 .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
 .stat-card { background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; padding: 18px 20px; }
 .stat-card .label { font-size: 11px; font-family: var(--mono); color: #9B978F; text-transform: uppercase; margin-bottom: 8px; }
@@ -84,7 +74,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .stat-card.green .value { color: #4A7C28; }
 .stat-card.amber .value { color: #8B5E0A; }
 .card { background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-.card-header { padding: 16px 20px; border-bottom: 1px solid #E0DBD0; display: flex; align-items: center; justify-content: space-between; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid #E0DBD0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .card-header h3 { font-size: 13.5px; font-weight: 600; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; padding: 10px 20px; font-size: 11px; font-family: var(--mono); letter-spacing: 0.5px; color: #9B978F; text-transform: uppercase; background: #F7F5F0; border-bottom: 1px solid #E0DBD0; font-weight: 400; }
@@ -124,21 +114,20 @@ tr:hover td { background: #F7F5F0; }
 .bar-fill.low { background: #D97706; }
 .bar-fill.empty { background: #8B1A1A; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.pending-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #E0DBD0; }
+.pending-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #E0DBD0; gap: 12px; }
 .pending-item:last-child { border-bottom: none; }
 .pending-left { display: flex; align-items: center; gap: 12px; }
 .pending-meta { font-size: 12px; color: #9B978F; margin-top: 2px; }
 .pending-actions { display: flex; gap: 6px; }
-.pending-amount { font-size: 13px; font-weight: 600; font-family: var(--mono); }
 .tabs { display: flex; gap: 2px; background: #F0EDE6; padding: 3px; border-radius: 10px; width: fit-content; margin-bottom: 20px; }
 .tab { padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #6B6660; border: none; background: none; font-family: var(--sans); }
 .tab.active { background: #fff; color: #1A1814; font-weight: 500; }
-.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
 .section-header h2 { font-size: 18px; font-weight: 600; }
 .empty { text-align: center; padding: 40px 20px; color: #9B978F; font-size: 13px; }
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
-.modal { background: #fff; border-radius: 16px; padding: 28px; width: 520px; max-width: 90vw; max-height: 90vh; overflow-y: auto; }
+.modal { background: #fff; border-radius: 16px; padding: 28px; width: 720px; max-width: 92vw; max-height: 90vh; overflow-y: auto; }
 .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
 .reimb-category { font-size: 11px; font-family: var(--mono); background: #F0EDE6; color: #6B6660; padding: 2px 8px; border-radius: 4px; }
@@ -149,8 +138,6 @@ tr:hover td { background: #F7F5F0; }
 .av-purple { background: #EDE9FE; color: #5B21B6; }
 .toast { position: fixed; bottom: 24px; right: 24px; background: #1A1814; color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; display: none; z-index: 200; }
 .toast.show { display: block; }
-
-/* ── STAFF PORTAL UI ────────────────────────── */
 .sp-card { background: #fff; border: 1px solid #E0DBD0; border-radius: 16px; overflow: hidden; margin-bottom: 14px; }
 .sp-card-header { padding: 14px 16px; border-bottom: 1px solid #E0DBD0; display: flex; align-items: center; justify-content: space-between; }
 .sp-card-header h3 { font-size: 13px; font-weight: 600; }
@@ -163,7 +150,7 @@ tr:hover td { background: #F7F5F0; }
 .sp-page-sub { font-size: 13px; color: #6B6660; margin-bottom: 24px; }
 .history-item { padding: 14px 0; border-bottom: 1px solid #E0DBD0; }
 .history-item:last-child { border-bottom: none; }
-.history-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.history-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 12px; }
 .history-title { font-size: 13.5px; font-weight: 500; }
 .history-meta { font-size: 12px; color: #9B978F; margin-top: 3px; }
 .history-amount { font-size: 14px; font-weight: 600; font-family: var(--mono); }
@@ -183,92 +170,25 @@ tr:hover td { background: #F7F5F0; }
 .sp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .sp-btn-primary { background: #2D5016; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 13.5px; cursor: pointer; font-family: var(--sans); font-weight: 500; width: 100%; margin-top: 4px; }
 .sp-section-title { font-size: 12px; font-family: var(--mono); color: #9B978F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-.cuti-bar-wrap { margin-bottom: 16px; }
 .sp-bar-bg { flex: 1; height: 8px; background: #F0EDE6; border-radius: 4px; overflow: hidden; margin-top: 6px; }
 .sp-bar-fill { height: 100%; background: #4A7C28; border-radius: 4px; }
 .receipt-drop { border: 1.5px dashed #CCC8BE; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #F0EDE6; }
 .tg-guide { background: #FDF3E0; border: 1px solid #FDE68A; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 13px; color: #78350F; }
 .tg-guide strong { color: #8B5E0A; display: block; margin-bottom: 4px; }
-
-
-/* ── FIX: HR Cuti layout + compact quota ───────────────── */
-#hr-cuti .grid-2 {
-  grid-template-columns: 1fr;
-  align-items: start;
-}
-#hr-cuti .card {
-  overflow-x: auto;
-}
-#hr-cuti table {
-  table-layout: fixed;
-  min-width: 980px;
-}
-#hr-cuti th,
-#hr-cuti td {
-  padding: 12px 14px;
-  vertical-align: middle;
-}
-#hr-cuti th:nth-child(1), #hr-cuti td:nth-child(1) { width: 22%; }
-#hr-cuti th:nth-child(2), #hr-cuti td:nth-child(2) { width: 15%; }
-#hr-cuti th:nth-child(3), #hr-cuti td:nth-child(3) { width: 17%; }
-#hr-cuti th:nth-child(4), #hr-cuti td:nth-child(4) { width: 10%; }
-#hr-cuti th:nth-child(5), #hr-cuti td:nth-child(5) { width: 18%; }
-#hr-cuti th:nth-child(6), #hr-cuti td:nth-child(6) { width: 10%; }
-#hr-cuti th:nth-child(7), #hr-cuti td:nth-child(7) { width: 14%; }
-#hr-cuti .staff-info { min-width: 0; }
-#hr-cuti .staff-name { line-height: 1.25; }
-#hr-cuti .badge { white-space: nowrap; }
-#hr-cuti-quota {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px 18px;
-}
-.leave-quota-item {
-  display: grid;
-  grid-template-columns: minmax(100px, 1fr) 120px 44px;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #F0EDE6;
-}
-.leave-quota-name {
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.leave-quota-value {
-  font-size: 12px;
-  font-family: var(--mono);
-  color: #9B978F;
-  text-align: right;
-}
+.table-wrap { overflow-x: auto; }
 @media (max-width: 900px) {
   .hr-app { grid-template-columns: 1fr; }
   .sidebar { position: relative; height: auto; }
-  #hr-cuti table { min-width: 860px; }
+  .stats-grid, .grid-2 { grid-template-columns: 1fr; }
+  .topbar { padding: 0 16px; }
+  .hr-content { padding: 20px 16px; }
 }
-
-
-/* ── PAYROLL XLSX IMPORT ───────────────────── */
-.import-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-.import-toolbar .form-input { max-width:360px; }
-.import-toolbar .form-select { max-width:220px; }
-.import-summary { margin-top:12px; font-size:13px; color:#6B6660; }
-.import-preview-wrap { overflow:auto; margin-top:12px; max-height:320px; border:1px solid #E0DBD0; border-radius:10px; }
-.import-preview-wrap table { min-width:900px; }
-
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     LOGIN VIEW
-══════════════════════════════════════════ -->
 <div id="view-login">
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
   <div class="login-card">
-    <div class="login-card-inner">
     <div class="login-brand">Gracie</div>
     <div class="login-sub">MANAGEMENT SYSTEM</div>
 
@@ -299,13 +219,8 @@ tr:hover td { background: #F7F5F0; }
       <button class="l-btn" onclick="doSetPin()">Simpan & Masuk →</button>
     </div>
   </div>
-  </div>
 </div>
-</div><!-- /view-login extra close -->
 
-<!-- ══════════════════════════════════════════
-     STAFF PORTAL VIEW
-══════════════════════════════════════════ -->
 <div id="view-staff">
   <header class="sp-header">
     <div class="sp-brand">Gracie Staff Portal</div>
@@ -316,8 +231,6 @@ tr:hover td { background: #F7F5F0; }
   </header>
 
   <div class="sp-content">
-
-    <!-- BERANDA -->
     <div class="sp-page active" id="sp-home">
       <div class="sp-page-title" id="sp-greeting">Halo!</div>
       <div class="sp-page-sub" id="sp-dept"></div>
@@ -334,7 +247,6 @@ tr:hover td { background: #F7F5F0; }
       </div>
     </div>
 
-    <!-- PROFIL -->
     <div class="sp-page" id="sp-profil">
       <div class="sp-page-title">Profil Saya</div>
       <div class="sp-page-sub">Update data pribadi kamu</div>
@@ -346,7 +258,7 @@ tr:hover td { background: #F7F5F0; }
         <div class="sp-card-header"><h3>Data Pekerjaan</h3><span style="font-size:12px;color:#9B978F">HR only</span></div>
         <div style="padding:16px" id="sp-profil-kerja"></div>
       </div>
-      <div class="sp-card" style="margin-top:4px">
+      <div class="sp-card">
         <div class="sp-card-header"><h3>Ganti PIN</h3></div>
         <div style="padding:16px">
           <div class="sp-form-group"><label class="sp-form-label">PIN Lama</label><input type="password" inputmode="numeric" class="sp-input" id="cp-lama" placeholder="PIN saat ini"></div>
@@ -361,7 +273,6 @@ tr:hover td { background: #F7F5F0; }
       </div>
     </div>
 
-    <!-- CUTI -->
     <div class="sp-page" id="sp-cuti">
       <div class="sp-page-title">Cuti & Absensi</div>
       <div class="sp-page-sub">Ajukan dan pantau status cuti</div>
@@ -379,14 +290,10 @@ tr:hover td { background: #F7F5F0; }
         <div class="sp-card-header"><h3>Ajukan Cuti</h3></div>
         <div style="padding:16px">
           <div class="sp-form-group"><label class="sp-form-label">Jenis Cuti</label>
-            <select class="sp-select" id="c-jenis">
-              <option>Cuti Tahunan</option><option>Cuti Pribadi</option><option>Sakit</option><option>Izin</option>
-            </select>
+            <select class="sp-select" id="c-jenis"><option>Cuti Tahunan</option><option>Cuti Pribadi</option><option>Sakit</option><option>Izin</option></select>
           </div>
           <div class="sp-form-group"><label class="sp-form-label">Durasi</label>
-            <select class="sp-select" id="c-durasi">
-              <option value="1">1 hari penuh</option><option value="0.5">½ hari</option>
-            </select>
+            <select class="sp-select" id="c-durasi" onchange="toggleCutiEnd()"><option value="1">1 hari penuh</option><option value="0.5">½ hari</option></select>
           </div>
           <div class="sp-form-row">
             <div class="sp-form-group"><label class="sp-form-label">Tanggal Mulai</label><input type="date" class="sp-input" id="c-start"></div>
@@ -400,7 +307,6 @@ tr:hover td { background: #F7F5F0; }
       <div class="sp-card"><div style="padding:16px" id="sp-cuti-history"></div></div>
     </div>
 
-    <!-- REIMB -->
     <div class="sp-page" id="sp-reimb">
       <div class="sp-page-title">Reimbursement</div>
       <div class="sp-page-sub">Ajukan dan pantau status reimb</div>
@@ -409,9 +315,7 @@ tr:hover td { background: #F7F5F0; }
         <div style="padding:16px">
           <div class="sp-form-row">
             <div class="sp-form-group"><label class="sp-form-label">Kategori</label>
-              <select class="sp-select" id="r-kat">
-                <option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option>
-              </select>
+              <select class="sp-select" id="r-kat"><option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option></select>
             </div>
             <div class="sp-form-group"><label class="sp-form-label">Tanggal</label><input type="date" class="sp-input" id="r-tgl"></div>
           </div>
@@ -431,28 +335,16 @@ tr:hover td { background: #F7F5F0; }
       <div class="sp-section-title">Riwayat Pengajuan</div>
       <div class="sp-card"><div style="padding:16px" id="sp-reimb-history"></div></div>
     </div>
-
-  </div><!-- /sp-content -->
+  </div>
 
   <nav class="sp-bottom">
-    <button class="sp-nav active" id="spnav-home" onclick="spNavigate('home',this)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Beranda
-    </button>
-    <button class="sp-nav" id="spnav-profil" onclick="spNavigate('profil',this)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
-    </button>
-    <button class="sp-nav" id="spnav-cuti" onclick="spNavigate('cuti',this)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Cuti
-    </button>
-    <button class="sp-nav" id="spnav-reimb" onclick="spNavigate('reimb',this)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Reimb
-    </button>
+    <button class="sp-nav active" id="spnav-home" onclick="spNavigate('home',this)">Beranda</button>
+    <button class="sp-nav" id="spnav-profil" onclick="spNavigate('profil',this)">Profil</button>
+    <button class="sp-nav" id="spnav-cuti" onclick="spNavigate('cuti',this)">Cuti</button>
+    <button class="sp-nav" id="spnav-reimb" onclick="spNavigate('reimb',this)">Reimb</button>
   </nav>
 </div>
 
-<!-- ══════════════════════════════════════════
-     HR DASHBOARD VIEW
-══════════════════════════════════════════ -->
 <div id="view-hr">
   <div class="hr-app">
     <aside class="sidebar">
@@ -462,28 +354,14 @@ tr:hover td { background: #F7F5F0; }
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">Menu</div>
-        <button class="nav-item active" onclick="hrNavigate('dashboard',this)">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Dashboard
-        </button>
-        <button class="nav-item" onclick="hrNavigate('staff',this)">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Data Staff
-        </button>
-        <button class="nav-item" onclick="hrNavigate('cuti',this)">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Cuti & Absensi <span class="nav-badge" id="cuti-badge">0</span>
-        </button>
-        <button class="nav-item" onclick="hrNavigate('reimb',this)">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          Reimbursement <span class="nav-badge" id="reimb-badge">0</span>
-        </button>
-        <button class="nav-item" onclick="hrNavigate('gaji',this)">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 14c0-1.1-1.8-2-4-2s-4 .9-4 2 1.8 2 4 2 4-.9 4-2z"/></svg>
-          Gaji & Payroll
-        </button>
+        <button class="nav-item active" onclick="hrNavigate('dashboard',this)">Dashboard</button>
+        <button class="nav-item" onclick="hrNavigate('staff',this)">Data Staff</button>
+        <button class="nav-item" onclick="hrNavigate('cuti',this)">Cuti & Absensi <span class="nav-badge" id="cuti-badge">0</span></button>
+        <button class="nav-item" onclick="hrNavigate('reimb',this)">Reimbursement <span class="nav-badge" id="reimb-badge">0</span></button>
+        <button class="nav-item" onclick="hrNavigate('gaji',this)">Gaji & Payroll</button>
       </nav>
       <div class="sidebar-footer">
+        <button class="sp-logout" onclick="syncFromSheets()">Sync</button>
         <button class="sp-logout" onclick="doLogout()">Keluar</button>
       </div>
     </aside>
@@ -495,116 +373,136 @@ tr:hover td { background: #F7F5F0; }
           <button class="btn btn-secondary btn-sm" onclick="syncFromSheets()">Refresh</button>
         </div>
       </div>
+
       <div class="hr-content">
-
-        <section class="hr-page active" id="hr-dashboard">
+        <div class="hr-page active" id="hr-dashboard">
           <div class="stats-grid">
-            <div class="stat-card green"><div class="label">Staff Aktif</div><div class="value" id="stat-aktif">0</div></div>
-            <div class="stat-card"><div class="label">Join Tahun Ini</div><div class="value" id="stat-join">0</div></div>
-            <div class="stat-card amber"><div class="label">Cuti Pending</div><div class="value" id="stat-cuti-pending">0</div></div>
-            <div class="stat-card amber"><div class="label">Reimb Pending</div><div class="value" id="stat-reimb-pending">0</div></div>
+            <div class="stat-card green"><div class="label">Staff Aktif</div><div class="value" id="stat-aktif">0</div><div class="change">Total aktif</div></div>
+            <div class="stat-card"><div class="label">Join Tahun Ini</div><div class="value" id="stat-join">0</div><div class="change">Staff baru</div></div>
+            <div class="stat-card amber"><div class="label">Cuti Pending</div><div class="value" id="stat-cuti-pending">0</div><div class="change">Butuh approval</div></div>
+            <div class="stat-card amber"><div class="label">Reimb Pending</div><div class="value" id="stat-reimb-pending">0</div><div class="change">Butuh approval</div></div>
           </div>
+
           <div class="grid-2">
-            <div class="card"><div class="card-header"><h3>Cuti Pending</h3></div><div id="dash-cuti"></div></div>
-            <div class="card"><div class="card-header"><h3>Reimbursement Pending</h3></div><div id="dash-reimb"></div></div>
+            <div class="card"><div class="card-header"><h3>Cuti Pending</h3><button class="btn btn-secondary btn-sm" onclick="hrNavigate('cuti')">Lihat semua</button></div><div id="dash-cuti"></div></div>
+            <div class="card"><div class="card-header"><h3>Reimb Pending</h3><button class="btn btn-secondary btn-sm" onclick="hrNavigate('reimb')">Lihat semua</button></div><div id="dash-reimb"></div></div>
           </div>
+
           <div class="card">
-            <div class="card-header"><h3>Staff Terbaru</h3></div>
-            <table><thead><tr><th>Staff</th><th>Job Title</th><th>Join</th><th>Status</th></tr></thead><tbody id="dash-staff"></tbody></table>
+            <div class="card-header"><h3>Data Staff</h3><button class="btn btn-primary btn-sm" onclick="openAddStaff()">+ Staff</button></div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Nama</th><th>Job Title</th><th>Join</th><th>Status</th></tr></thead>
+              <tbody id="dash-staff"></tbody>
+            </table></div>
           </div>
-        </section>
+        </div>
 
-        <section class="hr-page" id="hr-staff">
-          <div class="section-header"><h2>Data Staff</h2><button class="btn btn-primary" onclick="openAddStaff()">+ Tambah Staff</button></div>
-          <div class="tabs"><button class="tab active" onclick="filterStaff('semua',this)">Semua</button><button class="tab" onclick="filterStaff('aktif',this)">Aktif</button><button class="tab" onclick="filterStaff('resign',this)">Resign</button></div>
-          <div class="card"><table><thead><tr><th>Nama</th><th>Departemen</th><th>Job Title</th><th>Tipe</th><th>Join</th><th>Status</th><th>Sisa Cuti</th><th></th></tr></thead><tbody id="hr-staff-table"></tbody></table></div>
-        </section>
-
-        <section class="hr-page" id="hr-cuti">
-          <div class="section-header"><h2>Cuti & Absensi</h2><button class="btn btn-primary" onclick="openAddCuti()">+ Ajukan Cuti</button></div>
-          <div class="tabs"><button class="tab active" onclick="filterCuti('semua',this)">Semua</button><button class="tab" onclick="filterCuti('pending',this)">Pending</button><button class="tab" onclick="filterCuti('approved',this)">Approved</button><button class="tab" onclick="filterCuti('rejected',this)">Rejected</button></div>
-          <div class="grid-2">
-            <div class="card"><div class="card-header"><h3>Pengajuan Cuti</h3></div><table><thead><tr><th>Staff</th><th>Jenis</th><th>Tanggal</th><th>Durasi</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="hr-cuti-table"></tbody></table></div>
-            <div class="card"><div class="card-header"><h3>Sisa Cuti Staff</h3></div><div style="padding:16px" id="hr-cuti-quota"></div></div>
+        <div class="hr-page" id="hr-staff">
+          <div class="section-header">
+            <h2>Data Staff</h2>
+            <button class="btn btn-primary" onclick="openAddStaff()">+ Tambah Staff</button>
           </div>
-        </section>
+          <div class="tabs">
+            <button class="tab active" onclick="filterStaff('semua',this)">Semua</button>
+            <button class="tab" onclick="filterStaff('aktif',this)">Aktif</button>
+            <button class="tab" onclick="filterStaff('resign',this)">Resign</button>
+          </div>
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Nama</th><th>Dept</th><th>Job Title</th><th>Tipe</th><th>Join</th><th>Status</th><th>Cuti</th><th></th></tr></thead>
+            <tbody id="hr-staff-table"></tbody>
+          </table></div></div>
+        </div>
 
-        <section class="hr-page" id="hr-reimb">
-          <div class="section-header"><h2>Reimbursement</h2><button class="btn btn-primary" onclick="openAddReimb()">+ Ajukan Reimb</button></div>
-          <div class="tabs"><button class="tab active" onclick="filterReimb('semua',this)">Semua</button><button class="tab" onclick="filterReimb('pending',this)">Pending</button><button class="tab" onclick="filterReimb('approved',this)">Approved</button><button class="tab" onclick="filterReimb('rejected',this)">Rejected</button></div>
-          <div class="card"><table><thead><tr><th>Staff</th><th>Kategori</th><th>Tanggal</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="hr-reimb-table"></tbody></table></div>
-        </section>
+        <div class="hr-page" id="hr-cuti">
+          <div class="section-header">
+            <h2>Cuti & Absensi</h2>
+            <button class="btn btn-primary" onclick="openAddCuti()">+ Ajukan Cuti</button>
+          </div>
+          <div class="tabs">
+            <button class="tab active" onclick="filterCuti('semua',this)">Semua</button>
+            <button class="tab" onclick="filterCuti('pending',this)">Pending</button>
+            <button class="tab" onclick="filterCuti('approved',this)">Approved</button>
+            <button class="tab" onclick="filterCuti('rejected',this)">Rejected</button>
+          </div>
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Staff</th><th>Jenis</th><th>Tanggal</th><th>Durasi</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="hr-cuti-table"></tbody>
+          </table></div></div>
+          <div class="card"><div class="card-header"><h3>Kuota Cuti Staff</h3></div><div style="padding:20px" id="hr-cuti-quota"></div></div>
+        </div>
 
-        <section class="hr-page" id="hr-gaji">
-          <div class="section-header"><h2>Gaji & Payroll</h2><button class="btn btn-primary" onclick="openInputGaji()">+ Input Gaji</button></div>
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px"><label class="form-label">Periode</label><select class="form-select" id="gaji-periode" onchange="loadPayroll()" style="width:auto"></select></div>
-          <div class="card">
-            <div class="card-header">
-              <h3>Import Payroll dari XLSX Lama</h3>
-              <span style="font-size:12px;color:#9B978F">Upload file gaji lama, preview, lalu import semua periode</span>
-            </div>
-            <div style="padding:16px">
-              <div class="import-toolbar">
-                <input type="file" id="payroll-xlsx-file" accept=".xlsx,.xls" class="form-input">
-                <select id="payroll-xlsx-sheet" class="form-select"></select>
-                <button class="btn btn-secondary" onclick="previewPayrollXlsx()">Preview</button>
-                <button class="btn btn-primary" onclick="importPayrollXlsxRows()">Import ke Payroll</button>
-              </div>
-              <div id="payroll-import-summary" class="import-summary">Pilih file XLSX gaji lama untuk mulai import.</div>
-              <div class="import-preview-wrap">
-                <table>
-                  <thead><tr><th>Staff</th><th>Periode</th><th>Gaji</th><th>Live</th><th>Bonus</th><th>THR</th><th>Bazaar</th><th>Total</th></tr></thead>
-                  <tbody id="payroll-import-preview"><tr><td colspan="8" class="empty">Belum ada preview</td></tr></tbody>
-                </table>
-              </div>
+        <div class="hr-page" id="hr-reimb">
+          <div class="section-header">
+            <h2>Reimbursement</h2>
+            <button class="btn btn-primary" onclick="openAddReimb()">+ Ajukan Reimb</button>
+          </div>
+          <div class="tabs">
+            <button class="tab active" onclick="filterReimb('semua',this)">Semua</button>
+            <button class="tab" onclick="filterReimb('pending',this)">Pending</button>
+            <button class="tab" onclick="filterReimb('approved',this)">Approved</button>
+            <button class="tab" onclick="filterReimb('rejected',this)">Rejected</button>
+          </div>
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Staff</th><th>Kategori</th><th>Tanggal</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="hr-reimb-table"></tbody>
+          </table></div></div>
+        </div>
+
+        <div class="hr-page" id="hr-gaji">
+          <div class="section-header">
+            <h2>Gaji & Payroll</h2>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select class="form-select" id="gaji-periode" onchange="loadPayroll()"></select>
+              <button class="btn btn-primary" onclick="openInputGaji()">Input Gaji Bulanan</button>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px" id="gs-total">Rp 0</div></div>
             <div class="stat-card amber"><div class="label">Belum Transfer</div><div class="value" id="gs-belum">0</div></div>
             <div class="stat-card green"><div class="label">Sudah Transfer</div><div class="value" id="gs-sudah">0</div></div>
-            <div class="stat-card"><div class="label">Total Staff</div><div class="value" id="gs-count">0</div></div>
+            <div class="stat-card"><div class="label">Total Data</div><div class="value" id="gs-count">0</div></div>
           </div>
-          <div class="tabs"><button class="tab active" onclick="filterPayroll('semua',this)">Semua</button><button class="tab" onclick="filterPayroll('Belum',this)">Belum</button><button class="tab" onclick="filterPayroll('Sudah',this)">Sudah</button><button class="tab" onclick="filterPayroll('live',this)">Live Host</button></div>
           <div class="grid-2">
-            <div class="card"><div class="card-header"><h3>Payroll</h3></div><table><thead><tr><th>Nama</th><th>Tipe</th><th>Bank</th><th>No Rek</th><th>Dari</th><th>Pokok</th><th>Tambahan</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="gaji-table"></tbody></table></div>
-            <div class="card"><div class="card-header"><h3>Total per Rekening</h3></div><div style="padding:16px" id="gaji-rekening"></div></div>
+            <div class="card"><div class="card-header"><h3>Ringkasan Rekening Pengirim</h3></div><div style="padding:20px" id="gaji-rekening"></div></div>
+            <div class="card"><div class="card-header"><h3>Tools</h3></div><div style="padding:20px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary" onclick="loadTemplate()">Refresh Template</button></div></div>
           </div>
+          <div class="tabs">
+            <button class="tab active" onclick="filterPayroll('semua',this)">Semua</button>
+            <button class="tab" onclick="filterPayroll('Belum',this)">Belum</button>
+            <button class="tab" onclick="filterPayroll('Sudah',this)">Sudah</button>
+            <button class="tab" onclick="filterPayroll('live',this)">Live Host</button>
+          </div>
+          <div class="card"><div class="card-header"><h3>Payroll Periode</h3></div><div class="table-wrap"><table>
+            <thead><tr><th>Nama</th><th>Tipe</th><th>Bank</th><th>No Rek</th><th>Dari</th><th>Pokok/Flat</th><th>Tambahan</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="gaji-table"></tbody>
+          </table></div></div>
           <div class="card">
             <div class="card-header"><h3>Gaji Pokok per Staff</h3><span style="font-size:12px;color:#9B978F">Diisi sekali, berlaku tiap bulan</span></div>
-            <table><thead><tr><th>Nama</th><th>Job Title</th><th>Tipe</th><th>Gaji Pokok / Per Sesi</th><th>% Komisi</th><th>Threshold</th><th></th></tr></thead><tbody id="template-table"></tbody></table>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Nama</th><th>Job Title</th><th>Tipe</th><th>Gaji Pokok / Per Sesi</th><th>% Komisi</th><th>Threshold</th><th></th></tr></thead>
+              <tbody id="template-table"></tbody>
+            </table></div>
           </div>
-        </section>
-
+        </div>
       </div>
     </main>
   </div>
 </div>
 
-<!-- MODALS -->
 <div class="modal-overlay" id="modal-staff">
   <div class="modal">
     <h3>Tambah Staff Baru</h3>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="s-nama"></div>
       <div class="form-group"><label class="form-label">Job Title</label><input type="text" class="form-input" id="s-jobtitle" placeholder="e.g. Live Host"></div>
-      <div class="form-group"><label class="form-label">Departemen</label>
-        <select class="form-select" id="s-dept"><option>Content &amp; Media</option><option>Operational</option><option>Fashion Development</option><option>Management</option></select>
-      </div>
-      <div class="form-group"><label class="form-label">Tipe</label>
-        <select class="form-select" id="s-tipe"><option>Full-Time</option><option>Part-Time</option></select>
-      </div>
-      <div class="form-group"><label class="form-label">Lokasi</label>
-        <select class="form-select" id="s-lokasi"><option>Jelambar</option><option>Remote</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Departemen</label><select class="form-select" id="s-dept"><option>Content &amp; Media</option><option>Operational</option><option>Fashion Development</option><option>Management</option></select></div>
+      <div class="form-group"><label class="form-label">Tipe</label><select class="form-select" id="s-tipe"><option>Full-Time</option><option>Part-Time</option></select></div>
+      <div class="form-group"><label class="form-label">Lokasi</label><select class="form-select" id="s-lokasi"><option>Jelambar</option><option>Remote</option></select></div>
       <div class="form-group"><label class="form-label">Tanggal Join</label><input type="date" class="form-input" id="s-join"></div>
       <div class="form-group"><label class="form-label">No. WhatsApp</label><input type="text" class="form-input" id="s-wa" placeholder="+628xx"></div>
       <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="s-email"></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-staff')">Batal</button>
-      <button class="btn btn-primary" onclick="addStaff()">Simpan</button>
-    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-staff')">Batal</button><button class="btn btn-primary" onclick="addStaff()">Simpan</button></div>
   </div>
 </div>
 
@@ -613,17 +511,12 @@ tr:hover td { background: #F7F5F0; }
     <h3>Ajukan Cuti</h3>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="hc-staff"></select></div>
-      <div class="form-group"><label class="form-label">Jenis</label>
-        <select class="form-select" id="hc-jenis"><option>Cuti Tahunan</option><option>Cuti Pribadi</option><option>Sakit</option><option>Izin</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Jenis</label><select class="form-select" id="hc-jenis"><option>Cuti Tahunan</option><option>Cuti Pribadi</option><option>Sakit</option><option>Izin</option></select></div>
       <div class="form-group"><label class="form-label">Tanggal Mulai</label><input type="date" class="form-input" id="hc-start"></div>
       <div class="form-group"><label class="form-label">Tanggal Selesai</label><input type="date" class="form-input" id="hc-end"></div>
       <div class="form-group full"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="hc-ket"></textarea></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-cuti')">Batal</button>
-      <button class="btn btn-primary" onclick="hrAddCuti()">Ajukan</button>
-    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-cuti')">Batal</button><button class="btn btn-primary" onclick="hrAddCuti()">Ajukan</button></div>
   </div>
 </div>
 
@@ -631,399 +524,140 @@ tr:hover td { background: #F7F5F0; }
   <div class="modal">
     <h3>Ajukan Reimbursement</h3>
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="hr-reimb-staff"></select></div>
-      <div class="form-group"><label class="form-label">Kategori</label>
-        <select class="form-select" id="hr-kat"><option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="hr-staff-select"></select></div>
+      <div class="form-group"><label class="form-label">Kategori</label><select class="form-select" id="hr-kat"><option>Transportation</option><option>Food</option><option>Office Supplies</option><option>Travel</option><option>Utilities</option><option>Apps</option><option>Lainnya</option></select></div>
       <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="hr-tgl"></div>
       <div class="form-group"><label class="form-label">Jumlah (Rp)</label><input type="number" class="form-input" id="hr-jml"></div>
       <div class="form-group full"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="hr-ket"></textarea></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-reimb')">Batal</button>
-      <button class="btn btn-primary" onclick="hrAddReimb()">Ajukan</button>
-    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-reimb')">Batal</button><button class="btn btn-primary" onclick="hrAddReimb()">Ajukan</button></div>
   </div>
 </div>
 
-<!-- MODAL: Input Sesi Live -->
-<div class="modal-overlay" id="modal-live">
-  <div class="modal">
-    <h3>Input Sesi Live Host</h3>
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label">Staff</label><select class="form-select" id="ml-staff"></select></div>
-      <div class="form-group"><label class="form-label">Periode (YYYY-MM)</label><input type="text" class="form-input" id="ml-periode" placeholder="2026-05"></div>
-      <div class="form-group"><label class="form-label">Gaji per Sesi (Rp)</label><input type="number" class="form-input" id="ml-persesi" placeholder="0" oninput="hitungLiveTotal()"></div>
-      <div class="form-group"><label class="form-label">Jumlah Sesi</label><input type="number" class="form-input" id="ml-sesi" placeholder="0" oninput="hitungLiveTotal()"></div>
-      <div class="form-group"><label class="form-label">Total Omzet (Rp)</label><input type="number" class="form-input" id="ml-omzet" placeholder="0" oninput="hitungLiveTotal()"></div>
-      <div class="form-group"><label class="form-label">% Komisi</label><input type="number" class="form-input" id="ml-pct" placeholder="0" oninput="hitungLiveTotal()"></div>
-      <div class="form-group full">
-        <div style="background:#F7F5F0;border-radius:10px;padding:12px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:#6B6660">Flat (sesi × gaji)</span><span style="font-size:12px;font-family:var(--mono)" id="ml-flat-display">Rp 0</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:#6B6660">Komisi</span><span style="font-size:12px;font-family:var(--mono)" id="ml-komisi-display">Rp 0</span></div>
-          <div style="display:flex;justify-content:space-between;border-top:1px solid #E0DBD0;padding-top:8px">
-            <span style="font-size:13px;font-weight:500">Total dibayar</span>
-            <span style="font-size:16px;font-weight:600;font-family:var(--mono)" id="ml-total-display">Rp 0</span>
-          </div>
-        </div>
-        <div style="font-size:12px;color:#9B978F;margin-top:6px">Dari rekening: BCA Personal</div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-live')">Batal</button>
-      <button class="btn btn-primary" onclick="submitLive()">Simpan</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Input Gaji -->
-<div class="modal-overlay" id="modal-gaji">
+<div class="modal-overlay" id="modal-gaji-bulanan">
   <div class="modal">
     <h3>Input Gaji Bulanan</h3>
     <div id="gaji-form-area"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-gaji')">Batal</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-gaji-bulanan')">Batal</button>
       <button class="btn btn-primary" onclick="submitGajiBulanan()">Simpan Semua</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: Edit Template Gaji -->
 <div class="modal-overlay" id="modal-template">
   <div class="modal">
     <h3 id="mt-title">Edit Template Gaji</h3>
     <div class="form-grid">
-      <div class="form-group full" id="mt-pokok-wrap">
-        <label class="form-label">Gaji Pokok (Rp/bulan)</label>
-        <input type="number" class="form-input" id="mt-pokok" placeholder="0">
-      </div>
-      <div class="form-group full" id="mt-sesi-wrap" style="display:none">
-        <label class="form-label">Gaji per Sesi (Rp)</label>
-        <input type="number" class="form-input" id="mt-persesi" placeholder="0">
-      </div>
-      <div class="form-group" id="mt-komisi-wrap" style="display:none">
-        <label class="form-label">% Komisi</label>
-        <input type="number" class="form-input" id="mt-pct" placeholder="2" value="2">
-      </div>
-      <div class="form-group" id="mt-threshold-wrap" style="display:none">
-        <label class="form-label">Threshold (Rp)</label>
-        <input type="number" class="form-input" id="mt-threshold" placeholder="5000000" value="5000000">
-        <div style="font-size:11px;color:#9B978F;margin-top:4px">Omzet di atas angka ini baru dapat komisi</div>
-      </div>
+      <div class="form-group full" id="mt-pokok-wrap"><label class="form-label">Gaji Pokok (Rp/bulan)</label><input type="number" class="form-input" id="mt-pokok" placeholder="0"></div>
+      <div class="form-group full" id="mt-sesi-wrap" style="display:none"><label class="form-label">Gaji per Sesi (Rp)</label><input type="number" class="form-input" id="mt-persesi" placeholder="0"></div>
+      <div class="form-group" id="mt-komisi-wrap" style="display:none"><label class="form-label">% Komisi</label><input type="number" class="form-input" id="mt-pct" placeholder="2" value="2"></div>
+      <div class="form-group" id="mt-threshold-wrap" style="display:none"><label class="form-label">Threshold (Rp)</label><input type="number" class="form-input" id="mt-threshold" placeholder="5000000" value="5000000"><div style="font-size:11px;color:#9B978F;margin-top:4px">Omzet di atas angka ini baru dapat komisi</div></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-template')">Batal</button>
-      <button class="btn btn-primary" onclick="saveTemplate()">Simpan</button>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- MODAL: Edit Staff -->
-<div class="modal-overlay" id="modal-edit-staff">
-  <div class="modal">
-    <h3>Edit Staff</h3>
-    <input type="hidden" id="edit-staff-id">
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="edit-nama"></div>
-      <div class="form-group"><label class="form-label">Job Title</label><input type="text" class="form-input" id="edit-jobtitle"></div>
-      <div class="form-group"><label class="form-label">Departemen</label><input type="text" class="form-input" id="edit-dept"></div>
-      <div class="form-group"><label class="form-label">Tipe Kerja</label><select class="form-select" id="edit-tipe"><option>Full-Time</option><option>Part-Time</option><option>Freelance</option></select></div>
-      <div class="form-group"><label class="form-label">Lokasi</label><input type="text" class="form-input" id="edit-lokasi"></div>
-      <div class="form-group"><label class="form-label">Tanggal Join</label><input type="date" class="form-input" id="edit-join"></div>
-      <div class="form-group"><label class="form-label">Tanggal Resign</label><input type="date" class="form-input" id="edit-resign"></div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="edit-status"><option>Aktif</option><option>Resign</option></select></div>
-      <div class="form-group"><label class="form-label">Jatah Cuti</label><input type="number" class="form-input" id="edit-cuti-jatah" min="0" step="0.5"></div>
-      <div class="form-group"><label class="form-label">Sisa Cuti</label><input type="number" class="form-input" id="edit-cuti" min="0" step="0.5"></div>
-      <div class="form-group"><label class="form-label">WhatsApp</label><input type="text" class="form-input" id="edit-wa"></div>
-      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="edit-email"></div>
-      <div class="form-group"><label class="form-label">No. Rekening</label><input type="text" class="form-input" id="edit-norek"></div>
-      <div class="form-group"><label class="form-label">Nama Bank</label><input type="text" class="form-input" id="edit-bank"></div>
-      <div class="form-group full"><label class="form-label">Catatan HR</label><textarea class="form-textarea" id="edit-catatan"></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-edit-staff')">Batal</button>
-      <button class="btn btn-primary" onclick="saveEditStaff()">Simpan Perubahan</button>
-    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-template')">Batal</button><button class="btn btn-primary" onclick="saveTemplate()">Simpan</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════
 const API_URL     = 'https://script.google.com/macros/s/AKfycbyeT_G6yv78bVMWS0pOzP4phsUFgVn3-tLrvBvRxXsKbRmxUFXLT3JiSCfsomMngPfeCw/exec';
 const HR_PASSWORD = 'AdminGRC123';
 const COLORS      = ['av-green','av-blue','av-amber','av-purple','av-red'];
-
-// ══════════════════════════════════════════════
-// SESSION
-// ══════════════════════════════════════════════
 let session = { staffId: null, nama: null, role: null, data: null, cuti: [], reimb: [] };
+let tempWA = '';
+let hrState = { staff:[], cuti:[], reimb:[], staffFilter:'semua', cutiFilter:'semua', reimbFilter:'semua' };
+let payrollData = [];
+let payrollFilter = 'semua';
+let templateData = [];
+let editingStaffId = null;
+const sesiCounts = {};
 
-// ══════════════════════════════════════════════
-// API HELPERS
-// ══════════════════════════════════════════════
+function byId(id){ return document.getElementById(id); }
+function setText(id, value){ const el = byId(id); if(el) el.textContent = value; }
+function setHTML(id, value){ const el = byId(id); if(el) el.innerHTML = value; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
 function apiGet(params) {
   const qs = new URLSearchParams(params).toString();
-  return fetch(API_URL + '?' + qs).then(r => r.json()).catch(() => ({ok: false}));
+  return fetch(API_URL + '?' + qs).then(r => r.json()).catch(() => ({ok: false, error:'Network error'}));
 }
 function apiPost(params) {
-  return fetch(API_URL, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(params), mode: 'cors'
-  }).then(r => r.json()).catch(() => ({ok: false}));
+  return fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(params), mode: 'cors' })
+    .then(r => r.json()).catch(() => ({ok: false, error:'Network error'}));
 }
 function api(p) { return apiPost(p); }
 
-// ══════════════════════════════════════════════
-// PAYROLL XLSX IMPORT
-// ══════════════════════════════════════════════
-let payrollImportWorkbook = null;
-let payrollImportRows = [];
-
-document.addEventListener('change', async function(e) {
-  if (!e.target || e.target.id !== 'payroll-xlsx-file') return;
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-  try {
-    showToast('Membaca file XLSX...');
-    payrollImportWorkbook = await readXlsxWorkbook(file);
-    const sel = document.getElementById('payroll-xlsx-sheet');
-    sel.innerHTML = payrollImportWorkbook.SheetNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-    document.getElementById('payroll-import-summary').textContent = 'File terbaca. Pilih sheet lalu klik Preview.';
-    document.getElementById('payroll-import-preview').innerHTML = '<tr><td colspan="8" class="empty">Klik Preview untuk melihat data</td></tr>';
-    payrollImportRows = [];
-  } catch (err) {
-    console.error(err);
-    showToast('Gagal membaca XLSX: ' + err.message);
-  }
-});
-
-function readXlsxWorkbook(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        const data = new Uint8Array(evt.target.result);
-        resolve(XLSX.read(data, { type:'array', cellDates:false }));
-      } catch (err) { reject(err); }
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-function previewPayrollXlsx() {
-  if (!payrollImportWorkbook) { showToast('Pilih file XLSX dulu'); return; }
-  const sheetName = document.getElementById('payroll-xlsx-sheet').value;
-  payrollImportRows = parseLegacyPayrollSheet(payrollImportWorkbook, sheetName);
-  renderPayrollImportPreview(payrollImportRows);
-}
-
-function parseLegacyPayrollSheet(workbook, sheetName) {
-  const ws = workbook.Sheets[sheetName];
-  const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
-  if (!aoa.length) return [];
-
-  const monthCols = findMonthColumns(aoa);
-  const rows = [];
-
-  for (let r = 0; r < aoa.length; r++) {
-    const name = cleanCell(aoa[r][0]);
-    if (!name || isPayrollLineLabel(name) || isMonthLabel(name)) continue;
-
-    const block = { totalRow:r, gajiRow:-1, liveRow:-1, bonusRow:-1, thrRow:-1, bazaarRow:-1 };
-    for (let k = 1; k <= 8 && r + k < aoa.length; k++) {
-      const label = cleanCell(aoa[r+k][0]).toLowerCase();
-      if (label === 'gaji') block.gajiRow = r+k;
-      else if (label === 'live') block.liveRow = r+k;
-      else if (label.includes('bonus')) block.bonusRow = r+k;
-      else if (label.includes('thr')) block.thrRow = r+k;
-      else if (label.includes('bazaar')) block.bazaarRow = r+k;
-    }
-
-    if (block.gajiRow === -1 && block.liveRow === -1 && block.bonusRow === -1 && block.thrRow === -1 && block.bazaarRow === -1) continue;
-
-    monthCols.forEach(m => {
-      const gaji = readNum(aoa[block.gajiRow]?.[m.col]);
-      const live = readNum(aoa[block.liveRow]?.[m.col]);
-      const bonus = readNum(aoa[block.bonusRow]?.[m.col]);
-      const thr = readNum(aoa[block.thrRow]?.[m.col]);
-      const bazaar = readNum(aoa[block.bazaarRow]?.[m.col]);
-      const totalFromHeaderRow = readNum(aoa[block.totalRow]?.[m.col]);
-      const total = totalFromHeaderRow || (gaji + live + bonus + thr + bazaar);
-      if (!total && !gaji && !live && !bonus && !thr && !bazaar) return;
-      rows.push({
-        NamaStaff: name,
-        Periode: m.periode,
-        GajiPokok: gaji,
-        Live: live,
-        Bonus: bonus,
-        THR: thr,
-        Bazaar: bazaar,
-        Total: total,
-        Source: 'XLSX Upload - ' + sheetName
-      });
-    });
-  }
-  return rows;
-}
-
-function findMonthColumns(aoa) {
-  const out = [];
-  const maxRows = Math.min(12, aoa.length);
-  for (let r = 0; r < maxRows; r++) {
-    for (let c = 0; c < aoa[r].length; c++) {
-      const label = cleanCell(aoa[r][c]);
-      const periode = parseMonthLabelToPeriod(label);
-      if (periode) out.push({ row:r, col:c, label, periode });
-    }
-    if (out.length >= 2) return out;
-  }
-  return out;
-}
-
-function parseMonthLabelToPeriod(label) {
-  const s = String(label || '').trim().toLowerCase();
-  const m = s.match(/^(jan|feb|mar|apr|may|mei|jun|jul|aug|agu|sep|oct|okt|nov|dec|des)\s+(20\d{2})$/i);
-  if (!m) return '';
-  const monthMap = { jan:'01', feb:'02', mar:'03', apr:'04', may:'05', mei:'05', jun:'06', jul:'07', aug:'08', agu:'08', sep:'09', oct:'10', okt:'10', nov:'11', dec:'12', des:'12' };
-  return m[2] + '-' + monthMap[m[1].toLowerCase()];
-}
-
-function isMonthLabel(v) { return !!parseMonthLabelToPeriod(v); }
-function isPayrollLineLabel(v) {
-  const s = String(v || '').trim().toLowerCase();
-  return ['gaji','live','bonus/lembur','thr tahunan','bazaar'].includes(s) || s.includes('bonus') || s.includes('thr');
-}
-function cleanCell(v) { return String(v === undefined || v === null ? '' : v).replace(/\s+/g,' ').trim(); }
-function readNum(v) {
-  if (typeof v === 'number') return isNaN(v) ? 0 : v;
-  const n = Number(String(v || '').replace(/[^0-9.-]/g,''));
-  return isNaN(n) ? 0 : n;
-}
-function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-function renderPayrollImportPreview(rows) {
-  const tbody = document.getElementById('payroll-import-preview');
-  const sum = document.getElementById('payroll-import-summary');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Tidak ada data terdeteksi. Cek sheet yang dipilih.</td></tr>';
-    sum.textContent = '0 rows terdeteksi.';
-    return;
-  }
-  const total = rows.reduce((a,b)=>a + Number(b.Total || 0), 0);
-  const staffCount = new Set(rows.map(r => r.NamaStaff)).size;
-  const periodCount = new Set(rows.map(r => r.Periode)).size;
-  sum.textContent = `${rows.length} rows terdeteksi · ${staffCount} staff · ${periodCount} periode · total ${fmtRp(total)}`;
-  tbody.innerHTML = rows.slice(0, 200).map(r => `
-    <tr>
-      <td>${escapeHtml(r.NamaStaff)}</td><td>${r.Periode}</td>
-      <td>${fmtRp(r.GajiPokok)}</td><td>${fmtRp(r.Live)}</td><td>${fmtRp(r.Bonus)}</td>
-      <td>${fmtRp(r.THR)}</td><td>${fmtRp(r.Bazaar)}</td><td><strong>${fmtRp(r.Total)}</strong></td>
-    </tr>`).join('') + (rows.length > 200 ? '<tr><td colspan="8" class="empty">Preview hanya menampilkan 200 rows pertama</td></tr>' : '');
-}
-
-async function importPayrollXlsxRows() {
-  if (!payrollImportRows.length) { showToast('Preview dulu sebelum import'); return; }
-  if (!confirm(`Import ${payrollImportRows.length} rows ke Payroll? Data periode/staff yang sama akan di-update.`)) return;
-  showToast('Mengimport payroll...');
-  const res = await apiPost({ action:'importPayrollRows', token: HR_PASSWORD, rows: payrollImportRows });
-  if (res && res.ok) {
-    const skippedText = res.skipped ? ` · skipped ${res.skipped}` : '';
-    document.getElementById('payroll-import-summary').textContent = `Import selesai: inserted ${res.inserted}, updated ${res.updated}${skippedText}`;
-    showToast('Import payroll selesai ✓');
-    if (typeof loadPayroll === 'function') await loadPayroll();
-  } else {
-    showToast('Import gagal: ' + (res?.error || 'unknown'));
-  }
-}
-
-
-// ══════════════════════════════════════════════
-// UI HELPERS
-// ══════════════════════════════════════════════
 function showView(v) {
-  document.getElementById('view-login').style.display = v === 'login' ? 'flex' : 'none';
-  document.getElementById('view-staff').style.display = v === 'staff' ? 'block' : 'none';
-  document.getElementById('view-hr').style.display    = v === 'hr'    ? 'block' : 'none';
+  setDisplay('view-login', v === 'login' ? 'flex' : 'none');
+  setDisplay('view-staff', v === 'staff' ? 'block' : 'none');
+  setDisplay('view-hr',    v === 'hr'    ? 'block' : 'none');
 }
+function setDisplay(id, display){ const el = byId(id); if(el) el.style.display = display; }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  const t = byId('toast');
+  if(!t) return alert(msg);
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
 }
-
 function fmtDate(d) {
   if (!d) return '—';
   try { return new Date(d).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}); }
   catch(e) { return d; }
 }
-function fmtRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
-function initials(n) { return n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase(); }
-function avatarColor(id) { return COLORS[String(id).charCodeAt(0) % COLORS.length]; }
+function fmtRp(n) { return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+function initials(n) { return String(n||'?').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || '?'; }
+function avatarColor(id) { return COLORS[String(id||'0').charCodeAt(0) % COLORS.length]; }
 function badgeHtml(s) {
+  const key = String(s || '').toLowerCase();
   const map = {aktif:'badge-aktif',resign:'badge-resign',pending:'badge-pending',approved:'badge-approved',rejected:'badge-rejected'};
   const lbl = {aktif:'Aktif',resign:'Resign',pending:'Pending',approved:'Disetujui',rejected:'Ditolak'};
-  return `<span class="badge ${map[s]||''}">${lbl[s]||s}</span>`;
+  return `<span class="badge ${map[key]||''}">${lbl[key]||esc(s)||'—'}</span>`;
 }
 function daysBetween(a,b) {
   if(!a||!b) return 1;
   return Math.max(1, Math.round((new Date(b)-new Date(a))/86400000)+1);
 }
-
-// ══════════════════════════════════════════════
-// LOGIN FLOW
-// ══════════════════════════════════════════════
-let tempWA = '';
+function statusNorm(s){ return String(s || 'pending').toLowerCase(); }
+function isOk(res){ return res && res.ok !== false; }
 
 async function doLogin() {
-  const wa = document.getElementById('login-wa').value.trim();
+  const wa = byId('login-wa').value.trim();
   if (!wa) return;
-  const btn = document.getElementById('step-wa').querySelector('.l-btn');
+  const btn = byId('step-wa').querySelector('.l-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
-  const res = await apiGet({ action: 'loginStaff', wa }).catch(() => null);
+  const res = await apiGet({ action: 'loginStaff', wa });
   btn.textContent = 'Lanjut →'; btn.disabled = false;
-
   if (res && res.ok) {
     tempWA = wa;
     session.staffId = res.staffId;
     session.nama    = res.nama;
     session.role    = res.role || 'staff';
     if (res.needSetPin) {
-      document.getElementById('step-wa').style.display = 'none';
-      document.getElementById('step-setpin').style.display = 'block';
+      setDisplay('step-wa','none'); setDisplay('step-setpin','block');
     } else {
-      document.getElementById('pin-greeting').textContent = `Halo, ${res.nama}! Masukkan PIN kamu.`;
-      document.getElementById('step-wa').style.display = 'none';
-      document.getElementById('step-pin').style.display = 'block';
-      document.getElementById('login-pin').focus();
+      setText('pin-greeting', `Halo, ${res.nama}! Masukkan PIN kamu.`);
+      setDisplay('step-wa','none'); setDisplay('step-pin','block');
+      byId('login-pin').focus();
     }
   } else if (res && res.needPin) {
     tempWA = wa;
-    document.getElementById('step-wa').style.display = 'none';
-    document.getElementById('step-pin').style.display = 'block';
-    document.getElementById('login-pin').focus();
+    setDisplay('step-wa','none'); setDisplay('step-pin','block');
+    byId('login-pin').focus();
   } else {
-    const err = document.getElementById('login-error');
+    const err = byId('login-error');
     err.textContent = (res && res.error) || 'Nomor tidak terdaftar';
     err.style.display = 'block';
   }
 }
-
 async function doLoginPin() {
-  const pin = document.getElementById('login-pin').value.trim();
+  const pin = byId('login-pin').value.trim();
   if (!pin) return;
-  const btn = document.getElementById('step-pin').querySelector('.l-btn');
+  const btn = byId('step-pin').querySelector('.l-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
-  const res = await apiGet({ action: 'loginStaff', wa: tempWA, pin }).catch(() => null);
+  const res = await apiGet({ action: 'loginStaff', wa: tempWA, pin });
   btn.textContent = 'Masuk →'; btn.disabled = false;
-
   if (res && res.ok) {
     session.staffId = res.staffId;
     session.nama    = res.nama;
@@ -1031,52 +665,38 @@ async function doLoginPin() {
     localStorage.setItem('gracie_staff', JSON.stringify({staffId: session.staffId, nama: session.nama, role: session.role}));
     enterApp();
   } else {
-    const err = document.getElementById('pin-error');
+    const err = byId('pin-error');
     err.textContent = (res && res.error) || 'PIN salah';
     err.style.display = 'block';
-    document.getElementById('login-pin').value = '';
+    byId('login-pin').value = '';
   }
 }
-
 async function doSetPin() {
-  const p1 = document.getElementById('new-pin1').value.trim();
-  const p2 = document.getElementById('new-pin2').value.trim();
-  const err = document.getElementById('setpin-error');
+  const p1 = byId('new-pin1').value.trim();
+  const p2 = byId('new-pin2').value.trim();
+  const err = byId('setpin-error');
   if (!p1 || p1.length < 4) { err.textContent = 'PIN minimal 4 digit'; err.style.display = 'block'; return; }
-  if (p1 !== p2)             { err.textContent = 'PIN tidak cocok';    err.style.display = 'block'; return; }
+  if (p1 !== p2) { err.textContent = 'PIN tidak cocok'; err.style.display = 'block'; return; }
   const res = await api({ action: 'changePin', staffId: session.staffId, pinBaru: p1 });
-  if (res && res.ok !== false) {
+  if (isOk(res)) {
     localStorage.setItem('gracie_staff', JSON.stringify({staffId: session.staffId, nama: session.nama, role: session.role}));
     enterApp();
     showToast('PIN berhasil dibuat! 🔐');
-  } else {
-    err.textContent = (res && res.error) || 'Gagal'; err.style.display = 'block';
-  }
+  } else { err.textContent = (res && res.error) || 'Gagal'; err.style.display = 'block'; }
 }
-
 function backToWA() {
-  document.getElementById('step-pin').style.display = 'none';
-  document.getElementById('step-wa').style.display = 'block';
-  document.getElementById('login-pin').value = '';
-  document.getElementById('pin-error').style.display = 'none';
+  setDisplay('step-pin','none'); setDisplay('step-wa','block');
+  byId('login-pin').value = '';
+  setDisplay('pin-error','none');
 }
-
 function enterApp() {
   try {
     if (session.role === 'hr') {
       showView('hr');
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        try {
-          initHR();
-        } catch(e) {
-          console.error('initHR error:', e);
-          showToast('Error memuat HR dashboard: ' + e.message);
-        }
-      }, 100);
+      setTimeout(initHR, 80);
     } else {
       showView('staff');
-      document.getElementById('sp-nama').textContent = session.nama;
+      setText('sp-nama', session.nama || '');
       loadStaffData();
     }
   } catch(e) {
@@ -1085,876 +705,291 @@ function enterApp() {
     showToast('Error: ' + e.message);
   }
 }
-
 function doLogout() {
   localStorage.removeItem('gracie_staff');
   session = { staffId: null, nama: null, role: null, data: null, cuti: [], reimb: [] };
-  // Reset login form
-  document.getElementById('step-wa').style.display = 'block';
-  document.getElementById('step-pin').style.display = 'none';
-  document.getElementById('step-setpin').style.display = 'none';
-  document.getElementById('login-wa').value = '';
-  document.getElementById('login-pin').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('pin-error').style.display = 'none';
+  setDisplay('step-wa','block'); setDisplay('step-pin','none'); setDisplay('step-setpin','none');
+  if(byId('login-wa')) byId('login-wa').value = '';
+  if(byId('login-pin')) byId('login-pin').value = '';
+  setDisplay('login-error','none'); setDisplay('pin-error','none');
   showView('login');
 }
-
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  const wa   = document.getElementById('step-wa');
-  const pin  = document.getElementById('step-pin');
-  const setp = document.getElementById('step-setpin');
-  if (wa.style.display !== 'none')   doLogin();
-  else if (pin.style.display !== 'none')  doLoginPin();
-  else if (setp.style.display !== 'none') doSetPin();
+  if (byId('view-login').style.display === 'none') return;
+  if (byId('step-wa').style.display !== 'none') doLogin();
+  else if (byId('step-pin').style.display !== 'none') doLoginPin();
+  else if (byId('step-setpin').style.display !== 'none') doSetPin();
 });
 
-// ══════════════════════════════════════════════
-// HR DASHBOARD
-// ══════════════════════════════════════════════
-let hrState = { staff:[], cuti:[], reimb:[], staffFilter:'semua', cutiFilter:'semua', reimbFilter:'semua' };
-let hrLoggedIn = false;
-
-function initHR() {
-  hrLoggedIn = true;
-  syncFromSheets();
-}
-
+function initHR() { syncFromSheets(); }
 async function syncFromSheets() {
   try {
-  showToast('Memuat data...');
-  const [sRes, cRes, rRes] = await Promise.all([
-    apiGet({ action: 'getAllStaff', token: HR_PASSWORD }),
-    apiGet({ action: 'getCuti',     token: HR_PASSWORD }),
-    apiGet({ action: 'getReimb',    token: HR_PASSWORD }),
-  ]);
-
-  if (sRes.ok && sRes.data) {
-    hrState.staff = sRes.data.map(s => ({
-      id: s.ID, nama: s.NamaLengkap || '', dept: s.Departemen || '',
-      jobTitle: s.JobTitle || '', tipe: s.TipeKerja || '',
-      lokasi: s.LokasiKerja || '', join: s.TanggalMulai || '', resign: s.TanggalSelesai || '',
-      status: String(s.Status||'').toLowerCase() === 'aktif' ? 'aktif' : 'resign',
-      wa: s.WA || '', email: s.Email || '', cutiJatah: parseFloat(s.CutiJatah)||12, cutiSisa: parseFloat(s.CutiSisa)||0,
-      noRekening: s.NoRekening || '', namaBank: s.NamaBank || '', catatanHR: s.CatatanHR || '',
-      tgId: s.TelegramID || '', isDeptHead: s.IsDeptHead === 'TRUE' || s.IsDeptHead === true,
-    }));
-  }
-  if (cRes.ok && cRes.data) {
-    hrState.cuti = cRes.data.map(c => ({
-      id: c.ID, staffId: c.StaffID, jenis: c.Jenis || '',
-      start: c.TanggalMulai || '', end: c.TanggalSelesai || '',
-      durasi: parseFloat(c.Durasi)||1, ket: c.Keterangan || '',
-      status: String(c.Status||'pending').toLowerCase(),
-      tgl: c.TanggalAjukan || '',
-    }));
-  }
-  if (rRes.ok && rRes.data) {
-    hrState.reimb = rRes.data.map(r => ({
-      id: r.ID, staffId: r.StaffID, kat: r.Kategori || '',
-      tgl: r.Tanggal || '', jml: parseFloat(r.Jumlah)||0,
-      ket: r.Keterangan || '', status: String(r.Status||'pending').toLowerCase(),
-    }));
-  }
-
-  updateBadges();
-  renderHRDashboard();
-  showToast('Data berhasil dimuat ✓');
+    showToast('Memuat data...');
+    const [sRes, cRes, rRes] = await Promise.all([
+      apiGet({ action: 'getAllStaff', token: HR_PASSWORD }),
+      apiGet({ action: 'getCuti',     token: HR_PASSWORD }),
+      apiGet({ action: 'getReimb',    token: HR_PASSWORD }),
+    ]);
+    if (sRes.ok && sRes.data) {
+      hrState.staff = sRes.data.map(s => ({
+        id: s.ID, nama: s.NamaLengkap || '', dept: s.Departemen || '',
+        jobTitle: s.JobTitle || '', tipe: s.TipeKerja || '',
+        lokasi: s.LokasiKerja || '', join: s.TanggalMulai || '',
+        status: statusNorm(s.Status) === 'aktif' ? 'aktif' : 'resign',
+        wa: s.WA || '', email: s.Email || '', cutiSisa: parseFloat(s.CutiSisa)||0,
+        tgId: s.TelegramID || '', isDeptHead: s.IsDeptHead === 'TRUE' || s.IsDeptHead === true,
+        namaBank: s.NamaBank || '', noRekening: s.NoRekening || '',
+      }));
+    }
+    if (cRes.ok && cRes.data) {
+      hrState.cuti = cRes.data.map(c => ({
+        id: c.ID, staffId: c.StaffID, jenis: c.Jenis || '',
+        start: c.TanggalMulai || '', end: c.TanggalSelesai || '',
+        durasi: parseFloat(c.Durasi)||1, ket: c.Keterangan || '',
+        status: statusNorm(c.Status), tgl: c.TanggalAjukan || '',
+      }));
+    }
+    if (rRes.ok && rRes.data) {
+      hrState.reimb = rRes.data.map(r => ({
+        id: r.ID, staffId: r.StaffID, kat: r.Kategori || '',
+        tgl: r.Tanggal || '', jml: parseFloat(r.Jumlah)||0,
+        ket: r.Keterangan || '', status: statusNorm(r.Status),
+      }));
+    }
+    updateBadges();
+    renderHRDashboard();
+    const activePage = document.querySelector('.hr-page.active')?.id?.replace('hr-','');
+    if(activePage === 'staff') renderStaff();
+    if(activePage === 'cuti') renderCuti();
+    if(activePage === 'reimb') renderReimb();
+    if(activePage === 'gaji') { populatePeriode(); await loadTemplate(); await loadPayroll(); }
+    showToast('Data berhasil dimuat ✓');
   } catch(e) {
     console.error('syncFromSheets error:', e);
     showToast('Error sync: ' + e.message);
   }
 }
-
 function updateBadges() {
   const cp = hrState.cuti.filter(c=>c.status==='pending').length;
   const rp = hrState.reimb.filter(r=>r.status==='pending').length;
-  document.getElementById('cuti-badge').textContent = cp;
-  document.getElementById('reimb-badge').textContent = rp;
-  document.getElementById('stat-cuti-pending').textContent = cp;
-  document.getElementById('stat-reimb-pending').textContent = rp;
+  setText('cuti-badge', cp); setText('reimb-badge', rp);
+  setText('stat-cuti-pending', cp); setText('stat-reimb-pending', rp);
 }
-
 function getStaffById(id) { return hrState.staff.find(s => String(s.id) === String(id)); }
-
 function renderHRDashboard() {
   const aktif = hrState.staff.filter(s=>s.status==='aktif').length;
   const year  = new Date().getFullYear().toString();
-  const joinY = hrState.staff.filter(s=>s.join&&s.join.startsWith(year)).length;
-  document.getElementById('stat-aktif').textContent = aktif;
-  document.getElementById('stat-join').textContent  = joinY;
-
-  // Cuti pending
+  const joinY = hrState.staff.filter(s=>String(s.join||'').startsWith(year)).length;
+  setText('stat-aktif', aktif);
+  setText('stat-join', joinY);
+  updateBadges();
   const cp = hrState.cuti.filter(c=>c.status==='pending').slice(0,4);
-  document.getElementById('dash-cuti').innerHTML = cp.length ? cp.map(c => {
+  setHTML('dash-cuti', cp.length ? cp.map(c => {
     const s = getStaffById(c.staffId);
     if (!s) return '';
-    return `<div class="pending-item">
-      <div class="pending-left">
-        <div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div>
-        <div><div style="font-weight:500;font-size:13px">${s.nama}</div><div class="pending-meta">${c.jenis} · ${c.durasi} hari · ${fmtDate(c.start)}</div></div>
-      </div>
-      <div class="pending-actions">
-        <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.id}')">Terima</button>
-        <button class="btn btn-reject btn-sm"  onclick="rejectCuti('${c.id}')">Tolak</button>
-      </div>
-    </div>`;
-  }).join('') : '<div class="empty">Tidak ada pengajuan pending</div>';
-
-  // Reimb pending
+    return `<div class="pending-item"><div class="pending-left"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div style="font-weight:500;font-size:13px">${esc(s.nama)}</div><div class="pending-meta">${esc(c.jenis)} · ${c.durasi} hari · ${fmtDate(c.start)}</div></div></div><div class="pending-actions"><button class="btn btn-approve btn-sm" onclick="approveCuti('${esc(c.id)}')">Terima</button><button class="btn btn-reject btn-sm" onclick="rejectCuti('${esc(c.id)}')">Tolak</button></div></div>`;
+  }).join('') : '<div class="empty">Tidak ada pengajuan pending</div>');
   const rp = hrState.reimb.filter(r=>r.status==='pending').slice(0,4);
-  document.getElementById('dash-reimb').innerHTML = rp.length ? rp.map(r => {
+  setHTML('dash-reimb', rp.length ? rp.map(r => {
     const s = getStaffById(r.staffId);
     if (!s) return '';
-    return `<div class="pending-item">
-      <div class="pending-left">
-        <div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div>
-        <div><div style="font-weight:500;font-size:13px">${s.nama}</div><div class="pending-meta">${r.kat} · ${fmtDate(r.tgl)}</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--mono);font-weight:500;font-size:13px">${fmtRp(r.jml)}</span>
-        <button class="btn btn-approve btn-sm" onclick="approveReimb('${r.id}')">Terima</button>
-        <button class="btn btn-reject btn-sm"  onclick="rejectReimb('${r.id}')">Tolak</button>
-      </div>
-    </div>`;
-  }).join('') : '<div class="empty">Tidak ada pengajuan pending</div>';
-
-  // Staff table
-  document.getElementById('dash-staff').innerHTML = hrState.staff.slice(0,6).map(s => `
-    <tr>
-      <td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div class="staff-name">${s.nama}</div><div class="staff-dept">${s.dept}</div></div></div></td>
-      <td>${s.jobTitle||'—'}</td>
-      <td>${fmtDate(s.join)}</td>
-      <td>${badgeHtml(s.status)}</td>
-    </tr>`).join('');
+    return `<div class="pending-item"><div class="pending-left"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div style="font-weight:500;font-size:13px">${esc(s.nama)}</div><div class="pending-meta">${esc(r.kat)} · ${fmtDate(r.tgl)}</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-weight:500;font-size:13px">${fmtRp(r.jml)}</span><button class="btn btn-approve btn-sm" onclick="approveReimb('${esc(r.id)}')">Terima</button><button class="btn btn-reject btn-sm" onclick="rejectReimb('${esc(r.id)}')">Tolak</button></div></div>`;
+  }).join('') : '<div class="empty">Tidak ada pengajuan pending</div>');
+  setHTML('dash-staff', hrState.staff.slice(0,6).map(s => `<tr><td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div class="staff-name">${esc(s.nama)}</div><div class="staff-dept">${esc(s.dept)}</div></div></div></td><td>${esc(s.jobTitle)||'—'}</td><td>${fmtDate(s.join)}</td><td>${badgeHtml(s.status)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Belum ada data staff</td></tr>');
 }
-
-// HR Navigation
 function hrNavigate(page, btn) {
   document.querySelectorAll('.hr-page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('hr-' + page).classList.add('active');
+  const pageEl = byId('hr-' + page);
+  if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  if(btn && btn.classList) btn.classList.add('active');
   const titles = {dashboard:'Dashboard',staff:'Data Staff',cuti:'Cuti & Absensi',reimb:'Reimbursement',gaji:'Gaji & Payroll'};
-  document.getElementById('hr-page-title').textContent = titles[page]||page;
-  if (page === 'staff')  renderStaff();
-  if (page === 'cuti')   renderCuti();
-  if (page === 'reimb')  renderReimb();
-  if (page === 'gaji')   { populatePeriode(); loadPayroll(); loadTemplate(); }
-  if (page === 'gaji-template') { loadTemplate(); }
-  if (page === 'gaji')   { populatePeriode(); loadGaji(); }
+  setText('hr-page-title', titles[page]||page);
+  if (page === 'dashboard') renderHRDashboard();
+  if (page === 'staff') renderStaff();
+  if (page === 'cuti') renderCuti();
+  if (page === 'reimb') renderReimb();
+  if (page === 'gaji') { populatePeriode(); loadTemplate(); loadPayroll(); }
 }
-
-// Staff table
-
-function openEditStaff(id) {
-  const s = hrState.staff.find(x => String(x.id) === String(id));
-  if (!s) { showToast('Staff tidak ditemukan'); return; }
-  document.getElementById('edit-staff-id').value = s.id;
-  document.getElementById('edit-nama').value = s.nama || '';
-  document.getElementById('edit-jobtitle').value = s.jobTitle || '';
-  document.getElementById('edit-dept').value = s.dept || '';
-  document.getElementById('edit-tipe').value = s.tipe || 'Full-Time';
-  document.getElementById('edit-lokasi').value = s.lokasi || '';
-  document.getElementById('edit-join').value = toDateInput(s.join);
-  document.getElementById('edit-resign').value = toDateInput(s.resign || '');
-  document.getElementById('edit-status').value = s.status === 'aktif' ? 'Aktif' : 'Resign';
-  document.getElementById('edit-cuti-jatah').value = s.cutiJatah ?? 12;
-  document.getElementById('edit-cuti').value = s.cutiSisa ?? 0;
-  document.getElementById('edit-wa').value = s.wa || '';
-  document.getElementById('edit-email').value = s.email || '';
-  document.getElementById('edit-norek').value = s.noRekening || '';
-  document.getElementById('edit-bank').value = s.namaBank || '';
-  document.getElementById('edit-catatan').value = s.catatanHR || '';
-  document.getElementById('modal-edit-staff').classList.add('open');
-}
-
-function toDateInput(v) {
-  if (!v) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(String(v))) return String(v);
-  const d = new Date(v);
-  if (isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0,10);
-}
-
-async function saveEditStaff() {
-  const staffId = document.getElementById('edit-staff-id').value;
-  const payload = {
-    action: 'updateStaffHR',
-    token: HR_PASSWORD,
-    staffId,
-    NamaLengkap: document.getElementById('edit-nama').value.trim(),
-    JobTitle: document.getElementById('edit-jobtitle').value.trim(),
-    Departemen: document.getElementById('edit-dept').value.trim(),
-    TipeKerja: document.getElementById('edit-tipe').value,
-    LokasiKerja: document.getElementById('edit-lokasi').value.trim(),
-    TanggalMulai: document.getElementById('edit-join').value,
-    TanggalSelesai: document.getElementById('edit-resign').value,
-    Status: document.getElementById('edit-status').value,
-    CutiJatah: document.getElementById('edit-cuti-jatah').value,
-    CutiSisa: document.getElementById('edit-cuti').value,
-    WA: document.getElementById('edit-wa').value.trim(),
-    Email: document.getElementById('edit-email').value.trim(),
-    NoRekening: document.getElementById('edit-norek').value.trim(),
-    NamaBank: document.getElementById('edit-bank').value.trim(),
-    CatatanHR: document.getElementById('edit-catatan').value.trim()
-  };
-  if (!payload.NamaLengkap) { showToast('Nama wajib diisi'); return; }
-  showToast('Menyimpan perubahan...');
-  const res = await apiPost(payload);
-  if (res && res.ok !== false) {
-    closeModal('modal-edit-staff');
-    showToast('Data staff berhasil diupdate ✓');
-    await syncFromSheets();
-    renderStaff();
-  } else {
-    showToast('Gagal update staff: ' + (res?.error || 'Unknown error'));
-  }
-}
-
 function renderStaff() {
   const list = hrState.staff.filter(s => hrState.staffFilter==='semua' || s.status===hrState.staffFilter);
-  document.getElementById('hr-staff-table').innerHTML = list.map(s => `
-    <tr>
-      <td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div class="staff-name">${s.nama}${s.isDeptHead?' <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:1px 6px;border-radius:4px">Head</span>':''}</div><div class="staff-dept">${s.wa}</div></div></div></td>
-      <td>${s.dept}</td>
-      <td><span class="reimb-category">${s.jobTitle||'—'}</span></td>
-      <td><span class="badge ${s.tipe==='Full-Time'?'badge-aktif':'badge-cuti'}">${s.tipe}</span></td>
-      <td>${fmtDate(s.join)}</td>
-      <td>${badgeHtml(s.status)}</td>
-      <td>
-        <div class="cuti-bar">
-          <div class="bar-bg"><div class="bar-fill ${s.cutiSisa<=2?'empty':s.cutiSisa<=5?'low':''}" style="width:${Math.round(s.cutiSisa/12*100)}%"></div></div>
-          <span style="font-size:12px;font-family:var(--mono);color:#9B978F">${s.cutiSisa}</span>
-        </div>
-      </td>
-      <td><button class="btn btn-secondary btn-sm" onclick="openEditStaff('${s.id}')">Edit</button></td>
-    </tr>`).join('');
+  setHTML('hr-staff-table', list.map(s => `<tr><td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><div><div class="staff-name">${esc(s.nama)}${s.isDeptHead?' <span style="font-size:10px;background:#EDE9FE;color:#5B21B6;padding:1px 6px;border-radius:4px">Head</span>':''}</div><div class="staff-dept">${esc(s.wa)}</div></div></div></td><td>${esc(s.dept)}</td><td><span class="reimb-category">${esc(s.jobTitle)||'—'}</span></td><td><span class="badge ${s.tipe==='Full-Time'?'badge-aktif':'badge-cuti'}">${esc(s.tipe)}</span></td><td>${fmtDate(s.join)}</td><td>${badgeHtml(s.status)}</td><td><div class="cuti-bar"><div class="bar-bg"><div class="bar-fill ${s.cutiSisa<=2?'empty':s.cutiSisa<=5?'low':''}" style="width:${Math.round(s.cutiSisa/12*100)}%"></div></div><span style="font-size:12px;font-family:var(--mono);color:#9B978F">${s.cutiSisa}</span></div></td><td><button class="btn btn-secondary btn-sm" onclick="showToast('Edit segera hadir')">Edit</button></td></tr>`).join('') || '<tr><td colspan="8" class="empty">Tidak ada data</td></tr>');
 }
-
-function filterStaff(f, btn) {
-  hrState.staffFilter = f;
-  document.querySelectorAll('#hr-staff .tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderStaff();
-}
-
-// Cuti table
+function filterStaff(f, btn) { hrState.staffFilter = f; document.querySelectorAll('#hr-staff .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderStaff(); }
 function renderCuti() {
   const list = hrState.cuti.filter(c => hrState.cutiFilter==='semua' || c.status===hrState.cutiFilter);
-  document.getElementById('hr-cuti-table').innerHTML = list.length ? list.map(c => {
+  setHTML('hr-cuti-table', list.length ? list.map(c => {
     const s = getStaffById(c.staffId) || {nama:'—',id:'0'};
-    const aksi = c.status==='pending' ? `
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.id}')">Terima</button>
-        <button class="btn btn-reject btn-sm" onclick="rejectCuti('${c.id}')">Tolak</button>
-      </div>` : '<span style="font-size:12px;color:#9B978F">—</span>';
-    return `<tr>
-      <td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><span class="staff-name">${s.nama}</span></div></td>
-      <td>${c.jenis || '—'}</td>
-      <td><div style="line-height:1.35"><div>${fmtDate(c.start)}</div><div style="font-size:12px;color:#9B978F">s/d ${fmtDate(c.end)}</div></div></td>
-      <td><span style="font-family:var(--mono)">${c.durasi} hari</span></td>
-      <td style="color:#6B6660;line-height:1.35;word-break:break-word">${c.ket || '—'}</td>
-      <td style="white-space:nowrap">${badgeHtml(c.status)}</td>
-      <td>${aksi}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada data</td></tr>';
-
+    const aksi = c.status==='pending' ? `<div style="display:flex;gap:4px"><button class="btn btn-approve btn-sm" onclick="approveCuti('${esc(c.id)}')">Terima</button><button class="btn btn-reject btn-sm" onclick="rejectCuti('${esc(c.id)}')">Tolak</button></div>` : '—';
+    return `<tr><td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><span class="staff-name">${esc(s.nama)}</span></div></td><td>${esc(c.jenis)}</td><td>${fmtDate(c.start)} – ${fmtDate(c.end)}</td><td><span style="font-family:var(--mono)">${c.durasi} hari</span></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9B978F">${esc(c.ket)}</td><td>${badgeHtml(c.status)}</td><td>${aksi}</td></tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada data</td></tr>');
   const aktifStaff = hrState.staff.filter(s=>s.status==='aktif');
-  document.getElementById('hr-cuti-quota').innerHTML = aktifStaff.length ? aktifStaff.map(s => {
-    const jatah = Number(s.cutiJatah) || 12;
-    const sisa = Number(s.cutiSisa) || 0;
-    const pct = Math.max(0, Math.min(100, Math.round(sisa / jatah * 100)));
-    return `<div class="leave-quota-item" title="${s.nama}">
-      <div class="leave-quota-name">${s.nama}</div>
-      <div class="bar-bg" style="max-width:120px"><div class="bar-fill ${sisa<=2?'empty':sisa<=5?'low':''}" style="width:${pct}%"></div></div>
-      <div class="leave-quota-value">${sisa}/${jatah}</div>
-    </div>`;
-  }).join('') : '<div class="empty">Belum ada staff aktif</div>';
+  setHTML('hr-cuti-quota', aktifStaff.map(s => `<div class="cuti-bar" style="margin-bottom:10px"><div style="min-width:140px;font-size:13px">${esc(s.nama)}</div><div class="bar-bg" style="max-width:200px"><div class="bar-fill ${s.cutiSisa<=2?'empty':s.cutiSisa<=5?'low':''}" style="width:${Math.round(s.cutiSisa/12*100)}%"></div></div><span style="font-size:12px;font-family:var(--mono);min-width:50px;color:#9B978F">${s.cutiSisa}/12</span></div>`).join('') || '<div class="empty">Belum ada staff aktif</div>');
 }
-
-function filterCuti(f, btn) {
-  hrState.cutiFilter = f;
-  document.querySelectorAll('#hr-cuti .tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCuti();
-}
-
+function filterCuti(f, btn) { hrState.cutiFilter = f; document.querySelectorAll('#hr-cuti .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderCuti(); }
 async function approveCuti(id) {
   const res = await apiPost({ action: 'approveCuti', id: String(id), token: HR_PASSWORD });
-  if (res && res.ok !== false) {
-    const c = hrState.cuti.find(x=>String(x.id)===String(id));
-    if(c) c.status = 'approved';
+  if (isOk(res)) {
+    const c = hrState.cuti.find(x=>String(x.id)===String(id)); if(c) c.status = 'approved';
     const s = c ? hrState.staff.find(x=>String(x.id)===String(c.staffId)) : null;
     if (s && c && c.jenis === 'Cuti Tahunan') s.cutiSisa = Math.max(0, s.cutiSisa - c.durasi);
-    updateBadges(); renderHRDashboard(); renderCuti();
-    showToast('Cuti disetujui ✓');
+    updateBadges(); renderHRDashboard(); renderCuti(); showToast('Cuti disetujui ✓');
   } else showToast('Gagal: ' + (res?.error||''));
 }
-
 async function rejectCuti(id) {
   const res = await apiPost({ action: 'rejectCuti', id: String(id), token: HR_PASSWORD });
-  if (res && res.ok !== false) {
-    const c = hrState.cuti.find(x=>String(x.id)===String(id));
-    if(c) c.status = 'rejected';
-    updateBadges(); renderHRDashboard(); renderCuti();
-    showToast('Cuti ditolak');
-  } else showToast('Gagal: ' + (res?.error||''));
+  if (isOk(res)) { const c = hrState.cuti.find(x=>String(x.id)===String(id)); if(c) c.status = 'rejected'; updateBadges(); renderHRDashboard(); renderCuti(); showToast('Cuti ditolak'); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
-// Reimb table
 function renderReimb() {
   const list = hrState.reimb.filter(r => hrState.reimbFilter==='semua' || r.status===hrState.reimbFilter);
-  document.getElementById('hr-reimb-table').innerHTML = list.length ? list.map(r => {
+  setHTML('hr-reimb-table', list.length ? list.map(r => {
     const s = getStaffById(r.staffId) || {nama:'—',id:'0'};
-    const aksi = r.status==='pending' ? `
-      <div style="display:flex;gap:4px">
-        <button class="btn btn-approve btn-sm" onclick="approveReimb('${r.id}')">Terima</button>
-        <button class="btn btn-reject btn-sm" onclick="rejectReimb('${r.id}')">Tolak</button>
-      </div>` : '—';
-    return `<tr>
-      <td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><span class="staff-name">${s.nama}</span></div></td>
-      <td><span class="reimb-category">${r.kat}</span></td>
-      <td>${fmtDate(r.tgl)}</td>
-      <td><span style="font-family:var(--mono);font-weight:500">${fmtRp(r.jml)}</span></td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9B978F">${r.ket}</td>
-      <td>${badgeHtml(r.status)}</td>
-      <td>${aksi}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada data</td></tr>';
+    const aksi = r.status==='pending' ? `<div style="display:flex;gap:4px"><button class="btn btn-approve btn-sm" onclick="approveReimb('${esc(r.id)}')">Terima</button><button class="btn btn-reject btn-sm" onclick="rejectReimb('${esc(r.id)}')">Tolak</button></div>` : '—';
+    return `<tr><td><div class="staff-info"><div class="avatar ${avatarColor(s.id)}">${initials(s.nama)}</div><span class="staff-name">${esc(s.nama)}</span></div></td><td><span class="reimb-category">${esc(r.kat)}</span></td><td>${fmtDate(r.tgl)}</td><td><span style="font-family:var(--mono);font-weight:500">${fmtRp(r.jml)}</span></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9B978F">${esc(r.ket)}</td><td>${badgeHtml(r.status)}</td><td>${aksi}</td></tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada data</td></tr>');
 }
-
-function filterReimb(f, btn) {
-  hrState.reimbFilter = f;
-  document.querySelectorAll('#hr-reimb .tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderReimb();
-}
-
+function filterReimb(f, btn) { hrState.reimbFilter = f; document.querySelectorAll('#hr-reimb .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderReimb(); }
 async function approveReimb(id) {
   const res = await apiPost({ action: 'approveReimb', id: String(id), token: HR_PASSWORD });
-  if (res && res.ok !== false) {
-    const r = hrState.reimb.find(x=>String(x.id)===String(id));
-    if(r) r.status = 'approved';
-    updateBadges(); renderHRDashboard(); renderReimb();
-    showToast('Reimb disetujui ✓');
-  } else showToast('Gagal: ' + (res?.error||''));
+  if (isOk(res)) { const r = hrState.reimb.find(x=>String(x.id)===String(id)); if(r) r.status = 'approved'; updateBadges(); renderHRDashboard(); renderReimb(); showToast('Reimb disetujui ✓'); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
 async function rejectReimb(id) {
   const res = await apiPost({ action: 'rejectReimb', id: String(id), token: HR_PASSWORD });
-  if (res && res.ok !== false) {
-    const r = hrState.reimb.find(x=>String(x.id)===String(id));
-    if(r) r.status = 'rejected';
-    updateBadges(); renderHRDashboard(); renderReimb();
-    showToast('Reimb ditolak');
-  } else showToast('Gagal: ' + (res?.error||''));
+  if (isOk(res)) { const r = hrState.reimb.find(x=>String(x.id)===String(id)); if(r) r.status = 'rejected'; updateBadges(); renderHRDashboard(); renderReimb(); showToast('Reimb ditolak'); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
-// Modals
-function openAddStaff() {
-  document.getElementById('modal-staff').classList.add('open');
-}
-function openAddCuti() {
-  document.getElementById('hc-staff').innerHTML = hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
-  document.getElementById('modal-cuti').classList.add('open');
-}
-function openAddReimb() {
-  document.getElementById('hr-reimb-staff').innerHTML = hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
-  document.getElementById('modal-reimb').classList.add('open');
-}
-function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }); });
-
+function openAddStaff() { byId('modal-staff').classList.add('open'); }
+function openAddCuti() { setHTML('hc-staff', hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join('')); byId('modal-cuti').classList.add('open'); }
+function openAddReimb() { setHTML('hr-staff-select', hrState.staff.filter(s=>s.status==='aktif').map(s=>`<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join('')); byId('modal-reimb').classList.add('open'); }
+function closeModal(id) { const el = byId(id); if(el) el.classList.remove('open'); }
+document.addEventListener('click', e => { if(e.target.classList && e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); });
 async function addStaff() {
-  const nama = document.getElementById('s-nama').value.trim();
+  const nama = byId('s-nama').value.trim();
   if (!nama) { showToast('Nama wajib diisi'); return; }
-  const res = await apiPost({
-    action: 'addStaff', token: HR_PASSWORD,
-    NamaLengkap: nama,
-    JobTitle: document.getElementById('s-jobtitle').value,
-    Departemen: document.getElementById('s-dept').value,
-    TipeKerja: document.getElementById('s-tipe').value,
-    LokasiKerja: document.getElementById('s-lokasi').value,
-    TanggalMulai: document.getElementById('s-join').value,
-    WA: document.getElementById('s-wa').value,
-    Email: document.getElementById('s-email').value,
-  });
-  if (res && res.ok !== false) {
-    closeModal('modal-staff');
-    showToast(nama + ' berhasil ditambahkan!');
-    await syncFromSheets();
-  } else showToast('Gagal: ' + (res?.error||''));
+  const res = await apiPost({ action: 'addStaff', token: HR_PASSWORD, NamaLengkap: nama, JobTitle: byId('s-jobtitle').value, Departemen: byId('s-dept').value, TipeKerja: byId('s-tipe').value, LokasiKerja: byId('s-lokasi').value, TanggalMulai: byId('s-join').value, WA: byId('s-wa').value, Email: byId('s-email').value });
+  if (isOk(res)) { closeModal('modal-staff'); showToast(nama + ' berhasil ditambahkan!'); await syncFromSheets(); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
 async function hrAddCuti() {
-  const staffId = document.getElementById('hc-staff').value;
-  const start   = document.getElementById('hc-start').value;
-  const end     = document.getElementById('hc-end').value || start;
+  const staffId = byId('hc-staff').value, start = byId('hc-start').value, end = byId('hc-end').value || start;
   if (!start) { showToast('Pilih tanggal'); return; }
-  const res = await apiPost({
-    action: 'addCuti', staffId,
-    Jenis: document.getElementById('hc-jenis').value,
-    TanggalMulai: start, TanggalSelesai: end,
-    Durasi: daysBetween(start, end),
-    Keterangan: document.getElementById('hc-ket').value,
-  });
-  if (res && res.ok !== false) { closeModal('modal-cuti'); showToast('Cuti diajukan'); await syncFromSheets(); }
-  else showToast('Gagal: ' + (res?.error||''));
+  const res = await apiPost({ action: 'addCuti', staffId, Jenis: byId('hc-jenis').value, TanggalMulai: start, TanggalSelesai: end, Durasi: daysBetween(start,end), Keterangan: byId('hc-ket').value });
+  if (isOk(res)) { closeModal('modal-cuti'); showToast('Cuti diajukan'); await syncFromSheets(); } else showToast('Gagal: ' + (res?.error||''));
 }
-
 async function hrAddReimb() {
-  const staffId = document.getElementById('hr-reimb-staff').value;
-  const jml     = document.getElementById('hr-jml').value;
-  const tgl     = document.getElementById('hr-tgl').value;
+  const staffId = byId('hr-staff-select').value, jml = byId('hr-jml').value, tgl = byId('hr-tgl').value;
   if (!tgl || !jml) { showToast('Lengkapi form'); return; }
-  const res = await apiPost({
-    action: 'addReimb', staffId,
-    Kategori: document.getElementById('hr-kat').value,
-    Tanggal: tgl, Jumlah: jml,
-    Keterangan: document.getElementById('hr-ket').value,
-  });
-  if (res && res.ok !== false) { closeModal('modal-reimb'); showToast('Reimb diajukan'); await syncFromSheets(); }
-  else showToast('Gagal: ' + (res?.error||''));
+  const res = await apiPost({ action: 'addReimb', staffId, Kategori: byId('hr-kat').value, Tanggal: tgl, Jumlah: jml, Keterangan: byId('hr-ket').value });
+  if (isOk(res)) { closeModal('modal-reimb'); showToast('Reimb diajukan'); await syncFromSheets(); } else showToast('Gagal: ' + (res?.error||''));
 }
 
-// ══════════════════════════════════════════════
-// STAFF PORTAL
-// ══════════════════════════════════════════════
 function spNavigate(page, btn) {
   document.querySelectorAll('.sp-page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('sp-' + page).classList.add('active');
+  const pageEl = byId('sp-' + page); if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.sp-nav').forEach(b=>b.classList.remove('active'));
-  const navBtn = btn || document.getElementById('spnav-' + page);
-  if (navBtn && navBtn.classList) navBtn.classList.add('active');
+  const navBtn = btn || byId('spnav-' + page); if (navBtn) navBtn.classList.add('active');
 }
-
 async function loadStaffData() {
   const [sRes, cRes, rRes, csRes] = await Promise.all([
-    apiGet({ action: 'getStaff',        staffId: session.staffId }),
-    apiGet({ action: 'getCuti',          staffId: session.staffId }),
-    apiGet({ action: 'getReimb',         staffId: session.staffId }),
-    apiGet({ action: 'getCutiSummary',   staffId: session.staffId }),
+    apiGet({ action: 'getStaff', staffId: session.staffId }),
+    apiGet({ action: 'getCuti', staffId: session.staffId }),
+    apiGet({ action: 'getReimb', staffId: session.staffId }),
+    apiGet({ action: 'getCutiSummary', staffId: session.staffId }),
   ]);
-  if (sRes.ok)  session.data  = sRes.data;
-  if (cRes.ok)  session.cuti  = cRes.data  || [];
-  if (rRes.ok)  session.reimb = rRes.data   || [];
+  if (sRes.ok) session.data = sRes.data;
+  if (cRes.ok) session.cuti = cRes.data || [];
+  if (rRes.ok) session.reimb = rRes.data || [];
   if (csRes.ok) session.cutiSummary = csRes;
   renderSpHome(); renderSpProfil(); renderSpCuti(); renderSpReimb();
 }
-
 function renderSpHome() {
   const s = session.data || {};
-  document.getElementById('sp-greeting').textContent = `Halo, ${s.NamaLengkap || session.nama}! 👋`;
-  document.getElementById('sp-dept').textContent = `${s.JobTitle||''} · ${s.Departemen||''}`;
-  document.getElementById('sp-cuti-sisa').textContent = s.CutiSisa ?? '—';
-  document.getElementById('sp-reimb-pending').textContent = (session.reimb||[]).filter(r=>r.Status==='Pending').length;
-
-  const recent = [...(session.cuti||[]), ...(session.reimb||[])]
-    .sort((a,b) => new Date(b.TanggalAjukan||0) - new Date(a.TanggalAjukan||0)).slice(0,4);
-  document.getElementById('sp-recent').innerHTML = recent.length ? recent.map(item => {
-    const isCuti = !!item.Jenis;
-    const title  = isCuti ? item.Jenis : item.Kategori;
-    const sub    = isCuti ? `${fmtDate(item.TanggalMulai)} · ${item.Durasi} hari` : `${fmtDate(item.Tanggal)} · ${fmtRp(item.Jumlah)}`;
-    const st     = String(item.Status||'').toLowerCase();
-    return `<div class="history-item">
-      <div class="history-top"><span class="history-title">${title}</span><span class="badge badge-${st}">${item.Status}</span></div>
-      <div class="history-meta">${sub}</div>
-    </div>`;
-  }).join('') : '<div class="empty">Belum ada pengajuan</div>';
+  setText('sp-greeting', `Halo, ${s.NamaLengkap || session.nama || ''}! 👋`);
+  setText('sp-dept', `${s.JobTitle||''} · ${s.Departemen||''}`);
+  setText('sp-cuti-sisa', s.CutiSisa ?? '—');
+  setText('sp-reimb-pending', (session.reimb||[]).filter(r=>statusNorm(r.Status)==='pending').length);
+  const recent = [...(session.cuti||[]), ...(session.reimb||[])].sort((a,b) => new Date(b.TanggalAjukan||b.Tanggal||0) - new Date(a.TanggalAjukan||a.Tanggal||0)).slice(0,4);
+  setHTML('sp-recent', recent.length ? recent.map(item => {
+    const isCuti = !!item.Jenis, title = isCuti ? item.Jenis : item.Kategori, sub = isCuti ? `${fmtDate(item.TanggalMulai)} · ${item.Durasi} hari` : `${fmtDate(item.Tanggal)} · ${fmtRp(item.Jumlah)}`, st = statusNorm(item.Status);
+    return `<div class="history-item"><div class="history-top"><span class="history-title">${esc(title)}</span>${badgeHtml(st)}</div><div class="history-meta">${sub}</div></div>`;
+  }).join('') : '<div class="empty">Belum ada pengajuan</div>');
 }
-
 function renderSpProfil() {
   const s = session.data || {};
-  const fields = [
-    {key:'NamaLengkap',label:'Nama Lengkap',type:'text'},
-    {key:'TanggalLahir',label:'Tanggal Lahir',type:'date'},
-    {key:'WA',label:'No. WhatsApp',type:'tel'},
-    {key:'Email',label:'Email',type:'email'},
-    {key:'Alamat',label:'Alamat',type:'text'},
-    {key:'NoRekening',label:'No. Rekening',type:'text'},
-    {key:'NamaBank',label:'Nama Bank',type:'text'},
-    {key:'TelegramID',label:'Telegram ID',type:'text'},
-  ];
-  document.getElementById('sp-profil-data').innerHTML = fields.map(f => `
-    <div class="field-row">
-      <div class="field-label">${f.label}</div>
-      <div style="flex:1;text-align:right">
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
-          <span class="field-value" id="fv-${f.key}">${s[f.key]||'—'}</span>
-          <span class="field-edit" onclick="toggleEdit('${f.key}')">Edit</span>
-        </div>
-        <div class="inline-edit" id="fe-${f.key}">
-          <input type="${f.type}" class="sp-input" id="fi-${f.key}" value="${s[f.key]||''}" style="text-align:left;margin-top:6px">
-          <div class="edit-actions">
-            <button class="sp-btn-primary" style="margin:0;flex:1;padding:8px" onclick="saveField('${f.key}')">Simpan</button>
-            <button class="btn btn-secondary btn-sm" onclick="toggleEdit('${f.key}')">Batal</button>
-          </div>
-        </div>
-      </div>
-    </div>`).join('');
-
-  const readonly = [
-    {label:'Departemen',value:s.Departemen},
-    {label:'Job Title',value:s.JobTitle},
-    {label:'Tipe Kerja',value:s.TipeKerja},
-    {label:'Lokasi',value:s.LokasiKerja},
-    {label:'Tanggal Mulai',value:fmtDate(s.TanggalMulai)},
-  ];
-  document.getElementById('sp-profil-kerja').innerHTML = readonly.map(f => `
-    <div class="field-row">
-      <div class="field-label">${f.label}</div>
-      <div class="field-value">${f.value||'—'}</div>
-    </div>`).join('');
+  const fields = [{key:'NamaLengkap',label:'Nama Lengkap',type:'text'},{key:'TanggalLahir',label:'Tanggal Lahir',type:'date'},{key:'WA',label:'No. WhatsApp',type:'tel'},{key:'Email',label:'Email',type:'email'},{key:'Alamat',label:'Alamat',type:'text'},{key:'NoRekening',label:'No. Rekening',type:'text'},{key:'NamaBank',label:'Nama Bank',type:'text'},{key:'TelegramID',label:'Telegram ID',type:'text'}];
+  setHTML('sp-profil-data', fields.map(f => `<div class="field-row"><div class="field-label">${f.label}</div><div style="flex:1;text-align:right"><div style="display:flex;align-items:center;justify-content:flex-end;gap:8px"><span class="field-value" id="fv-${f.key}">${esc(s[f.key]||'—')}</span><span class="field-edit" onclick="toggleEdit('${f.key}')">Edit</span></div><div class="inline-edit" id="fe-${f.key}"><input type="${f.type}" class="sp-input" id="fi-${f.key}" value="${esc(s[f.key]||'')}" style="text-align:left;margin-top:6px"><div class="edit-actions"><button class="sp-btn-primary" style="margin:0;flex:1;padding:8px" onclick="saveField('${f.key}')">Simpan</button><button class="btn btn-secondary btn-sm" onclick="toggleEdit('${f.key}')">Batal</button></div></div></div></div>`).join(''));
+  const readonly = [{label:'Departemen',value:s.Departemen},{label:'Job Title',value:s.JobTitle},{label:'Tipe Kerja',value:s.TipeKerja},{label:'Lokasi',value:s.LokasiKerja},{label:'Tanggal Mulai',value:fmtDate(s.TanggalMulai)}];
+  setHTML('sp-profil-kerja', readonly.map(f => `<div class="field-row"><div class="field-label">${f.label}</div><div class="field-value">${esc(f.value||'—')}</div></div>`).join(''));
 }
-
-function toggleEdit(key) { document.getElementById('fe-'+key).classList.toggle('open'); }
-
+function toggleEdit(key) { const el = byId('fe-'+key); if(el) el.classList.toggle('open'); }
 async function saveField(key) {
-  const val = document.getElementById('fi-'+key).value.trim();
+  const val = byId('fi-'+key).value.trim();
   const res = await api({ action: 'updateStaff', staffId: session.staffId, nama: session.nama, [key]: val });
-  if (res && res.ok !== false) {
-    if (!session.data) session.data = {};
-    session.data[key] = val;
-    document.getElementById('fv-'+key).textContent = val || '—';
-    toggleEdit(key);
-    showToast('Tersimpan ✓');
-  } else showToast('Gagal menyimpan');
+  if (isOk(res)) { if (!session.data) session.data = {}; session.data[key] = val; setText('fv-'+key, val || '—'); toggleEdit(key); showToast('Tersimpan ✓'); }
+  else showToast('Gagal menyimpan');
 }
-
 function renderSpCuti() {
   const cs = session.cutiSummary;
   if (cs) {
-    document.getElementById('cuti-tahun').textContent = cs.tahun;
-    document.getElementById('cuti-sisa-num').textContent = cs.sisa;
-    document.getElementById('cuti-jatah-num').textContent = cs.jatah;
-    const pct = Math.round(cs.sisa / cs.jatah * 100);
-    const bar = document.getElementById('cuti-bar');
-    bar.style.width = pct + '%';
-    bar.style.background = cs.sisa <= 2 ? '#B91C1C' : cs.sisa <= 5 ? '#D97706' : '#4A7C28';
-    document.getElementById('cuti-summary-detail').innerHTML = `
-      <div style="text-align:center;padding:10px;background:#F0EDE6;border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${cs.jatah}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Jatah</div></div>
-      <div style="text-align:center;padding:10px;background:#FDE8E8;border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono);color:#8B1A1A">${cs.dipakai}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Terpakai</div></div>
-      <div style="text-align:center;padding:10px;background:${cs.sisa<=2?'#FDE8E8':cs.sisa<=5?'#FDF3E0':'#E8F0DE'};border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono);color:${cs.sisa<=2?'#8B1A1A':cs.sisa<=5?'#8B5E0A':'#2D5016'}">${cs.sisa}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Sisa</div></div>
-      ${cs.pending>0?`<div style="grid-column:1/-1;text-align:center;font-size:12px;color:#8B5E0A;background:#FDF3E0;padding:6px;border-radius:6px">⏳ ${cs.pending} hari sedang pending</div>`:''}`;
+    setText('cuti-tahun', cs.tahun || '');
+    setText('cuti-sisa-num', cs.sisa ?? '—');
+    setText('cuti-jatah-num', cs.jatah ?? 12);
+    const pct = Math.round((Number(cs.sisa)||0) / (Number(cs.jatah)||12) * 100);
+    const bar = byId('cuti-bar'); if(bar){ bar.style.width = pct + '%'; bar.style.background = cs.sisa <= 2 ? '#B91C1C' : cs.sisa <= 5 ? '#D97706' : '#4A7C28'; }
+    setHTML('cuti-summary-detail', `<div style="text-align:center;padding:10px;background:#F0EDE6;border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${cs.jatah}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Jatah</div></div><div style="text-align:center;padding:10px;background:#FDE8E8;border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono);color:#8B1A1A">${cs.dipakai}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Terpakai</div></div><div style="text-align:center;padding:10px;background:${cs.sisa<=2?'#FDE8E8':cs.sisa<=5?'#FDF3E0':'#E8F0DE'};border-radius:8px"><div style="font-size:20px;font-weight:600;font-family:var(--mono);color:${cs.sisa<=2?'#8B1A1A':cs.sisa<=5?'#8B5E0A':'#2D5016'}">${cs.sisa}</div><div style="font-size:11px;color:#9B978F;margin-top:2px">Sisa</div></div>${cs.pending>0?`<div style="grid-column:1/-1;text-align:center;font-size:12px;color:#8B5E0A;background:#FDF3E0;padding:6px;border-radius:6px">⏳ ${cs.pending} hari sedang pending</div>`:''}`);
   }
-
   const list = session.cuti || [];
-  document.getElementById('sp-cuti-history').innerHTML = list.length ? list.map(c => `
-    <div class="history-item">
-      <div class="history-top"><span class="history-title">${c.Jenis}</span><span class="badge badge-${String(c.Status||'').toLowerCase()}">${c.Status}</span></div>
-      <div class="history-meta">${fmtDate(c.TanggalMulai)} – ${fmtDate(c.TanggalSelesai)} · ${c.Durasi} hari</div>
-      ${c.Status==='Rejected'&&c.CatatanHR?`<div style="font-size:12px;color:#8B1A1A;margin-top:4px">Alasan: ${c.CatatanHR}</div>`:''}
-    </div>`).join('') : '<div class="empty">Belum ada riwayat cuti</div>';
+  setHTML('sp-cuti-history', list.length ? list.map(c => `<div class="history-item"><div class="history-top"><span class="history-title">${esc(c.Jenis)}</span>${badgeHtml(c.Status)}</div><div class="history-meta">${fmtDate(c.TanggalMulai)} – ${fmtDate(c.TanggalSelesai)} · ${c.Durasi} hari</div>${statusNorm(c.Status)==='rejected'&&c.CatatanHR?`<div style="font-size:12px;color:#8B1A1A;margin-top:4px">Alasan: ${esc(c.CatatanHR)}</div>`:''}</div>`).join('') : '<div class="empty">Belum ada riwayat cuti</div>');
 }
-
+function toggleCutiEnd(){ const half = byId('c-durasi').value === '0.5'; setDisplay('c-end-wrap', half ? 'none' : 'block'); }
 async function submitCuti() {
-  const start  = document.getElementById('c-start').value;
-  const durasi = parseFloat(document.getElementById('c-durasi').value);
-  const end    = durasi === 0.5 ? start : (document.getElementById('c-end').value || start);
+  const start = byId('c-start').value, durasi = parseFloat(byId('c-durasi').value), end = durasi === 0.5 ? start : (byId('c-end').value || start);
   if (!start) { showToast('Pilih tanggal dulu'); return; }
-  const res = await api({
-    action: 'addCuti', staffId: session.staffId,
-    Jenis: document.getElementById('c-jenis').value,
-    TanggalMulai: start, TanggalSelesai: end,
-    Durasi: durasi === 0.5 ? 0.5 : daysBetween(start, end),
-    Keterangan: document.getElementById('c-ket').value,
-  });
-  if (res && res.ok !== false) {
-    showToast('Pengajuan terkirim! Menunggu approval HR 🙏');
-    document.getElementById('c-start').value = '';
-    document.getElementById('c-end').value = '';
-    document.getElementById('c-ket').value = '';
-    await loadStaffData();
-  } else showToast((res&&res.error)||'Gagal mengirim');
+  const res = await api({ action: 'addCuti', staffId: session.staffId, Jenis: byId('c-jenis').value, TanggalMulai: start, TanggalSelesai: end, Durasi: durasi === 0.5 ? 0.5 : daysBetween(start,end), Keterangan: byId('c-ket').value });
+  if (isOk(res)) { showToast('Pengajuan terkirim! Menunggu approval HR 🙏'); byId('c-start').value=''; byId('c-end').value=''; byId('c-ket').value=''; await loadStaffData(); }
+  else showToast((res&&res.error)||'Gagal mengirim');
 }
-
 function renderSpReimb() {
   const list = session.reimb || [];
-  document.getElementById('sp-reimb-history').innerHTML = list.length ? list.map(r => `
-    <div class="history-item">
-      <div class="history-top">
-        <div><div class="history-title">${r.Kategori}</div><div class="history-meta">${fmtDate(r.Tanggal)} · ${r.Keterangan||''}</div></div>
-        <div style="text-align:right"><div class="history-amount">${fmtRp(r.Jumlah)}</div><span class="badge badge-${String(r.Status||'').toLowerCase()}">${r.Status}</span></div>
-      </div>
-      ${r.Status==='Rejected'&&r.CatatanHR?`<div style="font-size:12px;color:#8B1A1A;margin-top:4px">Alasan: ${r.CatatanHR}</div>`:''}
-    </div>`).join('') : '<div class="empty">Belum ada riwayat reimb</div>';
+  setHTML('sp-reimb-history', list.length ? list.map(r => `<div class="history-item"><div class="history-top"><div><div class="history-title">${esc(r.Kategori)}</div><div class="history-meta">${fmtDate(r.Tanggal)} · ${esc(r.Keterangan||'')}</div></div><div style="text-align:right"><div class="history-amount">${fmtRp(r.Jumlah)}</div>${badgeHtml(r.Status)}</div></div>${statusNorm(r.Status)==='rejected'&&r.CatatanHR?`<div style="font-size:12px;color:#8B1A1A;margin-top:4px">Alasan: ${esc(r.CatatanHR)}</div>`:''}</div>`).join('') : '<div class="empty">Belum ada riwayat reimb</div>');
 }
-
 function previewReceipt(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('receipt-img').src = e.target.result;
-    document.getElementById('receipt-preview').style.display = 'block';
-    document.getElementById('receipt-label').textContent = input.files[0].name;
-  };
+  reader.onload = e => { byId('receipt-img').src = e.target.result; setDisplay('receipt-preview','block'); setText('receipt-label', input.files[0].name); };
   reader.readAsDataURL(input.files[0]);
 }
-
 async function submitReimb() {
-  const tgl = document.getElementById('r-tgl').value;
-  const jml = document.getElementById('r-jml').value;
+  const tgl = byId('r-tgl').value, jml = byId('r-jml').value;
   if (!tgl || !jml) { showToast('Lengkapi form dulu'); return; }
-  const res = await api({
-    action: 'addReimb', staffId: session.staffId,
-    Kategori: document.getElementById('r-kat').value,
-    Tanggal: tgl, Jumlah: jml,
-    Keterangan: document.getElementById('r-ket').value,
-  });
-  if (res && res.ok !== false) {
-    showToast('Reimb terkirim! Menunggu approval HR 🙏');
-    document.getElementById('r-tgl').value = '';
-    document.getElementById('r-jml').value = '';
-    document.getElementById('r-ket').value = '';
-    document.getElementById('r-receipt').value = '';
-    document.getElementById('receipt-preview').style.display = 'none';
-    document.getElementById('receipt-label').textContent = 'Tap untuk pilih foto receipt';
-    await loadStaffData();
-  } else showToast((res&&res.error)||'Gagal mengirim');
+  const res = await api({ action: 'addReimb', staffId: session.staffId, Kategori: byId('r-kat').value, Tanggal: tgl, Jumlah: jml, Keterangan: byId('r-ket').value });
+  if (isOk(res)) { showToast('Reimb terkirim! Menunggu approval HR 🙏'); byId('r-tgl').value=''; byId('r-jml').value=''; byId('r-ket').value=''; byId('r-receipt').value=''; setDisplay('receipt-preview','none'); setText('receipt-label','Tap untuk pilih foto receipt'); await loadStaffData(); }
+  else showToast((res&&res.error)||'Gagal mengirim');
 }
-
 async function doChangePin() {
-  const lama   = document.getElementById('cp-lama').value.trim();
-  const baru   = document.getElementById('cp-baru').value.trim();
-  const konfirm = document.getElementById('cp-konfirm').value.trim();
+  const lama = byId('cp-lama').value.trim(), baru = byId('cp-baru').value.trim(), konfirm = byId('cp-konfirm').value.trim();
   if (baru !== konfirm) { showToast('PIN baru tidak cocok'); return; }
-  if (baru.length < 4)  { showToast('PIN minimal 4 digit'); return; }
+  if (baru.length < 4) { showToast('PIN minimal 4 digit'); return; }
   const res = await api({ action: 'changePin', staffId: session.staffId, pinLama: lama, pinBaru: baru });
-  if (res && res.ok !== false) {
-    showToast('PIN berhasil diganti! 🔐');
-    document.getElementById('cp-lama').value = '';
-    document.getElementById('cp-baru').value = '';
-    document.getElementById('cp-konfirm').value = '';
-  } else showToast((res&&res.error)||'Gagal ganti PIN');
+  if (isOk(res)) { showToast('PIN berhasil diganti! 🔐'); byId('cp-lama').value=''; byId('cp-baru').value=''; byId('cp-konfirm').value=''; }
+  else showToast((res&&res.error)||'Gagal ganti PIN');
 }
-
-// ══════════════════════════════════════════════
-// GAJI & PAYROLL
-// ══════════════════════════════════════════════
-let gajiData = [];
-let gajiFilter = 'semua';
-
-function getRekeningPengirim(tipe, pokok) {
-  const g = parseFloat(pokok) || 0;
-  if (tipe === 'Part-Time' || tipe === 'Freelance') return 'BCA Personal';
-  return g >= 4500000 ? 'PT Gracie Royal Sejahtera' : 'CV Gracie Royal Sentosa';
-}
-
-async function loadGaji() {
-  const periode = document.getElementById('gaji-periode')?.value || '';
-  // Load from Sheets via Apps Script
-  const [gRes, lRes] = await Promise.all([
-    apiGet({ action: 'getGaji', token: HR_PASSWORD, periode }),
-    apiGet({ action: 'getSesiLive', token: HR_PASSWORD, periode }),
-  ]);
-
-  const gajiRows  = (gRes.ok && gRes.data)  ? gRes.data  : [];
-  const liveRows  = (lRes.ok && lRes.data)  ? lRes.data  : [];
-
-  gajiData = [
-    ...gajiRows.map(g => ({
-      id: g.ID, staffId: g.StaffID, nama: g.NamaStaff, tipe: 'Gaji',
-      total: parseFloat(g.Total)||0, bank: g.NamaBank||'—',
-      noRek: g.NoRekening||'—', dari: g.DariRekening||'—',
-      status: g.StatusTransfer||'Belum', tglTransfer: g.TanggalTransfer||'',
-    })),
-    ...liveRows.map(l => ({
-      id: l.ID, staffId: l.StaffID, nama: l.NamaStaff, tipe: 'Live Host',
-      total: parseFloat(l.TotalDibayar)||0, bank: l.NamaBank||'—',
-      noRek: l.NoRekening||'—', dari: l.DariRekening||'BCA Personal',
-      status: l.StatusTransfer||'Belum', tglTransfer: l.TanggalTransfer||'',
-    })),
-  ];
-
-  renderGajiStats();
-  renderGajiTable();
-}
-
-function renderGajiStats() {
-  const total  = gajiData.reduce((s,r) => s + r.total, 0);
-  const belum  = gajiData.filter(r => r.status === 'Belum').length;
-  const sudah  = gajiData.filter(r => r.status === 'Sudah').length;
-
-  const byRek = {};
-  gajiData.forEach(r => { byRek[r.dari] = (byRek[r.dari]||0) + r.total; });
-
-  document.getElementById('gaji-stats').innerHTML = `
-    <div class="stat-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px">${fmtRp(total)}</div></div>
-    <div class="stat-card amber"><div class="label">Belum Transfer</div><div class="value">${belum}</div></div>
-    <div class="stat-card green"><div class="label">Sudah Transfer</div><div class="value">${sudah}</div></div>
-    <div class="stat-card"><div class="label">Total Staff</div><div class="value">${gajiData.length}</div></div>`;
-
-  document.getElementById('gaji-rekening').innerHTML = Object.entries(byRek).map(([rek, jml]) => `
-    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid #E0DBD0">
-      <span style="font-size:13px">${rek}</span>
-      <span style="font-family:var(--mono);font-weight:500">${fmtRp(jml)}</span>
-    </div>`).join('') || '<div class="empty">Belum ada data</div>';
-}
-
-function renderGajiTable() {
-  let list = gajiData;
-  if (gajiFilter === 'Belum')  list = list.filter(r => r.status === 'Belum');
-  if (gajiFilter === 'Sudah')  list = list.filter(r => r.status === 'Sudah');
-  if (gajiFilter === 'live')   list = list.filter(r => r.tipe === 'Live Host');
-
-  document.getElementById('gaji-table').innerHTML = list.length ? list.map(r => `
-    <tr>
-      <td><span style="font-weight:500">${r.nama}</span></td>
-      <td><span class="reimb-category">${r.tipe}</span></td>
-      <td>${r.bank}</td>
-      <td style="font-family:var(--mono);font-size:12px">${r.noRek}</td>
-      <td style="font-size:12px;color:#6B6660">${r.dari}</td>
-      <td style="font-family:var(--mono);font-weight:500">${fmtRp(r.total)}</td>
-      <td>${r.status === 'Sudah' ? '<span class="badge badge-approved">Sudah</span>' : '<span class="badge badge-pending">Belum</span>'}</td>
-      <td>${r.status === 'Belum' ? `<button class="btn btn-approve btn-sm" onclick="markTransfer('${r.id}','${r.tipe}')">Tandai Transfer</button>` : `<span style="font-size:11px;color:#9B978F">${r.tglTransfer}</span>`}</td>
-    </tr>`).join('') : '<tr><td colspan="8" class="empty">Belum ada data gaji</td></tr>';
-}
-
-function filterGaji(f, btn) {
-  gajiFilter = f;
-  document.querySelectorAll('#hr-gaji .tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderGajiTable();
-}
-
-async function markTransfer(id, tipe) {
-  const today = new Date().toLocaleDateString('id-ID');
-  const action = tipe === 'Live Host' ? 'updateSesiLive' : 'updateGaji';
-  await apiPost({ action, token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
-  showToast('Ditandai sudah transfer ✓');
-  await loadGaji();
-}
-
-function populatePeriode() {
-  const sel = document.getElementById('gaji-periode');
-  if (!sel) return;
-  const now = new Date();
-  let opts = '<option value="">Semua periode</option>';
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const val = d.toISOString().slice(0,7);
-    const lbl = d.toLocaleDateString('id-ID', {month:'long', year:'numeric'});
-    opts += `<option value="${val}">${lbl}</option>`;
-  }
-  sel.innerHTML = opts;
-}
-
-function openInputGaji() {
-  const aktif = hrState.staff.filter(s => s.status === 'aktif' && !s.jobTitle.toLowerCase().includes('live'));
-  document.getElementById('mg-staff').innerHTML = aktif.map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
-  document.getElementById('mg-periode').value = new Date().toISOString().slice(0,7);
-  document.getElementById('mg-pokok').value = '';
-  document.getElementById('mg-bonus').value = '';
-  document.getElementById('mg-thr').value = '';
-  document.getElementById('mg-bazaar').value = '';
-  document.getElementById('mg-total-display').textContent = 'Rp 0';
-  document.getElementById('mg-dari-rek').textContent = 'Dari rekening: —';
-  document.getElementById('modal-gaji').classList.add('open');
-}
-
-function openInputLive() {
-  const live = hrState.staff.filter(s => s.status === 'aktif' && s.jobTitle.toLowerCase().includes('live'));
-  const all  = hrState.staff.filter(s => s.status === 'aktif');
-  document.getElementById('ml-staff').innerHTML = (live.length ? live : all).map(s => `<option value="${s.id}">${s.nama}</option>`).join('');
-  document.getElementById('ml-periode').value = new Date().toISOString().slice(0,7);
-  document.getElementById('modal-live').classList.add('open');
-}
-
-function hitungGajiTotal() {
-  const pokok  = parseFloat(document.getElementById('mg-pokok').value)  || 0;
-  const bonus  = parseFloat(document.getElementById('mg-bonus').value)  || 0;
-  const thr    = parseFloat(document.getElementById('mg-thr').value)    || 0;
-  const bazaar = parseFloat(document.getElementById('mg-bazaar').value) || 0;
-  const total  = pokok + bonus + thr + bazaar;
-  document.getElementById('mg-total-display').textContent = fmtRp(total);
-  const staffId = document.getElementById('mg-staff').value;
-  const staff   = hrState.staff.find(s => String(s.id) === String(staffId));
-  const dari    = staff ? getRekeningPengirim(staff.tipe, pokok) : '—';
-  document.getElementById('mg-dari-rek').textContent = 'Dari rekening: ' + dari;
-}
-
-function hitungLiveTotal() {
-  const persesi = parseFloat(document.getElementById('ml-persesi').value) || 0;
-  const sesi    = parseFloat(document.getElementById('ml-sesi').value)    || 0;
-  const omzet   = parseFloat(document.getElementById('ml-omzet').value)   || 0;
-  const pct     = parseFloat(document.getElementById('ml-pct').value)     || 0;
-  const flat    = persesi * sesi;
-  const komisi  = Math.round(omzet * pct / 100);
-  document.getElementById('ml-flat-display').textContent   = fmtRp(flat);
-  document.getElementById('ml-komisi-display').textContent = fmtRp(komisi);
-  document.getElementById('ml-total-display').textContent  = fmtRp(flat + komisi);
-}
-
-async function submitGaji() {
-  const staffId = document.getElementById('mg-staff').value;
-  const pokok   = parseFloat(document.getElementById('mg-pokok').value) || 0;
-  if (!pokok) { showToast('Gaji pokok wajib diisi'); return; }
-  const staff = hrState.staff.find(s => String(s.id) === String(staffId));
-  const res = await apiPost({
-    action: 'addGaji', token: HR_PASSWORD,
-    StaffID: staffId,
-    Periode: document.getElementById('mg-periode').value,
-    GajiPokok: pokok,
-    Bonus: document.getElementById('mg-bonus').value || 0,
-    THR: document.getElementById('mg-thr').value || 0,
-    Bazaar: document.getElementById('mg-bazaar').value || 0,
-    NamaBank: staff?.namaBank || '',
-    NoRekening: staff?.noRekening || '',
-  });
-  if (res && res.ok !== false) {
-    closeModal('modal-gaji');
-    showToast('Gaji disimpan ✓');
-    await loadGaji();
-  } else showToast('Gagal: ' + (res?.error||''));
-}
-
-async function submitLive() {
-  const staffId = document.getElementById('ml-staff').value;
-  const persesi = parseFloat(document.getElementById('ml-persesi').value) || 0;
-  if (!persesi) { showToast('Gaji per sesi wajib diisi'); return; }
-  const staff = hrState.staff.find(s => String(s.id) === String(staffId));
-  const res = await apiPost({
-    action: 'addSesiLive', token: HR_PASSWORD,
-    StaffID: staffId,
-    Periode: document.getElementById('ml-periode').value,
-    GajiPerSesi: persesi,
-    JumlahSesi: document.getElementById('ml-sesi').value || 0,
-    TotalOmzet: document.getElementById('ml-omzet').value || 0,
-    PctKomisi: document.getElementById('ml-pct').value || 0,
-    NamaBank: staff?.namaBank || '',
-    NoRekening: staff?.noRekening || '',
-  });
-  if (res && res.ok !== false) {
-    closeModal('modal-live');
-    showToast('Sesi live disimpan ✓');
-    await loadGaji();
-  } else showToast('Gagal: ' + (res?.error||''));
-}
-
-// ══════════════════════════════════════════════
-// GAJI & PAYROLL
-// ══════════════════════════════════════════════
-let payrollData = [];
-let payrollFilter = 'semua';
-let templateData = [];
-let editingStaffId = null;
 
 function getRekening(tipe, pokok) {
   const g = parseFloat(pokok) || 0;
   if (tipe === 'Part-Time' || tipe === 'Freelance') return 'BCA Personal';
   return g >= 4500000 ? 'PT Gracie Royal Sejahtera' : 'CV Gracie Royal Sentosa';
 }
-
 function hitungKomisi(omzet, threshold, pct) {
   const kena = Math.max(0, omzet - threshold);
   return Math.round(kena * pct / 100);
 }
-
 function populatePeriode() {
-  const sel = document.getElementById('gaji-periode');
-  if (!sel) return;
+  const sel = byId('gaji-periode'); if (!sel) return;
+  const existing = sel.value;
   const now = new Date();
   let opts = '<option value="">Pilih periode...</option>';
   for (let i = 0; i < 12; i++) {
@@ -1964,401 +999,157 @@ function populatePeriode() {
     opts += `<option value="${val}">${lbl}</option>`;
   }
   sel.innerHTML = opts;
-  // Default to current month
-  sel.value = now.toISOString().slice(0,7);
+  sel.value = existing || now.toISOString().slice(0,7);
 }
-
 async function loadPayroll() {
-  const periode = document.getElementById('gaji-periode')?.value || '';
+  const periode = byId('gaji-periode')?.value || '';
   if (!periode) return;
-
   const [gRes, lRes] = await Promise.all([
-    apiGet({ action: 'getGaji',     token: HR_PASSWORD, periode }),
+    apiGet({ action: 'getGaji', token: HR_PASSWORD, periode }),
     apiGet({ action: 'getSesiLive', token: HR_PASSWORD, periode }),
   ]);
-
-  const gajiRows = (gRes.ok && gRes.data)  ? gRes.data  : [];
-  const liveRows = (lRes.ok && lRes.data)  ? lRes.data  : [];
-
+  const gajiRows = (gRes.ok && gRes.data) ? gRes.data : [];
+  const liveRows = (lRes.ok && lRes.data) ? lRes.data : [];
   payrollData = [
-    ...gajiRows.map(g => ({
-      id: g.ID, staffId: g.StaffID, nama: g.NamaStaff, tipe: 'Gaji',
-      gajiPokok: parseFloat(g.GajiPokok)||0,
-      bonus: parseFloat(g.Bonus)||0,
-      thr: parseFloat(g.THR)||0,
-      bazaar: parseFloat(g.Bazaar)||0,
-      tambahan: (parseFloat(g.Bonus)||0) + (parseFloat(g.THR)||0) + (parseFloat(g.Bazaar)||0),
-      total: parseFloat(g.Total)||0,
-      bank: g.NamaBank||'—', noRek: g.NoRekening||'—',
-      dari: g.DariRekening||'—',
-      status: g.StatusTransfer||'Belum', tglTransfer: g.TanggalTransfer||'',
-    })),
-    ...liveRows.map(l => ({
-      id: l.ID, staffId: l.StaffID, nama: l.NamaStaff, tipe: 'Live Host',
-      gajiPokok: parseFloat(l.TotalFlat)||0,
-      bonus: parseFloat(l.KomisiNominal)||0,
-      thr: 0, bazaar: 0,
-      tambahan: parseFloat(l.KomisiNominal)||0,
-      total: parseFloat(l.TotalDibayar)||0,
-      bank: l.NamaBank||'—', noRek: l.NoRekening||'—',
-      dari: 'BCA Personal',
-      status: l.StatusTransfer||'Belum', tglTransfer: l.TanggalTransfer||'',
-      omzet: parseFloat(l.TotalOmzet)||0,
-      threshold: parseFloat(l.Threshold)||5000000,
-    })),
+    ...gajiRows.map(g => ({ id:g.ID, staffId:g.StaffID, nama:g.NamaStaff, tipe:'Gaji', gajiPokok:+g.GajiPokok||0, bonus:+g.Bonus||0, thr:+g.THR||0, bazaar:+g.Bazaar||0, tambahan:(+g.Bonus||0)+(+g.THR||0)+(+g.Bazaar||0), total:+g.Total||0, bank:g.NamaBank||'—', noRek:g.NoRekening||'—', dari:g.DariRekening||'—', status:g.StatusTransfer||'Belum', tglTransfer:g.TanggalTransfer||'' })),
+    ...liveRows.map(l => ({ id:l.ID, staffId:l.StaffID, nama:l.NamaStaff, tipe:'Live Host', gajiPokok:+l.TotalFlat||0, bonus:+l.KomisiNominal||0, thr:0, bazaar:0, tambahan:+l.KomisiNominal||0, total:+l.TotalDibayar||0, bank:l.NamaBank||'—', noRek:l.NoRekening||'—', dari:'BCA Personal', status:l.StatusTransfer||'Belum', tglTransfer:l.TanggalTransfer||'', omzet:+l.TotalOmzet||0, threshold:+l.Threshold||5000000 }))
   ];
-
-  renderPayrollStats();
-  renderPayrollTable();
+  renderPayrollStats(); renderPayrollTable();
 }
-
 function renderPayrollStats() {
-  const total = payrollData.reduce((s,r) => s + r.total, 0);
-  const belum = payrollData.filter(r => r.status === 'Belum').length;
-  const sudah = payrollData.filter(r => r.status === 'Sudah').length;
-
-  document.getElementById('gs-total').textContent = fmtRp(total);
-  document.getElementById('gs-belum').textContent = belum;
-  document.getElementById('gs-sudah').textContent = sudah;
-  document.getElementById('gs-count').textContent = payrollData.length;
-
-  const byRek = {};
-  payrollData.forEach(r => { byRek[r.dari] = (byRek[r.dari]||0) + r.total; });
-  document.getElementById('gaji-rekening').innerHTML = Object.keys(byRek).length
-    ? Object.entries(byRek).map(([rek, jml]) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:0.5px solid #E0DBD0">
-          <span style="font-size:13px;font-weight:500">${rek}</span>
-          <span style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(jml)}</span>
-        </div>`).join('')
-    : '<div class="empty">Belum ada data bulan ini</div>';
+  const total = payrollData.reduce((s,r)=>s+r.total,0), belum = payrollData.filter(r=>r.status==='Belum').length, sudah = payrollData.filter(r=>r.status==='Sudah').length;
+  setText('gs-total', fmtRp(total)); setText('gs-belum', belum); setText('gs-sudah', sudah); setText('gs-count', payrollData.length);
+  const byRek = {}; payrollData.forEach(r => { byRek[r.dari] = (byRek[r.dari]||0) + r.total; });
+  setHTML('gaji-rekening', Object.keys(byRek).length ? Object.entries(byRek).map(([rek,jml])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:0.5px solid #E0DBD0"><span style="font-size:13px;font-weight:500">${esc(rek)}</span><span style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(jml)}</span></div>`).join('') : '<div class="empty">Belum ada data bulan ini</div>');
 }
-
 function renderPayrollTable() {
   let list = payrollData;
   if (payrollFilter === 'Belum') list = list.filter(r => r.status === 'Belum');
   if (payrollFilter === 'Sudah') list = list.filter(r => r.status === 'Sudah');
-  if (payrollFilter === 'live')  list = list.filter(r => r.tipe === 'Live Host');
-
-  document.getElementById('gaji-table').innerHTML = list.length ? list.map(r => {
-    const tambahanDetail = r.tipe === 'Live Host'
-      ? `<span style="font-size:11px;color:#9B978F">Komisi ${fmtRp(r.bonus)}</span>`
-      : `<span style="font-size:11px;color:#9B978F">${[r.bonus?'B:'+fmtRp(r.bonus):'', r.thr?'THR:'+fmtRp(r.thr):'', r.bazaar?'Bzr:'+fmtRp(r.bazaar):''].filter(Boolean).join(' ')}</span>`;
-    return `<tr>
-      <td><span style="font-weight:500">${r.nama}</span></td>
-      <td><span class="reimb-category">${r.tipe}</span></td>
-      <td style="font-size:12px">${r.bank}</td>
-      <td style="font-family:var(--mono);font-size:12px">${r.noRek}</td>
-      <td style="font-size:11px;color:#6B6660">${r.dari}</td>
-      <td style="font-family:var(--mono)">${fmtRp(r.gajiPokok)}</td>
-      <td>${tambahanDetail}</td>
-      <td style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(r.total)}</td>
-      <td>${r.status === 'Sudah' ? '<span class="badge badge-approved">✓ Sudah</span>' : '<span class="badge badge-pending">Belum</span>'}</td>
-      <td>${r.status === 'Belum'
-        ? `<button class="btn btn-approve btn-sm" onclick="markTransfer('${r.id}','${r.tipe}')">Tandai ✓</button>`
-        : `<span style="font-size:11px;color:#9B978F">${r.tglTransfer}</span>`
-      }</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="10" class="empty">Belum ada data untuk periode ini</td></tr>';
+  if (payrollFilter === 'live') list = list.filter(r => r.tipe === 'Live Host');
+  setHTML('gaji-table', list.length ? list.map(r => {
+    const tambahanDetail = r.tipe === 'Live Host' ? `<span style="font-size:11px;color:#9B978F">Komisi ${fmtRp(r.bonus)}</span>` : `<span style="font-size:11px;color:#9B978F">${[r.bonus?'B:'+fmtRp(r.bonus):'', r.thr?'THR:'+fmtRp(r.thr):'', r.bazaar?'Bzr:'+fmtRp(r.bazaar):''].filter(Boolean).join(' ')}</span>`;
+    return `<tr><td><span style="font-weight:500">${esc(r.nama)}</span></td><td><span class="reimb-category">${esc(r.tipe)}</span></td><td style="font-size:12px">${esc(r.bank)}</td><td style="font-family:var(--mono);font-size:12px">${esc(r.noRek)}</td><td style="font-size:11px;color:#6B6660">${esc(r.dari)}</td><td style="font-family:var(--mono)">${fmtRp(r.gajiPokok)}</td><td>${tambahanDetail}</td><td style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(r.total)}</td><td>${r.status === 'Sudah' ? '<span class="badge badge-approved">✓ Sudah</span>' : '<span class="badge badge-pending">Belum</span>'}</td><td>${r.status === 'Belum' ? `<button class="btn btn-approve btn-sm" onclick="markTransfer('${esc(r.id)}','${esc(r.tipe)}')">Tandai ✓</button>` : `<span style="font-size:11px;color:#9B978F">${esc(r.tglTransfer)}</span>`}</td></tr>`;
+  }).join('') : '<tr><td colspan="10" class="empty">Belum ada data untuk periode ini</td></tr>');
 }
-
-function filterPayroll(f, btn) {
-  payrollFilter = f;
-  document.querySelectorAll('#hr-gaji .tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderPayrollTable();
-}
-
+function filterPayroll(f, btn) { payrollFilter = f; document.querySelectorAll('#hr-gaji .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderPayrollTable(); }
 async function markTransfer(id, tipe) {
   const today = new Date().toLocaleDateString('id-ID');
   const action = tipe === 'Live Host' ? 'updateSesiLive' : 'updateGaji';
   const res = await apiPost({ action, token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
-  if (res && res.ok !== false) {
-    const item = payrollData.find(r => r.id === id);
-    if (item) { item.status = 'Sudah'; item.tglTransfer = today; }
-    renderPayrollStats();
-    renderPayrollTable();
-    showToast('Transfer ditandai ✓');
-  }
+  if (isOk(res)) { const item = payrollData.find(r => String(r.id) === String(id)); if(item){ item.status='Sudah'; item.tglTransfer=today; } renderPayrollStats(); renderPayrollTable(); showToast('Transfer ditandai ✓'); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
-// ── TEMPLATE GAJI ──────────────────────────────
 async function loadTemplate() {
   const res = await apiGet({ action: 'getGajiTemplate', token: HR_PASSWORD });
-  if (!res.ok) return;
+  if (!res.ok) { renderTemplateTable(); return; }
   templateData = res.data || [];
   renderTemplateTable();
 }
-
 function renderTemplateTable() {
-  document.getElementById('template-table').innerHTML = templateData.map(s => {
+  setHTML('template-table', templateData.length ? templateData.map(s => {
     const isLive = s.JobTitle && s.JobTitle.toLowerCase().includes('live');
-    const gajiInfo = isLive
-      ? `<span style="font-family:var(--mono)">${fmtRp(s.GajiPerSesi)}<span style="font-size:11px;color:#9B978F">/sesi</span></span>`
-      : `<span style="font-family:var(--mono)">${fmtRp(s.GajiPokok)}<span style="font-size:11px;color:#9B978F">/bulan</span></span>`;
-    const komisiInfo = isLive
-      ? `${s.PctKomisi||2}%`
-      : '—';
-    const thresholdInfo = isLive
-      ? fmtRp(s.Threshold||5000000)
-      : '—';
-    return `<tr>
-      <td><span style="font-weight:500">${s.NamaLengkap}</span></td>
-      <td><span class="reimb-category">${s.JobTitle||'—'}</span></td>
-      <td><span class="badge ${s.TipeKerja==='Full-Time'?'badge-aktif':'badge-cuti'}">${s.TipeKerja}</span></td>
-      <td>${gajiInfo}</td>
-      <td>${komisiInfo}</td>
-      <td>${thresholdInfo}</td>
-      <td><button class="btn btn-secondary btn-sm" onclick="openEditTemplate('${s.ID}')">Edit</button></td>
-    </tr>`;
-  }).join('');
+    const gajiInfo = isLive ? `<span style="font-family:var(--mono)">${fmtRp(s.GajiPerSesi)}<span style="font-size:11px;color:#9B978F">/sesi</span></span>` : `<span style="font-family:var(--mono)">${fmtRp(s.GajiPokok)}<span style="font-size:11px;color:#9B978F">/bulan</span></span>`;
+    return `<tr><td><span style="font-weight:500">${esc(s.NamaLengkap)}</span></td><td><span class="reimb-category">${esc(s.JobTitle||'—')}</span></td><td><span class="badge ${s.TipeKerja==='Full-Time'?'badge-aktif':'badge-cuti'}">${esc(s.TipeKerja)}</span></td><td>${gajiInfo}</td><td>${isLive ? esc(s.PctKomisi||2)+'%' : '—'}</td><td>${isLive ? fmtRp(s.Threshold||s.ThresholdKomisi||5000000) : '—'}</td><td><button class="btn btn-secondary btn-sm" onclick="openEditTemplate('${esc(s.ID)}')">Edit</button></td></tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Template belum ada / gagal dimuat</td></tr>');
 }
-
 function openEditTemplate(staffId) {
-  const s = templateData.find(x => x.ID === staffId);
-  if (!s) return;
+  const s = templateData.find(x => String(x.ID) === String(staffId)); if (!s) return;
   editingStaffId = staffId;
   const isLive = s.JobTitle && s.JobTitle.toLowerCase().includes('live');
-  document.getElementById('mt-title').textContent = 'Edit Gaji — ' + s.NamaLengkap;
-  document.getElementById('mt-pokok-wrap').style.display = isLive ? 'none' : 'block';
-  document.getElementById('mt-sesi-wrap').style.display = isLive ? 'block' : 'none';
-  document.getElementById('mt-komisi-wrap').style.display = isLive ? 'block' : 'none';
-  document.getElementById('mt-threshold-wrap').style.display = isLive ? 'block' : 'none';
-  if (isLive) {
-    document.getElementById('mt-persesi').value = s.GajiPerSesi || '';
-    document.getElementById('mt-pct').value = s.PctKomisi || 2;
-    document.getElementById('mt-threshold').value = s.Threshold || 5000000;
-  } else {
-    document.getElementById('mt-pokok').value = s.GajiPokok || '';
-  }
-  document.getElementById('modal-template').classList.add('open');
+  setText('mt-title', 'Edit Gaji — ' + s.NamaLengkap);
+  setDisplay('mt-pokok-wrap', isLive ? 'none' : 'block');
+  setDisplay('mt-sesi-wrap', isLive ? 'block' : 'none');
+  setDisplay('mt-komisi-wrap', isLive ? 'block' : 'none');
+  setDisplay('mt-threshold-wrap', isLive ? 'block' : 'none');
+  if (isLive) { byId('mt-persesi').value = s.GajiPerSesi || ''; byId('mt-pct').value = s.PctKomisi || 2; byId('mt-threshold').value = s.Threshold || s.ThresholdKomisi || 5000000; }
+  else { byId('mt-pokok').value = s.GajiPokok || ''; }
+  byId('modal-template').classList.add('open');
 }
-
 async function saveTemplate() {
-  const s = templateData.find(x => x.ID === editingStaffId);
+  const s = templateData.find(x => String(x.ID) === String(editingStaffId));
   const isLive = s && s.JobTitle && s.JobTitle.toLowerCase().includes('live');
-  const updates = { action: 'setGajiTemplate', token: HR_PASSWORD, staffId: editingStaffId };
-  if (isLive) {
-    updates.GajiPerSesi = document.getElementById('mt-persesi').value;
-    updates.PctKomisi   = document.getElementById('mt-pct').value;
-    updates.ThresholdKomisi = document.getElementById('mt-threshold').value;
-  } else {
-    updates.GajiPokok = document.getElementById('mt-pokok').value;
-  }
+  const updates = { action:'setGajiTemplate', token:HR_PASSWORD, staffId:editingStaffId };
+  if (isLive) { updates.GajiPerSesi = byId('mt-persesi').value; updates.PctKomisi = byId('mt-pct').value; updates.ThresholdKomisi = byId('mt-threshold').value; }
+  else { updates.GajiPokok = byId('mt-pokok').value; }
   const res = await apiPost(updates);
-  if (res && res.ok !== false) {
-    closeModal('modal-template');
-    showToast('Template gaji disimpan ✓');
-    await loadTemplate();
-  } else showToast('Gagal: ' + (res?.error||''));
+  if (isOk(res)) { closeModal('modal-template'); showToast('Template gaji disimpan ✓'); await loadTemplate(); }
+  else showToast('Gagal: ' + (res?.error||''));
 }
-
-// ── INPUT GAJI BULANAN ──────────────────────────
 function openInputGaji() {
-  const periode = document.getElementById('gaji-periode')?.value;
+  const periode = byId('gaji-periode')?.value;
   if (!periode) { showToast('Pilih periode dulu'); return; }
-
-  // Build form untuk semua staff aktif
   const aktif = hrState.staff.filter(s => s.status === 'aktif');
-  const template = {};
-  templateData.forEach(t => { template[t.ID] = t; });
-
-  document.getElementById('gaji-form-area').innerHTML = `
-    <div style="font-size:13px;color:#6B6660;margin-bottom:16px">Periode: <strong>${periode}</strong></div>
-    <div style="max-height:400px;overflow-y:auto">
-      ${aktif.map(s => {
-        const t = template[s.id] || {};
-        const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
-        const dari = getRekening(s.tipe, t.GajiPokok);
-        if (isLive) return `
-          <div style="padding:12px;border-bottom:1px solid #E0DBD0">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <span style="font-weight:500;font-size:14px">${s.nama}</span>
-              <div style="display:flex;gap:6px;align-items:center">
-                <span class="reimb-category">Live Host</span>
-                <button class="btn btn-secondary btn-sm" onclick="addSesiRow('${s.id}')">+ Sesi</button>
-              </div>
-            </div>
-            <div id="sesi-container-${s.id}">
-              ${buildSesiRow(s.id, 0, t)}
-            </div>
-            <div id="gf-komisi-total-${s.id}" style="margin-top:8px;padding:8px 10px;background:#E8F0DE;border-radius:8px;font-size:12px;display:flex;justify-content:space-between">
-              <span style="color:#2D5016">Total komisi bulan ini:</span>
-              <span style="font-family:var(--mono);font-weight:600;color:#2D5016">Rp 0</span>
-            </div>
-          </div>`;
-        return `
-          <div style="padding:12px;border-bottom:1px solid #E0DBD0">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <span style="font-weight:500">${s.nama}</span>
-              <span style="font-size:12px;color:#9B978F">${dari}</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
-              <div><label class="form-label">Gaji Pokok</label><input type="number" class="form-input" id="gf-pokok-${s.id}" value="${t.GajiPokok||0}" style="font-size:13px;padding:6px 10px"></div>
-              <div><label class="form-label">Bonus/Lembur</label><input type="number" class="form-input" id="gf-bonus-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
-              <div><label class="form-label">THR</label><input type="number" class="form-input" id="gf-thr-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
-              <div><label class="form-label">Bazaar</label><input type="number" class="form-input" id="gf-bazaar-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
-            </div>
-          </div>`;
-      }).join('')}
-    </div>`;
-  document.getElementById('modal-gaji').classList.add('open');
+  const template = {}; templateData.forEach(t => { template[t.ID] = t; });
+  setHTML('gaji-form-area', `<div style="font-size:13px;color:#6B6660;margin-bottom:16px">Periode: <strong>${esc(periode)}</strong></div><div style="max-height:520px;overflow-y:auto">${aktif.map(s => {
+    const t = template[s.id] || {};
+    const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
+    if (isLive) return `<div style="padding:12px;border-bottom:1px solid #E0DBD0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:500;font-size:14px">${esc(s.nama)}</span><div style="display:flex;gap:6px;align-items:center"><span class="reimb-category">Live Host</span><button class="btn btn-secondary btn-sm" onclick="addSesiRow('${esc(s.id)}')">+ Sesi</button></div></div><div id="sesi-container-${esc(s.id)}">${buildSesiRow(s.id,0,t)}</div><div id="gf-komisi-total-${esc(s.id)}" style="margin-top:8px;padding:8px 10px;background:#E8F0DE;border-radius:8px;font-size:12px;display:flex;justify-content:space-between"><span style="color:#2D5016">Total komisi bulan ini:</span><span style="font-family:var(--mono);font-weight:600;color:#2D5016">Rp 0</span></div></div>`;
+    const dari = getRekening(s.tipe, t.GajiPokok);
+    return `<div style="padding:12px;border-bottom:1px solid #E0DBD0"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:500">${esc(s.nama)}</span><span style="font-size:12px;color:#9B978F">${esc(dari)}</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><div><label class="form-label">Gaji Pokok</label><input type="number" class="form-input" id="gf-pokok-${esc(s.id)}" value="${esc(t.GajiPokok||0)}" style="font-size:13px;padding:6px 10px"></div><div><label class="form-label">Bonus/Lembur</label><input type="number" class="form-input" id="gf-bonus-${esc(s.id)}" placeholder="0" style="font-size:13px;padding:6px 10px"></div><div><label class="form-label">THR</label><input type="number" class="form-input" id="gf-thr-${esc(s.id)}" placeholder="0" style="font-size:13px;padding:6px 10px"></div><div><label class="form-label">Bazaar</label><input type="number" class="form-input" id="gf-bazaar-${esc(s.id)}" placeholder="0" style="font-size:13px;padding:6px 10px"></div></div></div>`;
+  }).join('')}</div>`);
+  byId('modal-gaji-bulanan').classList.add('open');
 }
-
-// Sesi live counters per staff
-const sesiCounts = {};
-
 function buildSesiRow(staffId, idx, t) {
-  return `<div id="sesi-row-${staffId}-${idx}" style="background:#F7F5F0;border-radius:8px;padding:10px;margin-bottom:8px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:12px;font-weight:500;color:#6B6660">Sesi ${idx+1}</span>
-      ${idx > 0 ? `<button onclick="removeSesiRow('${staffId}',${idx})" style="background:none;border:none;color:#8B1A1A;cursor:pointer;font-size:12px">✕ Hapus</button>` : ''}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px">
-      <div><label class="form-label">Tanggal</label><input type="date" class="form-input" id="gf-tgl-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
-      <div><label class="form-label">Jam Mulai</label><input type="time" class="form-input" id="gf-jam1-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
-      <div><label class="form-label">Jam Selesai</label><input type="time" class="form-input" id="gf-jam2-${staffId}-${idx}" style="font-size:12px;padding:5px 8px"></div>
-      <div><label class="form-label">Studio</label>
-        <select class="form-input" id="gf-studio-${staffId}-${idx}" style="font-size:12px;padding:5px 8px">
-          <option>IWG</option><option>GRC</option><option>Lainnya</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
-      <div><label class="form-label">Omzet Shopee (Rp)</label><input type="number" class="form-input" id="gf-shopee-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${staffId}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
-      <div><label class="form-label">Omzet TikTok (Rp)</label><input type="number" class="form-input" id="gf-tiktok-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${staffId}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
-      <div><label class="form-label">Ads Budget (Rp)</label><input type="number" class="form-input" id="gf-ads-${staffId}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px"></div>
-      <div><label class="form-label">Co-Host</label><input type="text" class="form-input" id="gf-cohost-${staffId}-${idx}" placeholder="nama co-host" style="font-size:12px;padding:5px 8px"></div>
-    </div>
-  </div>`;
+  const threshold = t.Threshold || t.ThresholdKomisi || 5000000, pct = t.PctKomisi || 2;
+  return `<div id="sesi-row-${esc(staffId)}-${idx}" style="background:#F7F5F0;border-radius:8px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;font-weight:500;color:#6B6660">Sesi ${idx+1}</span>${idx>0?`<button onclick="removeSesiRow('${esc(staffId)}',${idx})" style="background:none;border:none;color:#8B1A1A;cursor:pointer;font-size:12px">✕ Hapus</button>`:''}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px"><div><label class="form-label">Tanggal</label><input type="date" class="form-input" id="gf-tgl-${esc(staffId)}-${idx}" style="font-size:12px;padding:5px 8px"></div><div><label class="form-label">Jam Mulai</label><input type="time" class="form-input" id="gf-jam1-${esc(staffId)}-${idx}" style="font-size:12px;padding:5px 8px"></div><div><label class="form-label">Jam Selesai</label><input type="time" class="form-input" id="gf-jam2-${esc(staffId)}-${idx}" style="font-size:12px;padding:5px 8px"></div><div><label class="form-label">Studio</label><select class="form-input" id="gf-studio-${esc(staffId)}-${idx}" style="font-size:12px;padding:5px 8px"><option>IWG</option><option>GRC</option><option>Lainnya</option></select></div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"><div><label class="form-label">Omzet Shopee</label><input type="number" class="form-input" id="gf-shopee-${esc(staffId)}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${esc(staffId)}',${threshold},${pct})"></div><div><label class="form-label">Omzet TikTok</label><input type="number" class="form-input" id="gf-tiktok-${esc(staffId)}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px" oninput="updateTotalKomisi('${esc(staffId)}',${threshold},${pct})"></div><div><label class="form-label">Ads Budget</label><input type="number" class="form-input" id="gf-ads-${esc(staffId)}-${idx}" placeholder="0" style="font-size:12px;padding:5px 8px"></div><div><label class="form-label">Co-Host</label><input type="text" class="form-input" id="gf-cohost-${esc(staffId)}-${idx}" placeholder="nama co-host" style="font-size:12px;padding:5px 8px"></div></div></div>`;
 }
-
 function addSesiRow(staffId) {
-  if (!sesiCounts[staffId]) sesiCounts[staffId] = 1;
-  else sesiCounts[staffId]++;
-  const idx = sesiCounts[staffId] - 1;
-  const t = templateData.find(x => x.ID === staffId) || {};
-  const container = document.getElementById('sesi-container-'+staffId);
-  if (container) {
-    const div = document.createElement('div');
-    div.innerHTML = buildSesiRow(staffId, idx, t);
-    container.appendChild(div.firstElementChild);
-  }
+  sesiCounts[staffId] = (sesiCounts[staffId] || 1) + 1;
+  const idx = sesiCounts[staffId] - 1, t = templateData.find(x => String(x.ID) === String(staffId)) || {}, container = byId('sesi-container-'+staffId);
+  if(container){ const div = document.createElement('div'); div.innerHTML = buildSesiRow(staffId,idx,t); container.appendChild(div.firstElementChild); }
 }
-
-function removeSesiRow(staffId, idx) {
-  document.getElementById('sesi-row-'+staffId+'-'+idx)?.remove();
-}
-
+function removeSesiRow(staffId, idx) { byId('sesi-row-'+staffId+'-'+idx)?.remove(); }
 function updateTotalKomisi(staffId, threshold, pct) {
-  // Sum all sesi omzet for this staff
   let totalOmzet = 0;
-  for (let i = 0; i < 50; i++) {
-    const shopee = parseFloat(document.getElementById('gf-shopee-'+staffId+'-'+i)?.value) || 0;
-    const tiktok = parseFloat(document.getElementById('gf-tiktok-'+staffId+'-'+i)?.value) || 0;
-    if (shopee === 0 && tiktok === 0 && !document.getElementById('gf-shopee-'+staffId+'-'+i)) break;
+  for (let i=0; i<50; i++) {
+    const exists = byId('gf-shopee-'+staffId+'-'+i);
+    if (!exists && i>0) break;
+    const shopee = parseFloat(byId('gf-shopee-'+staffId+'-'+i)?.value) || 0;
+    const tiktok = parseFloat(byId('gf-tiktok-'+staffId+'-'+i)?.value) || 0;
     totalOmzet += shopee + tiktok;
   }
   const totalKomisi = hitungKomisi(totalOmzet, threshold, pct);
-  const el = document.getElementById('gf-komisi-total-'+staffId);
-  if (el) {
-    const span = el.querySelector('span:last-child');
-    if (span) span.textContent = fmtRp(totalKomisi);
-  }
+  const el = byId('gf-komisi-total-'+staffId);
+  if (el) el.querySelector('span:last-child').textContent = fmtRp(totalKomisi);
 }
-
-function previewKomisi(staffId, threshold, pct) {
-  updateTotalKomisi(staffId, threshold, pct);
-}
-
 async function submitGajiBulanan() {
-  const periode = document.getElementById('gaji-periode')?.value;
+  const periode = byId('gaji-periode')?.value;
   if (!periode) return;
-
   const aktif = hrState.staff.filter(s => s.status === 'aktif');
-  const template = {};
-  templateData.forEach(t => { template[t.ID] = t; });
-
+  const template = {}; templateData.forEach(t => { template[t.ID] = t; });
   const promises = [];
   aktif.forEach(s => {
-    const t = template[s.id] || {};
-    const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
+    const t = template[s.id] || {}, isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
     if (isLive) {
-      // Submit each sesi individually
-      for (let i = 0; i < 50; i++) {
-        const tglEl = document.getElementById('gf-tgl-'+s.id+'-'+i);
-        if (!tglEl) break;
-        const shopee = parseFloat(document.getElementById('gf-shopee-'+s.id+'-'+i)?.value) || 0;
-        const tiktok = parseFloat(document.getElementById('gf-tiktok-'+s.id+'-'+i)?.value) || 0;
-        if (shopee > 0 || tiktok > 0) {
-          promises.push(apiPost({
-            action: 'addSesiLive', token: HR_PASSWORD,
-            StaffID: s.id, Periode: periode,
-            Tanggal: tglEl.value || periode,
-            JamMulai: document.getElementById('gf-jam1-'+s.id+'-'+i)?.value || '',
-            JamSelesai: document.getElementById('gf-jam2-'+s.id+'-'+i)?.value || '',
-            Studio: document.getElementById('gf-studio-'+s.id+'-'+i)?.value || '',
-            CoHost: document.getElementById('gf-cohost-'+s.id+'-'+i)?.value || '',
-            AdsBudget: document.getElementById('gf-ads-'+s.id+'-'+i)?.value || 0,
-            GajiPerSesi: t.GajiPerSesi || 0,
-            OmzetShopee: shopee,
-            OmzetTiktok: tiktok,
-            TotalOmzet: shopee + tiktok,
-            PctKomisi: t.PctKomisi || 2,
-            Threshold: t.Threshold || t.ThresholdKomisi || 5000000,
-            NamaBank: s.namaBank || '',
-            NoRekening: s.noRekening || '',
-          }));
-        }
+      for (let i=0; i<50; i++) {
+        const tglEl = byId('gf-tgl-'+s.id+'-'+i); if (!tglEl && i>0) break; if (!tglEl) continue;
+        const shopee = parseFloat(byId('gf-shopee-'+s.id+'-'+i)?.value) || 0, tiktok = parseFloat(byId('gf-tiktok-'+s.id+'-'+i)?.value) || 0;
+        if (shopee > 0 || tiktok > 0) promises.push(apiPost({ action:'addSesiLive', token:HR_PASSWORD, StaffID:s.id, Periode:periode, Tanggal:tglEl.value || periode, JamMulai:byId('gf-jam1-'+s.id+'-'+i)?.value || '', JamSelesai:byId('gf-jam2-'+s.id+'-'+i)?.value || '', Studio:byId('gf-studio-'+s.id+'-'+i)?.value || '', CoHost:byId('gf-cohost-'+s.id+'-'+i)?.value || '', AdsBudget:byId('gf-ads-'+s.id+'-'+i)?.value || 0, GajiPerSesi:t.GajiPerSesi || 0, OmzetShopee:shopee, OmzetTiktok:tiktok, TotalOmzet:shopee+tiktok, PctKomisi:t.PctKomisi || 2, Threshold:t.Threshold || t.ThresholdKomisi || 5000000, NamaBank:s.namaBank || '', NoRekening:s.noRekening || '' }));
       }
     } else {
-      const pokok  = parseFloat(document.getElementById('gf-pokok-'+s.id)?.value) || 0;
-      const bonus  = parseFloat(document.getElementById('gf-bonus-'+s.id)?.value) || 0;
-      const thr    = parseFloat(document.getElementById('gf-thr-'+s.id)?.value) || 0;
-      const bazaar = parseFloat(document.getElementById('gf-bazaar-'+s.id)?.value) || 0;
-      if (pokok > 0) {
-        promises.push(apiPost({
-          action: 'addGaji', token: HR_PASSWORD,
-          StaffID: s.id, Periode: periode,
-          GajiPokok: pokok, Bonus: bonus, THR: thr, Bazaar: bazaar,
-          NamaBank: s.namaBank || '',
-          NoRekening: s.noRekening || '',
-        }));
-      }
+      const pokok = parseFloat(byId('gf-pokok-'+s.id)?.value) || 0, bonus = parseFloat(byId('gf-bonus-'+s.id)?.value) || 0, thr = parseFloat(byId('gf-thr-'+s.id)?.value) || 0, bazaar = parseFloat(byId('gf-bazaar-'+s.id)?.value) || 0;
+      if (pokok > 0) promises.push(apiPost({ action:'addGaji', token:HR_PASSWORD, StaffID:s.id, Periode:periode, GajiPokok:pokok, Bonus:bonus, THR:thr, Bazaar:bazaar, NamaBank:s.namaBank || '', NoRekening:s.noRekening || '' }));
     }
   });
-
-  if (promises.length === 0) { showToast('Tidak ada data untuk disimpan'); return; }
-
+  if (!promises.length) { showToast('Tidak ada data untuk disimpan'); return; }
   showToast('Menyimpan...');
   await Promise.all(promises);
-  closeModal('modal-gaji');
+  closeModal('modal-gaji-bulanan');
   showToast(`${promises.length} data gaji disimpan ✓`);
   await loadPayroll();
 }
 
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
-const savedSession = localStorage.getItem('gracie_staff');
-if (savedSession) {
-  try {
-    const s = JSON.parse(savedSession);
-    if (s && s.staffId && s.role) {
-      session.staffId = s.staffId;
-      session.nama    = s.nama;
-      session.role    = s.role;
-      enterApp();
-    } else {
-      localStorage.removeItem('gracie_staff');
-      showView('login');
-    }
-  } catch(e) {
-    localStorage.removeItem('gracie_staff');
-    showView('login');
-  }
-} else {
-  showView('login');
-}
+(function init(){
+  const savedSession = localStorage.getItem('gracie_staff');
+  if (savedSession) {
+    try {
+      const s = JSON.parse(savedSession);
+      if (s && s.staffId && s.role) { session.staffId=s.staffId; session.nama=s.nama; session.role=s.role; enterApp(); }
+      else { localStorage.removeItem('gracie_staff'); showView('login'); }
+    } catch(e) { localStorage.removeItem('gracie_staff'); showView('login'); }
+  } else showView('login');
+})();
 </script>
 </body>
 </html>
