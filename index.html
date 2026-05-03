@@ -411,6 +411,10 @@ tr:hover td { background: #F7F5F0; }
           <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Gaji & Payroll
         </button>
+        <button class="nav-item" onclick="hrNavigate('gaji',this)">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Gaji & Payroll
+        </button>
       </nav>
       <div class="sidebar-footer">
         <button onclick="doLogout()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:0;font-family:var(--sans)">Keluar</button>
@@ -529,6 +533,63 @@ tr:hover td { background: #F7F5F0; }
             <table>
               <thead><tr><th>Nama</th><th>Tipe</th><th>Bank</th><th>No. Rekening</th><th>Dari Rekening</th><th>Total</th><th>Status</th><th></th></tr></thead>
               <tbody id="gaji-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GAJI -->
+        <div class="hr-page" id="hr-gaji">
+          <div class="section-header">
+            <h2>Gaji & Payroll</h2>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select class="form-select" id="gaji-periode" style="padding:6px 12px;font-size:13px;width:160px" onchange="loadPayroll()">
+                <option value="">Pilih periode...</option>
+              </select>
+              <button class="btn btn-secondary" onclick="hrNavigate('gaji-template',this)">⚙️ Template Gaji</button>
+              <button class="btn btn-primary" onclick="openInputGaji()">+ Input Gaji</button>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-grid" id="gaji-stats" style="margin-bottom:20px">
+            <div class="stat-card"><div class="label">Total Payroll</div><div class="value" id="gs-total" style="font-size:20px">—</div></div>
+            <div class="stat-card amber"><div class="label">Belum Transfer</div><div class="value" id="gs-belum">—</div></div>
+            <div class="stat-card green"><div class="label">Sudah Transfer</div><div class="value" id="gs-sudah">—</div></div>
+            <div class="stat-card"><div class="label">Total Staff</div><div class="value" id="gs-count">—</div></div>
+          </div>
+
+          <!-- Rekening summary -->
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header"><h3>Rekap per rekening pengirim</h3></div>
+            <div style="padding:16px" id="gaji-rekening"><div class="empty">Pilih periode untuk melihat data</div></div>
+          </div>
+
+          <!-- Table -->
+          <div class="tabs">
+            <button class="tab active" onclick="filterPayroll('semua',this)">Semua</button>
+            <button class="tab" onclick="filterPayroll('Belum',this)">Belum Transfer</button>
+            <button class="tab" onclick="filterPayroll('Sudah',this)">Sudah Transfer</button>
+            <button class="tab" onclick="filterPayroll('live',this)">Live Host</button>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Nama Staff</th><th>Tipe</th><th>Bank</th><th>No. Rekening</th><th>Dari</th><th>Gaji Pokok</th><th>Tambahan</th><th>Total</th><th>Status</th><th></th></tr></thead>
+              <tbody id="gaji-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TEMPLATE GAJI -->
+        <div class="hr-page" id="hr-gaji-template">
+          <div class="section-header">
+            <h2>Template Gaji Staff</h2>
+            <button class="btn btn-secondary" onclick="hrNavigate('gaji',document.querySelectorAll('.nav-item')[4])">← Kembali</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Gaji Pokok per Staff</h3><span style="font-size:12px;color:#9B978F">Diisi sekali, berlaku tiap bulan</span></div>
+            <table>
+              <thead><tr><th>Nama</th><th>Job Title</th><th>Tipe</th><th>Gaji Pokok / Per Sesi</th><th>% Komisi</th><th>Threshold</th><th></th></tr></thead>
+              <tbody id="template-table"></tbody>
             </table>
           </div>
         </div>
@@ -655,6 +716,48 @@ tr:hover td { background: #F7F5F0; }
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-live')">Batal</button>
       <button class="btn btn-primary" onclick="submitLive()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Input Gaji -->
+<div class="modal-overlay" id="modal-gaji">
+  <div class="modal">
+    <h3>Input Gaji Bulanan</h3>
+    <div id="gaji-form-area"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gaji')">Batal</button>
+      <button class="btn btn-primary" onclick="submitGajiBulanan()">Simpan Semua</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Template Gaji -->
+<div class="modal-overlay" id="modal-template">
+  <div class="modal">
+    <h3 id="mt-title">Edit Template Gaji</h3>
+    <div class="form-grid">
+      <div class="form-group full" id="mt-pokok-wrap">
+        <label class="form-label">Gaji Pokok (Rp/bulan)</label>
+        <input type="number" class="form-input" id="mt-pokok" placeholder="0">
+      </div>
+      <div class="form-group full" id="mt-sesi-wrap" style="display:none">
+        <label class="form-label">Gaji per Sesi (Rp)</label>
+        <input type="number" class="form-input" id="mt-persesi" placeholder="0">
+      </div>
+      <div class="form-group" id="mt-komisi-wrap" style="display:none">
+        <label class="form-label">% Komisi</label>
+        <input type="number" class="form-input" id="mt-pct" placeholder="2" value="2">
+      </div>
+      <div class="form-group" id="mt-threshold-wrap" style="display:none">
+        <label class="form-label">Threshold (Rp)</label>
+        <input type="number" class="form-input" id="mt-threshold" placeholder="5000000" value="5000000">
+        <div style="font-size:11px;color:#9B978F;margin-top:4px">Omzet di atas angka ini baru dapat komisi</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-template')">Batal</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">Simpan</button>
     </div>
   </div>
 </div>
@@ -985,6 +1088,8 @@ function hrNavigate(page, btn) {
   if (page === 'staff')  renderStaff();
   if (page === 'cuti')   renderCuti();
   if (page === 'reimb')  renderReimb();
+  if (page === 'gaji')   { populatePeriode(); loadPayroll(); loadTemplate(); }
+  if (page === 'gaji-template') { loadTemplate(); }
   if (page === 'gaji')   { populatePeriode(); loadGaji(); }
 }
 
@@ -1604,6 +1709,333 @@ async function submitLive() {
     showToast('Sesi live disimpan ✓');
     await loadGaji();
   } else showToast('Gagal: ' + (res?.error||''));
+}
+
+// ══════════════════════════════════════════════
+// GAJI & PAYROLL
+// ══════════════════════════════════════════════
+let payrollData = [];
+let payrollFilter = 'semua';
+let templateData = [];
+let editingStaffId = null;
+
+function getRekening(tipe, pokok) {
+  const g = parseFloat(pokok) || 0;
+  if (tipe === 'Part-Time' || tipe === 'Freelance') return 'BCA Personal';
+  return g >= 4500000 ? 'PT Gracie Royal Sejahtera' : 'CV Gracie Royal Sentosa';
+}
+
+function hitungKomisi(omzet, threshold, pct) {
+  const kena = Math.max(0, omzet - threshold);
+  return Math.round(kena * pct / 100);
+}
+
+function populatePeriode() {
+  const sel = document.getElementById('gaji-periode');
+  if (!sel) return;
+  const now = new Date();
+  let opts = '<option value="">Pilih periode...</option>';
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.toISOString().slice(0,7);
+    const lbl = d.toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+    opts += `<option value="${val}">${lbl}</option>`;
+  }
+  sel.innerHTML = opts;
+  // Default to current month
+  sel.value = now.toISOString().slice(0,7);
+}
+
+async function loadPayroll() {
+  const periode = document.getElementById('gaji-periode')?.value || '';
+  if (!periode) return;
+
+  const [gRes, lRes] = await Promise.all([
+    apiGet({ action: 'getGaji',     token: HR_PASSWORD, periode }),
+    apiGet({ action: 'getSesiLive', token: HR_PASSWORD, periode }),
+  ]);
+
+  const gajiRows = (gRes.ok && gRes.data)  ? gRes.data  : [];
+  const liveRows = (lRes.ok && lRes.data)  ? lRes.data  : [];
+
+  payrollData = [
+    ...gajiRows.map(g => ({
+      id: g.ID, staffId: g.StaffID, nama: g.NamaStaff, tipe: 'Gaji',
+      gajiPokok: parseFloat(g.GajiPokok)||0,
+      bonus: parseFloat(g.Bonus)||0,
+      thr: parseFloat(g.THR)||0,
+      bazaar: parseFloat(g.Bazaar)||0,
+      tambahan: (parseFloat(g.Bonus)||0) + (parseFloat(g.THR)||0) + (parseFloat(g.Bazaar)||0),
+      total: parseFloat(g.Total)||0,
+      bank: g.NamaBank||'—', noRek: g.NoRekening||'—',
+      dari: g.DariRekening||'—',
+      status: g.StatusTransfer||'Belum', tglTransfer: g.TanggalTransfer||'',
+    })),
+    ...liveRows.map(l => ({
+      id: l.ID, staffId: l.StaffID, nama: l.NamaStaff, tipe: 'Live Host',
+      gajiPokok: parseFloat(l.TotalFlat)||0,
+      bonus: parseFloat(l.KomisiNominal)||0,
+      thr: 0, bazaar: 0,
+      tambahan: parseFloat(l.KomisiNominal)||0,
+      total: parseFloat(l.TotalDibayar)||0,
+      bank: l.NamaBank||'—', noRek: l.NoRekening||'—',
+      dari: 'BCA Personal',
+      status: l.StatusTransfer||'Belum', tglTransfer: l.TanggalTransfer||'',
+      omzet: parseFloat(l.TotalOmzet)||0,
+      threshold: parseFloat(l.Threshold)||5000000,
+    })),
+  ];
+
+  renderPayrollStats();
+  renderPayrollTable();
+}
+
+function renderPayrollStats() {
+  const total = payrollData.reduce((s,r) => s + r.total, 0);
+  const belum = payrollData.filter(r => r.status === 'Belum').length;
+  const sudah = payrollData.filter(r => r.status === 'Sudah').length;
+
+  document.getElementById('gs-total').textContent = fmtRp(total);
+  document.getElementById('gs-belum').textContent = belum;
+  document.getElementById('gs-sudah').textContent = sudah;
+  document.getElementById('gs-count').textContent = payrollData.length;
+
+  const byRek = {};
+  payrollData.forEach(r => { byRek[r.dari] = (byRek[r.dari]||0) + r.total; });
+  document.getElementById('gaji-rekening').innerHTML = Object.keys(byRek).length
+    ? Object.entries(byRek).map(([rek, jml]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:0.5px solid #E0DBD0">
+          <span style="font-size:13px;font-weight:500">${rek}</span>
+          <span style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(jml)}</span>
+        </div>`).join('')
+    : '<div class="empty">Belum ada data bulan ini</div>';
+}
+
+function renderPayrollTable() {
+  let list = payrollData;
+  if (payrollFilter === 'Belum') list = list.filter(r => r.status === 'Belum');
+  if (payrollFilter === 'Sudah') list = list.filter(r => r.status === 'Sudah');
+  if (payrollFilter === 'live')  list = list.filter(r => r.tipe === 'Live Host');
+
+  document.getElementById('gaji-table').innerHTML = list.length ? list.map(r => {
+    const tambahanDetail = r.tipe === 'Live Host'
+      ? `<span style="font-size:11px;color:#9B978F">Komisi ${fmtRp(r.bonus)}</span>`
+      : `<span style="font-size:11px;color:#9B978F">${[r.bonus?'B:'+fmtRp(r.bonus):'', r.thr?'THR:'+fmtRp(r.thr):'', r.bazaar?'Bzr:'+fmtRp(r.bazaar):''].filter(Boolean).join(' ')}</span>`;
+    return `<tr>
+      <td><span style="font-weight:500">${r.nama}</span></td>
+      <td><span class="reimb-category">${r.tipe}</span></td>
+      <td style="font-size:12px">${r.bank}</td>
+      <td style="font-family:var(--mono);font-size:12px">${r.noRek}</td>
+      <td style="font-size:11px;color:#6B6660">${r.dari}</td>
+      <td style="font-family:var(--mono)">${fmtRp(r.gajiPokok)}</td>
+      <td>${tambahanDetail}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:#2D5016">${fmtRp(r.total)}</td>
+      <td>${r.status === 'Sudah' ? '<span class="badge badge-approved">✓ Sudah</span>' : '<span class="badge badge-pending">Belum</span>'}</td>
+      <td>${r.status === 'Belum'
+        ? `<button class="btn btn-approve btn-sm" onclick="markTransfer('${r.id}','${r.tipe}')">Tandai ✓</button>`
+        : `<span style="font-size:11px;color:#9B978F">${r.tglTransfer}</span>`
+      }</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="10" class="empty">Belum ada data untuk periode ini</td></tr>';
+}
+
+function filterPayroll(f, btn) {
+  payrollFilter = f;
+  document.querySelectorAll('#hr-gaji .tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPayrollTable();
+}
+
+async function markTransfer(id, tipe) {
+  const today = new Date().toLocaleDateString('id-ID');
+  const action = tipe === 'Live Host' ? 'updateSesiLive' : 'updateGaji';
+  const res = await apiPost({ action, token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
+  if (res && res.ok !== false) {
+    const item = payrollData.find(r => r.id === id);
+    if (item) { item.status = 'Sudah'; item.tglTransfer = today; }
+    renderPayrollStats();
+    renderPayrollTable();
+    showToast('Transfer ditandai ✓');
+  }
+}
+
+// ── TEMPLATE GAJI ──────────────────────────────
+async function loadTemplate() {
+  const res = await apiGet({ action: 'getGajiTemplate', token: HR_PASSWORD });
+  if (!res.ok) return;
+  templateData = res.data || [];
+  renderTemplateTable();
+}
+
+function renderTemplateTable() {
+  document.getElementById('template-table').innerHTML = templateData.map(s => {
+    const isLive = s.JobTitle && s.JobTitle.toLowerCase().includes('live');
+    const gajiInfo = isLive
+      ? `<span style="font-family:var(--mono)">${fmtRp(s.GajiPerSesi)}<span style="font-size:11px;color:#9B978F">/sesi</span></span>`
+      : `<span style="font-family:var(--mono)">${fmtRp(s.GajiPokok)}<span style="font-size:11px;color:#9B978F">/bulan</span></span>`;
+    const komisiInfo = isLive
+      ? `${s.PctKomisi||2}%`
+      : '—';
+    const thresholdInfo = isLive
+      ? fmtRp(s.Threshold||5000000)
+      : '—';
+    return `<tr>
+      <td><span style="font-weight:500">${s.NamaLengkap}</span></td>
+      <td><span class="reimb-category">${s.JobTitle||'—'}</span></td>
+      <td><span class="badge ${s.TipeKerja==='Full-Time'?'badge-aktif':'badge-cuti'}">${s.TipeKerja}</span></td>
+      <td>${gajiInfo}</td>
+      <td>${komisiInfo}</td>
+      <td>${thresholdInfo}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openEditTemplate('${s.ID}')">Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openEditTemplate(staffId) {
+  const s = templateData.find(x => x.ID === staffId);
+  if (!s) return;
+  editingStaffId = staffId;
+  const isLive = s.JobTitle && s.JobTitle.toLowerCase().includes('live');
+  document.getElementById('mt-title').textContent = 'Edit Gaji — ' + s.NamaLengkap;
+  document.getElementById('mt-pokok-wrap').style.display = isLive ? 'none' : 'block';
+  document.getElementById('mt-sesi-wrap').style.display = isLive ? 'block' : 'none';
+  document.getElementById('mt-komisi-wrap').style.display = isLive ? 'block' : 'none';
+  document.getElementById('mt-threshold-wrap').style.display = isLive ? 'block' : 'none';
+  if (isLive) {
+    document.getElementById('mt-persesi').value = s.GajiPerSesi || '';
+    document.getElementById('mt-pct').value = s.PctKomisi || 2;
+    document.getElementById('mt-threshold').value = s.Threshold || 5000000;
+  } else {
+    document.getElementById('mt-pokok').value = s.GajiPokok || '';
+  }
+  document.getElementById('modal-template').classList.add('open');
+}
+
+async function saveTemplate() {
+  const s = templateData.find(x => x.ID === editingStaffId);
+  const isLive = s && s.JobTitle && s.JobTitle.toLowerCase().includes('live');
+  const updates = { action: 'setGajiTemplate', token: HR_PASSWORD, staffId: editingStaffId };
+  if (isLive) {
+    updates.GajiPerSesi = document.getElementById('mt-persesi').value;
+    updates.PctKomisi   = document.getElementById('mt-pct').value;
+    updates.ThresholdKomisi = document.getElementById('mt-threshold').value;
+  } else {
+    updates.GajiPokok = document.getElementById('mt-pokok').value;
+  }
+  const res = await apiPost(updates);
+  if (res && res.ok !== false) {
+    closeModal('modal-template');
+    showToast('Template gaji disimpan ✓');
+    await loadTemplate();
+  } else showToast('Gagal: ' + (res?.error||''));
+}
+
+// ── INPUT GAJI BULANAN ──────────────────────────
+function openInputGaji() {
+  const periode = document.getElementById('gaji-periode')?.value;
+  if (!periode) { showToast('Pilih periode dulu'); return; }
+
+  // Build form untuk semua staff aktif
+  const aktif = hrState.staff.filter(s => s.status === 'aktif');
+  const template = {};
+  templateData.forEach(t => { template[t.ID] = t; });
+
+  document.getElementById('gaji-form-area').innerHTML = `
+    <div style="font-size:13px;color:#6B6660;margin-bottom:16px">Periode: <strong>${periode}</strong></div>
+    <div style="max-height:400px;overflow-y:auto">
+      ${aktif.map(s => {
+        const t = template[s.id] || {};
+        const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
+        const dari = getRekening(s.tipe, t.GajiPokok);
+        if (isLive) return `
+          <div style="padding:12px;border-bottom:1px solid #E0DBD0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-weight:500">${s.nama}</span>
+              <span class="reimb-category">Live Host</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+              <div><label class="form-label">Jumlah Sesi</label><input type="number" class="form-input" id="gf-sesi-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
+              <div><label class="form-label">Total Omzet (Rp)</label><input type="number" class="form-input" id="gf-omzet-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px" oninput="previewKomisi('${s.id}',${t.Threshold||5000000},${t.PctKomisi||2})"></div>
+              <div><label class="form-label">Est. Komisi</label><div id="gf-komisi-${s.id}" style="padding:6px 10px;background:#F0EDE6;border-radius:8px;font-size:12px;font-family:var(--mono);margin-top:5px">Rp 0</div></div>
+            </div>
+          </div>`;
+        return `
+          <div style="padding:12px;border-bottom:1px solid #E0DBD0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-weight:500">${s.nama}</span>
+              <span style="font-size:12px;color:#9B978F">${dari}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+              <div><label class="form-label">Gaji Pokok</label><input type="number" class="form-input" id="gf-pokok-${s.id}" value="${t.GajiPokok||0}" style="font-size:13px;padding:6px 10px"></div>
+              <div><label class="form-label">Bonus/Lembur</label><input type="number" class="form-input" id="gf-bonus-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
+              <div><label class="form-label">THR</label><input type="number" class="form-input" id="gf-thr-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
+              <div><label class="form-label">Bazaar</label><input type="number" class="form-input" id="gf-bazaar-${s.id}" placeholder="0" style="font-size:13px;padding:6px 10px"></div>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('modal-gaji').classList.add('open');
+}
+
+function previewKomisi(staffId, threshold, pct) {
+  const omzet = parseFloat(document.getElementById('gf-omzet-'+staffId)?.value) || 0;
+  const komisi = hitungKomisi(omzet, threshold, pct);
+  const el = document.getElementById('gf-komisi-'+staffId);
+  if (el) el.textContent = fmtRp(komisi);
+}
+
+async function submitGajiBulanan() {
+  const periode = document.getElementById('gaji-periode')?.value;
+  if (!periode) return;
+
+  const aktif = hrState.staff.filter(s => s.status === 'aktif');
+  const template = {};
+  templateData.forEach(t => { template[t.ID] = t; });
+
+  const promises = [];
+  aktif.forEach(s => {
+    const t = template[s.id] || {};
+    const isLive = s.jobTitle && s.jobTitle.toLowerCase().includes('live');
+    if (isLive) {
+      const sesi  = parseFloat(document.getElementById('gf-sesi-'+s.id)?.value) || 0;
+      const omzet = parseFloat(document.getElementById('gf-omzet-'+s.id)?.value) || 0;
+      if (sesi > 0 || omzet > 0) {
+        promises.push(apiPost({
+          action: 'addSesiLive', token: HR_PASSWORD,
+          StaffID: s.id, Periode: periode,
+          GajiPerSesi: t.GajiPerSesi || 0,
+          JumlahSesi: sesi,
+          TotalOmzet: omzet,
+          PctKomisi: t.PctKomisi || 2,
+          Threshold: t.Threshold || t.ThresholdKomisi || 5000000,
+          NamaBank: s.namaBank || '',
+          NoRekening: s.noRekening || '',
+        }));
+      }
+    } else {
+      const pokok  = parseFloat(document.getElementById('gf-pokok-'+s.id)?.value) || 0;
+      const bonus  = parseFloat(document.getElementById('gf-bonus-'+s.id)?.value) || 0;
+      const thr    = parseFloat(document.getElementById('gf-thr-'+s.id)?.value) || 0;
+      const bazaar = parseFloat(document.getElementById('gf-bazaar-'+s.id)?.value) || 0;
+      if (pokok > 0) {
+        promises.push(apiPost({
+          action: 'addGaji', token: HR_PASSWORD,
+          StaffID: s.id, Periode: periode,
+          GajiPokok: pokok, Bonus: bonus, THR: thr, Bazaar: bazaar,
+          NamaBank: s.namaBank || '',
+          NoRekening: s.noRekening || '',
+        }));
+      }
+    }
+  });
+
+  if (promises.length === 0) { showToast('Tidak ada data untuk disimpan'); return; }
+
+  showToast('Menyimpan...');
+  await Promise.all(promises);
+  closeModal('modal-gaji');
+  showToast(`${promises.length} data gaji disimpan ✓`);
+  await loadPayroll();
 }
 
 // ══════════════════════════════════════════════
