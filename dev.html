@@ -378,20 +378,10 @@ tbody tr:hover td{background:#FAFAF7;}
 
 /* ── CUTI & REIMBURSE TABLE FIX ─────────────── */
 #hr-cuti td, #hr-reimburse td { vertical-align: middle; }
-
-/* Kolom aksi tidak wrap, tombol tetap sebaris */
 #hr-cuti td:last-child,
-#hr-reimburse td:last-child { white-space: nowrap; width: 90px; }
-
-/* Kolom staff bisa shrink */
-#hr-cuti td:first-child,
-#hr-reimburse td:first-child { min-width: 130px; }
-
-/* Kolom keterangan ellipsis */
-#hr-cuti td:nth-child(5) {
-  max-width: 100px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
-}
+#hr-reimburse td:last-child { white-space: nowrap; width: 80px; }
+#hr-cuti td:first-child { min-width: 140px; max-width: 180px; }
+#hr-reimburse td:first-child { min-width: 140px; max-width: 180px; }
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
@@ -426,7 +416,7 @@ tbody tr:hover td{background:#FAFAF7;}
       <!-- Step 1: WA -->
       <div id="step-wa">
         <label class="l-label">Nomor WhatsApp</label>
-        <input type="tel" class="l-input" id="inp-wa" placeholder="08xxxxxxx" autocomplete="tel">
+        <input type="tel" class="l-input" id="inp-wa" placeholder="08xxxxxxxx" autocomplete="tel">
         <div class="l-error hidden" id="err-wa"></div>
         <button class="l-btn" onclick="doLoginWA()">Lanjut →</button>
         <div class="l-hint">Isi dengan nomor WhatsApp</div>
@@ -588,24 +578,34 @@ tbody tr:hover td{background:#FAFAF7;}
             <h2>Cuti &amp; Absensi</h2>
             <button class="btn btn-primary" onclick="openAddCutiHR()">+ Ajukan Cuti</button>
           </div>
-          <div class="tabs">
-            <button class="tab active" onclick="filterCuti('semua',this)">Semua</button>
-            <button class="tab" onclick="filterCuti('Pending',this)">Pending</button>
-            <button class="tab" onclick="filterCuti('Approved',this)">Approved</button>
-            <button class="tab" onclick="filterCuti('Rejected',this)">Rejected</button>
+          <!-- Sub-tabs: Pengajuan / Kuota -->
+          <div class="tabs" style="margin-bottom:16px">
+            <button class="tab active" id="cuti-subtab-pengajuan" onclick="switchCutiSubtab('pengajuan',this)">Pengajuan</button>
+            <button class="tab" id="cuti-subtab-kuota" onclick="switchCutiSubtab('kuota',this)">Kuota Cuti</button>
           </div>
-          <div class="grid-2" style="align-items:start">
+
+          <!-- Sub-tab: Pengajuan -->
+          <div id="cuti-panel-pengajuan">
+            <div class="tabs">
+              <button class="tab active" onclick="filterCuti('semua',this)">Semua</button>
+              <button class="tab" onclick="filterCuti('Pending',this)">Pending</button>
+              <button class="tab" onclick="filterCuti('Approved',this)">Approved</button>
+              <button class="tab" onclick="filterCuti('Rejected',this)">Rejected</button>
+            </div>
             <div class="card">
-              <div class="card-header"><h3>Pengajuan Cuti</h3></div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Staff</th><th>Jenis</th><th>Tanggal</th><th>Durasi</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+                  <thead><tr><th>Staff</th><th>Jenis</th><th>Tanggal</th><th>Durasi</th><th>Status</th><th>Aksi</th></tr></thead>
                   <tbody id="cuti-table"></tbody>
                 </table>
               </div>
             </div>
+          </div>
+
+          <!-- Sub-tab: Kuota -->
+          <div id="cuti-panel-kuota" class="hidden">
             <div class="card">
-              <div class="card-header"><h3>Sisa Kuota Cuti</h3></div>
+              <div class="card-header"><h3>Sisa Kuota Cuti Semua Staff</h3></div>
               <div id="cuti-quota-list" style="padding:16px"></div>
             </div>
           </div>
@@ -1542,26 +1542,24 @@ function renderCuti() {
 
     let aksi = '';
     if (c.Status === 'Pending') {
-      aksi = `<div style="display:flex;gap:6px">
-        <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.ID}')" title="Approve">✓</button>
-        <button class="btn btn-reject btn-sm" onclick="openRejectCuti('${c.ID}')" title="Tolak">✕</button>
+      aksi = `<div style="display:flex;gap:4px">
+        <button class="btn btn-approve btn-sm btn-icon" onclick="approveCuti('${c.ID}')" title="Approve">✓</button>
+        <button class="btn btn-reject btn-sm btn-icon" onclick="openRejectCuti('${c.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
       aksi = `<button class="btn btn-ghost btn-sm" onclick="undoCuti('${c.ID}')">↩ Undo</button>`;
     }
 
-    const ket = c.ket || c.Keterangan || '';
     return `<tr>
       <td><div class="staff-row"><div class="avatar ${avColor(s.ID)}">${initials(s.NamaLengkap)}</div>
-        <div><div class="staff-name">${s.NamaLengkap}</div><div class="staff-sub">${s.dept||''}</div></div></div></td>
+        <span class="staff-name">${s.NamaLengkap}</span></div></td>
       <td><span class="chip">${c.Jenis}</span></td>
       <td style="white-space:nowrap">${tgl}</td>
       <td><span class="mono">${dur} hari</span></td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink3)">${ket||'—'}</td>
       <td>${badgeHtml(c.Status)}</td>
       <td style="white-space:nowrap">${aksi}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="7">' + emptyHtml('Tidak ada data cuti') + '</td></tr>';
+  }).join('') : '<tr><td colspan="6">' + emptyHtml('Tidak ada data cuti') + '</td></tr>';
 
   // Quota grid cards
   const aktif = state.staff.filter(s => String(s.Status).toLowerCase() === 'aktif');
@@ -1583,6 +1581,13 @@ function renderCuti() {
           + '</div></div>';
       }).join('')}
     </div>` : emptyHtml('Belum ada staff aktif');
+}
+
+function switchCutiSubtab(tab, btn) {
+  document.getElementById('cuti-panel-pengajuan').classList.toggle('hidden', tab !== 'pengajuan');
+  document.getElementById('cuti-panel-kuota').classList.toggle('hidden', tab !== 'kuota');
+  document.querySelectorAll('#hr-cuti .tabs:first-of-type .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 }
 
 function filterCuti(f, btn) {
@@ -1670,9 +1675,9 @@ function renderReimburse() {
     const s = state.staff.find(x => x.ID === r.StaffID) || { NamaLengkap: r.NamaStaff, ID: r.StaffID };
     let aksi = '';
     if (r.Status === 'Pending') {
-      aksi = `<div style="display:flex;gap:6px">
-        <button class="btn btn-approve btn-sm" onclick="approveReimburse('${r.ID}')" title="Approve">✓</button>
-        <button class="btn btn-reject btn-sm" onclick="openRejectReimburse('${r.ID}')" title="Tolak">✕</button>
+      aksi = `<div style="display:flex;gap:4px">
+        <button class="btn btn-approve btn-sm btn-icon" onclick="approveReimburse('${r.ID}')" title="Approve">✓</button>
+        <button class="btn btn-reject btn-sm btn-icon" onclick="openRejectReimburse('${r.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
       aksi = `<button class="btn btn-ghost btn-sm" onclick="undoReimburse('${r.ID}')">↩ Undo</button>`;
