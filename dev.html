@@ -666,15 +666,20 @@ tbody tr:hover td{background:#FAFAF7;}
             <div class="card" style="margin-bottom:16px">
               <div class="card-header">
                 <h3 id="gaji-table-title">Payroll</h3>
-                <div class="tabs" style="margin:0">
-                  <button class="tab active" onclick="filterGaji('semua',this)">Semua</button>
-                  <button class="tab" onclick="filterGaji('Belum',this)">Belum</button>
-                  <button class="tab" onclick="filterGaji('Sudah',this)">Sudah</button>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div class="tabs" style="margin:0">
+                    <button class="tab active" onclick="filterGaji('semua',this)">Semua</button>
+                    <button class="tab" onclick="filterGaji('Belum',this)">Belum</button>
+                    <button class="tab" onclick="filterGaji('Sudah',this)">Sudah</button>
+                  </div>
+                  <button class="btn btn-approve btn-sm hidden" id="btn-bulk-transfer" onclick="bulkMarkTransfer()">
+                    ✓ Tandai Transfer (<span id="bulk-count">0</span>)
+                  </button>
                 </div>
               </div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Staff</th><th>Bank · Rekening</th><th>Pokok</th><th>Tunjangan</th><th>Lembur</th><th>Bazaar</th><th>Bonus</th><th>THR</th><th>Custom</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+                  <thead><tr><th style="width:36px"><input type="checkbox" id="gaji-check-all" onchange="toggleAllGaji(this)" title="Pilih semua"></th><th>Staff</th><th>Bank · Rekening</th><th>Pokok</th><th>Tunjangan</th><th>Lembur</th><th>Bazaar</th><th>Bonus</th><th>THR</th><th>Custom</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
                   <tbody id="gaji-table"></tbody>
                 </table>
               </div>
@@ -2539,6 +2544,10 @@ function renderGajiTable() {
   const tbody = document.getElementById('gaji-table');
   if (!tbody) return;
 
+  // Update checkbox select all state
+  const checkAll = document.getElementById('gaji-check-all');
+  if (checkAll) checkAll.checked = false;
+
   tbody.innerHTML = list.length ? list.map(r => {
     // Parse custom components
     let customHtml = '—', customTotal = 0;
@@ -2551,14 +2560,19 @@ function renderGajiTable() {
       }
     } catch(_) {}
 
-    const aksi = r.StatusTransfer === 'Belum'
+    const aksi = !sudahTransfer
       ? `<div style="display:flex;gap:4px">
           <button class="btn btn-approve btn-sm btn-icon" onclick="markTransfer('${r.ID}')" title="Tandai Sudah Transfer">✓</button>
           <button class="btn btn-ghost btn-sm" onclick="openEditGaji('${r.ID}')">Edit</button>
         </div>`
-      : `<span style="font-size:11px;color:var(--ink3)">${r.TanggalTransfer||''}</span>`;
+      : `<div style="display:flex;gap:4px;align-items:center">
+          <span style="font-size:11px;color:var(--ink3)">${r.TanggalTransfer||''}</span>
+          <button class="btn btn-ghost btn-sm" onclick="undoTransfer('${r.ID}')" title="Undo transfer">↩</button>
+        </div>`;
 
-    return `<tr>
+    const sudahTransfer = r.StatusTransfer === 'Sudah';
+    return `<tr style="${sudahTransfer ? 'opacity:.65' : ''}">
+      <td><input type="checkbox" class="gaji-row-check" data-id="${r.ID}" ${sudahTransfer ? 'disabled' : ''} onchange="updateBulkCount()"></td>
       <td><span style="font-weight:500">${r.NamaStaff}</span></td>
       <td style="font-size:12px">${r.NamaBank||'—'}${r.NoRekening?' · '+r.NoRekening:''}</td>
       <td style="font-family:var(--mono)">${fmtRp(r.GajiPokok)}</td>
@@ -2575,7 +2589,7 @@ function renderGajiTable() {
       <td style="white-space:nowrap">${aksi}</td>
     </tr>`;
   }).join('')
-  : '<tr><td colspan="12">' + emptyHtml('Belum ada data gaji periode ini') + '</td></tr>';
+  : '<tr><td colspan="13">' + emptyHtml('Belum ada data gaji periode ini') + '</td></tr>';
 }
 
 function filterGaji(f, btn) {
@@ -2622,8 +2636,12 @@ function renderKomponenGaji() {
     : emptyHtml('Belum ada komponen custom. Tambah untuk mulai menggunakan.');
 }
 
+function todayStr() {
+  return new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
 async function markTransfer(id) {
-  const today = new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const today = todayStr();
   const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
   if (res.ok) {
     const item = gajiData.find(r => r.ID === id);
@@ -2631,6 +2649,48 @@ async function markTransfer(id) {
     renderGajiStats(); renderGajiTable();
     toast('Ditandai Sudah Transfer ✓', 'success');
   } else toast(res.error || 'Gagal', 'error');
+}
+
+async function undoTransfer(id) {
+  const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Belum', TanggalTransfer: '' });
+  if (res.ok) {
+    const item = gajiData.find(r => r.ID === id);
+    if (item) { item.StatusTransfer = 'Belum'; item.TanggalTransfer = ''; }
+    renderGajiStats(); renderGajiTable();
+    toast('Status dikembalikan ke Belum Transfer', 'success');
+  } else toast(res.error || 'Gagal', 'error');
+}
+
+function toggleAllGaji(cb) {
+  document.querySelectorAll('.gaji-row-check:not(:disabled)').forEach(c => { c.checked = cb.checked; });
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const checked = document.querySelectorAll('.gaji-row-check:checked').length;
+  const btn = document.getElementById('btn-bulk-transfer');
+  const cnt = document.getElementById('bulk-count');
+  if (btn) btn.classList.toggle('hidden', checked === 0);
+  if (cnt) cnt.textContent = checked;
+}
+
+async function bulkMarkTransfer() {
+  const checked = [...document.querySelectorAll('.gaji-row-check:checked')];
+  if (!checked.length) return;
+  const today = todayStr();
+  toast('Memproses ' + checked.length + ' transfer...');
+  let done = 0;
+  for (const cb of checked) {
+    const id = cb.dataset.id;
+    const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
+    if (res.ok) {
+      const item = gajiData.find(r => r.ID === id);
+      if (item) { item.StatusTransfer = 'Sudah'; item.TanggalTransfer = today; }
+      done++;
+    }
+  }
+  renderGajiStats(); renderGajiTable();
+  toast(done + ' transfer berhasil ditandai ✓', 'success');
 }
 
 function buildCustomFields(existingJson) {
