@@ -589,7 +589,7 @@ tbody tr:hover td{background:#FAFAF7;}
             </div>
             <div class="card">
               <div class="card-header"><h3>Sisa Kuota Cuti</h3></div>
-              <div class="card-body" id="cuti-quota-list"></div>
+              <div id="cuti-quota-list" style="padding:16px"></div>
             </div>
           </div>
         </section>
@@ -1544,19 +1544,28 @@ function renderCuti() {
     </tr>`;
   }).join('') : '<tr><td colspan="6">' + emptyHtml('Tidak ada data cuti') + '</td></tr>';
 
-  // Quota bars
+  // Quota grid cards
   const aktif = state.staff.filter(s => String(s.Status).toLowerCase() === 'aktif');
-  document.getElementById('cuti-quota-list').innerHTML = aktif.length ? aktif.map(s => {
-    const sisa = parseFloat(s.CutiSisa) || 0;
-    const jatah = parseFloat(s.CutiJatah) || 12;
-    const pct = Math.min(100, Math.round(sisa / jatah * 100));
-    const fillClass = sisa <= 2 ? 'empty' : sisa <= 5 ? 'low' : '';
-    return `<div class="quota-bar-wrap" style="margin-bottom:12px">
-      <div style="min-width:140px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.NamaLengkap}</div>
-      <div class="quota-bar" style="max-width:none;flex:1"><div class="quota-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
-      <span class="mono text-sm text-muted" style="min-width:40px;text-align:right">${sisa}/${jatah}</span>
-    </div>`;
-  }).join('') : emptyHtml('Belum ada staff aktif');
+  document.getElementById('cuti-quota-list').innerHTML = aktif.length ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:4px 0">
+      ${aktif.map(s => {
+        const sisa  = parseFloat(s.CutiSisa)  || 0;
+        const jatah = parseFloat(s.CutiJatah) || 12;
+        const pct   = Math.min(100, Math.round(sisa / jatah * 100));
+        const color = sisa <= 2 ? 'var(--red)' : sisa <= 5 ? '#D97706' : 'var(--leaf)';
+        const bg    = sisa <= 2 ? 'var(--red-lt)' : sisa <= 5 ? 'var(--amber-lt)' : 'var(--leaf-lt)';
+        return \`<div style="background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px">
+          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px">\${s.NamaLengkap}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:10px;color:var(--ink3)">Sisa cuti</span>
+            <span style="font-size:13px;font-weight:600;font-family:var(--mono);color:\${color}">\${sisa}<span style="font-size:10px;color:var(--ink3);font-weight:400">/\${jatah}</span></span>
+          </div>
+          <div style="height:4px;background:var(--line);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:\${pct}%;background:\${color};border-radius:2px;transition:width .3s"></div>
+          </div>
+        </div>\`;
+      }).join('')}
+    </div>` : emptyHtml('Belum ada staff aktif');
 }
 
 function filterCuti(f, btn) {
@@ -1573,6 +1582,12 @@ function openAddCutiHR() {
   document.getElementById('hc-jenis').innerHTML = state.jenisCuti
     .filter(j => String(j.Aktif) === 'true')
     .map(j => `<option value="${j.Nama}">${j.Nama}</option>`).join('');
+  // Default tanggal = hari ini
+  const today = new Date().toISOString().slice(0,10);
+  const startEl = document.getElementById('hc-start');
+  const endEl   = document.getElementById('hc-end');
+  if (startEl) startEl.value = today;
+  if (endEl)   endEl.value   = today;
   openModal('modal-add-cuti-hr');
 }
 
@@ -1675,6 +1690,9 @@ function openAddReimburseHR() {
   document.getElementById('hr-reimb-kat').innerHTML = state.kategori
     .filter(k => String(k.Aktif) === 'true')
     .map(k => `<option value="${k.Nama}">${k.Nama}</option>`).join('');
+  // Default tanggal transaksi = hari ini
+  const tglEl = document.getElementById('hr-reimb-tgl');
+  if (tglEl) tglEl.value = new Date().toISOString().slice(0,10);
   openModal('modal-add-reimb-hr');
 }
 
