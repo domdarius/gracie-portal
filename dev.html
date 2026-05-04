@@ -2583,8 +2583,7 @@ async function submitAddGaji() {
 async function openGenerateGaji() {
   const periode = document.getElementById('gaji-periode')?.value;
   if (!periode) { toast('Pilih periode dulu', 'error'); return; }
-  if (!confirm('Generate gaji ' + periode + ' dari template untuk semua staff aktif?
-Staff yang sudah ada data gaji bulan ini akan di-skip.')) return;
+  if (!confirm('Generate gaji ' + periode + ' dari template untuk semua staff aktif? Staff yang sudah ada data gaji bulan ini akan di-skip.')) return;
   toast('Generating...');
   const res = await apiGet({ action: 'generateGaji', token: HR_PASSWORD, Periode: periode });
   if (res.ok) {
