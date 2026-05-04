@@ -409,10 +409,10 @@ tbody tr:hover td{background:#FAFAF7;}
       <!-- Step 1: WA -->
       <div id="step-wa">
         <label class="l-label">Nomor WhatsApp</label>
-        <input type="tel" class="l-input" id="inp-wa" placeholder="08xx / +62xx / 62xx" autocomplete="tel">
+        <input type="tel" class="l-input" id="inp-wa" placeholder="08xxxxxxxxx" autocomplete="tel">
         <div class="l-error hidden" id="err-wa"></div>
         <button class="l-btn" onclick="doLoginWA()">Lanjut →</button>
-        <div class="l-hint">Format bebas: 08xx, +62xx, atau 62xx</div>
+        <div class="l-hint">isi nomor WhatsApp</div>
       </div>
 
       <!-- Step 2: PIN -->
@@ -427,7 +427,7 @@ tbody tr:hover td{background:#FAFAF7;}
 
       <!-- Step 3: Set PIN pertama kali -->
       <div id="step-setpin" class="hidden">
-        <div class="l-muted">Buat PIN untuk keamanan akun kamu (4–6 digit angka).</div>
+        <div class="l-muted">Buat PIN untuk keamanan akun kamu (6 digit angka).</div>
         <label class="l-label">PIN Baru</label>
         <input type="password" inputmode="numeric" maxlength="6" class="l-input" id="inp-pin1" placeholder="PIN baru">
         <label class="l-label" style="margin-top:12px">Konfirmasi PIN</label>
@@ -1469,7 +1469,7 @@ async function submitAddStaff() {
   const nama = document.getElementById('ms-nama').value.trim();
   const wa   = document.getElementById('ms-wa').value.trim();
   if (!nama || !wa) { toast('Nama dan WA wajib diisi', 'error'); return; }
-  const res = await apiPost({
+  const res = await apiGet({
     action: 'addStaff', token: HR_PASSWORD,
     NamaLengkap: nama, WA: wa,
     JobTitle: document.getElementById('ms-jobtitle').value,
@@ -1488,7 +1488,7 @@ async function submitAddStaff() {
 
 async function submitEditStaff() {
   const id = document.getElementById('es-id').value;
-  const res = await apiPost({
+  const res = await apiGet({
     action: 'updateStaffHR', token: HR_PASSWORD, staffId: id,
     NamaLengkap: document.getElementById('es-nama').value,
     JobTitle: document.getElementById('es-jobtitle').value,
@@ -1594,7 +1594,7 @@ async function submitAddCutiHR() {
   const start   = document.getElementById('hc-start').value;
   const end     = document.getElementById('hc-end').value || start;
   if (!start) { toast('Pilih tanggal mulai', 'error'); return; }
-  const res = await apiPost({
+  const res = await apiGet({
     action: 'addCuti', staffId,
     Jenis: document.getElementById('hc-jenis').value,
     TanggalMulai: start, TanggalSelesai: end,
@@ -1609,7 +1609,7 @@ async function submitAddCutiHR() {
 }
 
 async function approveCuti(id) {
-  const res = await apiPost({ action: 'approveCuti', token: HR_PASSWORD, id });
+  const res = await apiGet({ action: 'approveCuti', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Cuti disetujui ✓', 'success');
     await syncAll(); renderDashboard(); renderCuti();
@@ -1625,7 +1625,7 @@ function openRejectCuti(id) {
 async function submitRejectCuti() {
   const id = document.getElementById('rc-id').value;
   const catatan = document.getElementById('rc-alasan').value;
-  const res = await apiPost({ action: 'rejectCuti', token: HR_PASSWORD, id, catatan });
+  const res = await apiGet({ action: 'rejectCuti', token: HR_PASSWORD, id, catatan });
   if (res.ok) {
     closeModal('modal-reject-cuti');
     toast('Pengajuan ditolak', 'success');
@@ -1635,7 +1635,7 @@ async function submitRejectCuti() {
 
 async function undoCuti(id) {
   if (!confirm('Kembalikan status pengajuan ini ke Pending?')) return;
-  const res = await apiPost({ action: 'undoCuti', token: HR_PASSWORD, id });
+  const res = await apiGet({ action: 'undoCuti', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
     await syncAll(); renderDashboard(); renderCuti();
@@ -1701,7 +1701,7 @@ async function submitAddReimburseHR() {
   const jmlEl = document.getElementById('hr-reimb-jml');
   const jml = getRawNominal(jmlEl);
   if (!tgl || !ket || !jml) { toast('Semua field wajib diisi', 'error'); return; }
-  const res = await apiPost({
+  const res = await apiGet({
     action: 'addReimburse', staffId,
     Kategori: document.getElementById('hr-reimb-kat').value,
     TanggalTransaksi: tgl, Jumlah: jml, Keterangan: ket,
@@ -1715,7 +1715,7 @@ async function submitAddReimburseHR() {
 }
 
 async function approveReimburse(id) {
-  const res = await apiPost({ action: 'approveReimburse', token: HR_PASSWORD, id });
+  const res = await apiGet({ action: 'approveReimburse', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Reimbursement disetujui ✓', 'success');
     await syncAll(); renderDashboard(); renderReimburse();
@@ -1731,7 +1731,7 @@ function openRejectReimburse(id) {
 async function submitRejectReimburse() {
   const id = document.getElementById('rr-id').value;
   const catatan = document.getElementById('rr-alasan').value;
-  const res = await apiPost({ action: 'rejectReimburse', token: HR_PASSWORD, id, catatan });
+  const res = await apiGet({ action: 'rejectReimburse', token: HR_PASSWORD, id, catatan });
   if (res.ok) {
     closeModal('modal-reject-reimb');
     toast('Reimbursement ditolak', 'success');
@@ -1741,7 +1741,7 @@ async function submitRejectReimburse() {
 
 async function undoReimburse(id) {
   if (!confirm('Kembalikan ke Pending?')) return;
-  const res = await apiPost({ action: 'undoReimburse', token: HR_PASSWORD, id });
+  const res = await apiGet({ action: 'undoReimburse', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
     await syncAll(); renderDashboard(); renderReimburse();
@@ -1812,8 +1812,8 @@ async function submitKategori() {
   const nama = document.getElementById('kat-nama').value.trim();
   if (!nama) { toast('Nama wajib diisi', 'error'); return; }
   const res = id
-    ? await apiPost({ action: 'updateKategori', token: HR_PASSWORD, id, Nama: nama })
-    : await apiPost({ action: 'addKategori', token: HR_PASSWORD, Nama: nama });
+    ? await apiGet({ action: 'updateKategori', token: HR_PASSWORD, id, Nama: nama })
+    : await apiGet({ action: 'addKategori', token: HR_PASSWORD, Nama: nama });
   if (res.ok) {
     closeModal('modal-kategori');
     toast('Tersimpan ✓', 'success');
@@ -1825,7 +1825,7 @@ async function submitKategori() {
 
 async function toggleKategori(id, aktif) {
   const newVal = String(aktif) === 'true' ? 'false' : 'true';
-  const res = await apiPost({ action: 'updateKategori', token: HR_PASSWORD, id, Aktif: newVal });
+  const res = await apiGet({ action: 'updateKategori', token: HR_PASSWORD, id, Aktif: newVal });
   if (res.ok) {
     const kRes = await apiGet({ action: 'getKategori', token: HR_PASSWORD, all: 'true' });
     if (kRes.ok) state.kategori = kRes.data || [];
@@ -1856,8 +1856,8 @@ async function submitJenisCuti() {
   const potong = document.getElementById('jc-potong').checked ? 'true' : 'false';
   if (!nama) { toast('Nama wajib diisi', 'error'); return; }
   const res = id
-    ? await apiPost({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Nama: nama, PotongKuota: potong })
-    : await apiPost({ action: 'addJenisCuti', token: HR_PASSWORD, Nama: nama, PotongKuota: potong });
+    ? await apiGet({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Nama: nama, PotongKuota: potong })
+    : await apiGet({ action: 'addJenisCuti', token: HR_PASSWORD, Nama: nama, PotongKuota: potong });
   if (res.ok) {
     closeModal('modal-jenis-cuti');
     toast('Tersimpan ✓', 'success');
@@ -1869,7 +1869,7 @@ async function submitJenisCuti() {
 
 async function toggleJenisCuti(id, aktif) {
   const newVal = String(aktif) === 'true' ? 'false' : 'true';
-  const res = await apiPost({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Aktif: newVal });
+  const res = await apiGet({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Aktif: newVal });
   if (res.ok) {
     const jRes = await apiGet({ action: 'getJenisCuti', token: HR_PASSWORD, all: 'true' });
     if (jRes.ok) state.jenisCuti = jRes.data || [];
@@ -1883,7 +1883,7 @@ async function doResetPin() {
   const s = state.staff.find(x => x.ID === staffId);
   if (!s) return;
   if (!confirm('Reset PIN ' + s.NamaLengkap + '? Mereka harus buat PIN baru saat login berikutnya.')) return;
-  const res = await apiPost({ action: 'resetPin', token: HR_PASSWORD, staffId });
+  const res = await apiGet({ action: 'resetPin', token: HR_PASSWORD, staffId });
   if (res.ok) toast('PIN ' + s.NamaLengkap + ' berhasil direset ✓', 'success');
   else toast(res.error || 'Gagal', 'error');
 }
@@ -2047,7 +2047,7 @@ async function submitCutiStaff() {
     dur = hari;
   }
 
-  const res = await apiPost({
+  const res = await apiGet({
     action: 'addCuti', staffId: state.session.staffId,
     Jenis: jenis, TanggalMulai: start, TanggalSelesai: end,
     Durasi: dur, JamMulai: jamMulai, JamSelesai: jamSelesai,
@@ -2248,7 +2248,7 @@ function toggleFieldEdit(key) {
 
 async function saveField(key) {
   const val = document.getElementById('fi-' + key).value.trim();
-  const res = await apiPost({ action: 'updateStaff', staffId: state.session.staffId, [key]: val });
+  const res = await apiGet({ action: 'updateStaff', staffId: state.session.staffId, [key]: val });
   if (res.ok) {
     if (!state.staffData) state.staffData = {};
     state.staffData[key] = val;
@@ -2265,7 +2265,7 @@ async function doChangePIN() {
   if (baru !== konfirm) { toast('PIN baru tidak cocok', 'error'); return; }
   if (!baru || baru.length < 4) { toast('PIN minimal 4 digit', 'error'); return; }
   if (!/^\d+$/.test(baru)) { toast('PIN hanya boleh angka', 'error'); return; }
-  const res = await apiPost({ action: 'changePin', staffId: state.session.staffId, pinLama: lama, pinBaru: baru });
+  const res = await apiGet({ action: 'changePin', staffId: state.session.staffId, pinLama: lama, pinBaru: baru });
   if (res.ok) {
     toast('PIN berhasil diganti! 🔐', 'success');
     document.getElementById('cp-lama').value = '';
