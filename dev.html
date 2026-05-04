@@ -377,21 +377,21 @@ tbody tr:hover td{background:#FAFAF7;}
 .mi-inactive{opacity:.45;}
 
 /* ── CUTI & REIMBURSE TABLE FIX ─────────────── */
-#hr-cuti .table-wrap,
-#hr-reimburse .table-wrap { overflow-x: auto; }
-
-#hr-cuti table,
-#hr-reimburse table { min-width: 700px; table-layout: auto; }
-
-#hr-cuti th:last-child,
-#hr-cuti td:last-child,
-#hr-reimburse th:last-child,
-#hr-reimburse td:last-child {
-  white-space: nowrap;
-  min-width: 180px;
-}
-
 #hr-cuti td, #hr-reimburse td { vertical-align: middle; }
+
+/* Kolom aksi tidak wrap, tombol tetap sebaris */
+#hr-cuti td:last-child,
+#hr-reimburse td:last-child { white-space: nowrap; width: 90px; }
+
+/* Kolom staff bisa shrink */
+#hr-cuti td:first-child,
+#hr-reimburse td:first-child { min-width: 130px; }
+
+/* Kolom keterangan ellipsis */
+#hr-cuti td:nth-child(5) {
+  max-width: 100px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
@@ -1542,9 +1542,9 @@ function renderCuti() {
 
     let aksi = '';
     if (c.Status === 'Pending') {
-      aksi = `<div style="display:flex;gap:6px;flex-wrap:nowrap">
-        <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.ID}')">✓ Approve</button>
-        <button class="btn btn-reject btn-sm" onclick="openRejectCuti('${c.ID}')">✕ Tolak</button>
+      aksi = `<div style="display:flex;gap:6px">
+        <button class="btn btn-approve btn-sm" onclick="approveCuti('${c.ID}')" title="Approve">✓</button>
+        <button class="btn btn-reject btn-sm" onclick="openRejectCuti('${c.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
       aksi = `<button class="btn btn-ghost btn-sm" onclick="undoCuti('${c.ID}')">↩ Undo</button>`;
@@ -1670,9 +1670,9 @@ function renderReimburse() {
     const s = state.staff.find(x => x.ID === r.StaffID) || { NamaLengkap: r.NamaStaff, ID: r.StaffID };
     let aksi = '';
     if (r.Status === 'Pending') {
-      aksi = `<div style="display:flex;gap:6px;flex-wrap:nowrap">
-        <button class="btn btn-approve btn-sm" onclick="approveReimburse('${r.ID}')">✓ Approve</button>
-        <button class="btn btn-reject btn-sm" onclick="openRejectReimburse('${r.ID}')">✕ Tolak</button>
+      aksi = `<div style="display:flex;gap:6px">
+        <button class="btn btn-approve btn-sm" onclick="approveReimburse('${r.ID}')" title="Approve">✓</button>
+        <button class="btn btn-reject btn-sm" onclick="openRejectReimburse('${r.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
       aksi = `<button class="btn btn-ghost btn-sm" onclick="undoReimburse('${r.ID}')">↩ Undo</button>`;
