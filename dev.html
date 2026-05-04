@@ -416,10 +416,10 @@ tbody tr:hover td{background:#FAFAF7;}
       <!-- Step 1: WA -->
       <div id="step-wa">
         <label class="l-label">Nomor WhatsApp</label>
-        <input type="tel" class="l-input" id="inp-wa" placeholder="08xxxxxxxx" autocomplete="tel">
+        <input type="tel" class="l-input" id="inp-wa" placeholder="08xx / +62xx / 62xx" autocomplete="tel">
         <div class="l-error hidden" id="err-wa"></div>
         <button class="l-btn" onclick="doLoginWA()">Lanjut →</button>
-        <div class="l-hint">Isi dengan nomor WhatsApp</div>
+        <div class="l-hint">Format bebas: 08xx, +62xx, atau 62xx</div>
       </div>
 
       <!-- Step 2: PIN -->
@@ -1415,8 +1415,8 @@ function pendingReimbRow(r) {
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <span style="font-family:var(--mono);font-weight:600;font-size:13px">${fmtRp(r.Jumlah)}</span>
-      <button class="btn btn-approve btn-sm" onclick="approveReimburse('${r.ID}')">✓</button>
-      <button class="btn btn-reject btn-sm" onclick="openRejectReimburse('${r.ID}')">✕</button>
+      <button class="btn btn-approve btn-sm btn-icon" onclick="approveReimburse('${r.ID}')" title="Approve">✓</button>
+      <button class="btn btn-reject btn-sm btn-icon" onclick="openRejectReimburse('${r.ID}')" title="Tolak">✕</button>
     </div>
   </div>`;
 }
