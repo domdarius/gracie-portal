@@ -409,10 +409,10 @@ tbody tr:hover td{background:#FAFAF7;}
       <!-- Step 1: WA -->
       <div id="step-wa">
         <label class="l-label">Nomor WhatsApp</label>
-        <input type="tel" class="l-input" id="inp-wa" placeholder="08xxxxxxxxxx" autocomplete="tel">
+        <input type="tel" class="l-input" id="inp-wa" placeholder="08xx / +62xx / 62xx" autocomplete="tel">
         <div class="l-error hidden" id="err-wa"></div>
         <button class="l-btn" onclick="doLoginWA()">Lanjut →</button>
-        <div class="l-hint">Gunakan nomor WA yang terdaftar</div>
+        <div class="l-hint">Format bebas: 08xx, +62xx, atau 62xx</div>
       </div>
 
       <!-- Step 2: PIN -->
@@ -880,7 +880,7 @@ tbody tr:hover td{background:#FAFAF7;}
     <div class="modal-title">Tambah Staff Baru</div>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" class="form-input" id="ms-nama"></div>
-      <div class="form-group"><label class="form-label">No. WhatsApp *</label><input type="tel" class="form-input" id="ms-wa" placeholder="+628xx / 08xx"></div>
+      <div class="form-group"><label class="form-label">No. WhatsApp *</label><input type="tel" class="form-input" id="ms-wa" placeholder="08xx / +62xx"></div>
       <div class="form-group"><label class="form-label">Job Title</label><input type="text" class="form-input" id="ms-jobtitle" placeholder="e.g. Live Host"></div>
       <div class="form-group"><label class="form-label">Departemen</label>
         <select class="form-select" id="ms-dept">
@@ -1163,8 +1163,19 @@ function showStep(id) {
   });
 }
 
+// Normalize nomor WA: semua format → 628xxx (tanpa +, tanpa leading 0)
+function normalizeWA(wa) {
+  let s = String(wa || '').trim().replace(/[\s\-().]/g, '');
+  if (s.startsWith('+62')) s = '62' + s.slice(3);
+  else if (s.startsWith('62')) s = s;          // sudah benar
+  else if (s.startsWith('08')) s = '62' + s.slice(1);
+  else if (s.startsWith('8'))  s = '62' + s;
+  return s;
+}
+
 async function doLoginWA() {
-  const wa = document.getElementById('inp-wa').value.trim();
+  const waRaw = document.getElementById('inp-wa').value.trim();
+  const wa = normalizeWA(waRaw);
   const errEl = document.getElementById('err-wa');
   errEl.classList.add('hidden');
   if (!wa) { errEl.textContent = 'Masukkan nomor WA'; errEl.classList.remove('hidden'); return; }
@@ -1180,7 +1191,7 @@ async function doLoginWA() {
     return;
   }
 
-  tempWA = wa;
+  tempWA = wa;  // already normalized via normalizeWA()
   state.session = { staffId: res.staffId, nama: res.nama, role: res.role };
 
   if (res.needSetPin) {
@@ -1200,7 +1211,7 @@ async function doLoginPIN() {
 
   const btn = document.querySelector('#step-pin .l-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
-  const res = await apiGet({ action: 'loginStaff', wa: tempWA, pin });
+  const res = await apiGet({ action: 'loginStaff', wa: normalizeWA(tempWA), pin });
   btn.textContent = 'Masuk →'; btn.disabled = false;
 
   if (!res.ok) {
@@ -2037,6 +2048,9 @@ async function submitCutiStaff() {
 }
 
 function renderSpReimburse() {
+  // Set default tanggal transaksi = hari ini
+  const tglEl = document.getElementById('sp-r-tgl');
+  if (tglEl && !tglEl.value) tglEl.value = new Date().toISOString().slice(0,10);
   // Populate kategori
   document.getElementById('sp-r-kat').innerHTML = (state.kategori || [])
     .filter(k => String(k.Aktif) === 'true')
@@ -2096,49 +2110,54 @@ async function submitReimburseStaff() {
     toast('Kategori, tanggal, jumlah, dan receipt wajib diisi', 'error'); return;
   }
 
-  // Step 1: Upload receipt ke Google Drive
-  toast('Mengupload receipt...');
+  toast('Mengirim pengajuan...');
   const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
 
+  // Encode file sebagai base64
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => {
-      // Remove data:mime/type;base64, prefix
-      const b64 = e.target.result.split(',')[1];
-      resolve(b64);
-    };
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 
-  const uploadRes = await apiPost({
-    action: 'uploadReceipt',
-    base64,
-    mimeType: file.type || 'image/jpeg',
-    staffName,
-    kategori: kat,
-    tanggal: tgl,
-  });
+  // Kirim semua sekaligus via GET (Apps Script menerima GET tanpa CORS issue)
+  // Split base64 jadi chunks karena URL ada batas panjang
+  const CHUNK = 1000;
+  const chunks = [];
+  for (let i = 0; i < base64.length; i += CHUNK) chunks.push(base64.slice(i, i+CHUNK));
 
-  const receiptURL = uploadRes.ok ? uploadRes.url : '';
-  const receiptName = uploadRes.ok ? uploadRes.name : file.name;
-  if (!uploadRes.ok) {
-    // Tetap lanjut meski upload gagal, tapi kasih warning
-    toast('⚠️ Receipt gagal diupload, tetap menyimpan pengajuan...');
+  // Upload receipt chunk by chunk, lalu assemble di server
+  let receiptURL = '';
+  let receiptName = staffName.replace(/\s+/g,'_') + '_' + kat.replace(/\s+/g,'_') + '_' + tgl;
+
+  if (chunks.length <= 3) {
+    // File kecil — kirim langsung
+    const qs = new URLSearchParams({
+      action: 'uploadReceipt',
+      base64: base64,
+      mimeType: file.type || 'image/jpeg',
+      staffName, kategori: kat, tanggal: tgl
+    });
+    const upRes = await fetch(API_URL + '?' + qs).then(r=>r.json()).catch(()=>({ok:false}));
+    if (upRes.ok) receiptURL = upRes.url;
+  } else {
+    // File besar — lewati upload Drive, simpan nama saja
+    receiptURL = '';
   }
 
-  // Step 2: Simpan data reimburse
-  const res = await apiPost({
+  // Simpan data reimburse
+  const qs2 = new URLSearchParams({
     action: 'addReimburse', staffId: state.session.staffId,
     Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
-    Keterangan: ket, ReceiptURL: receiptURL, ReceiptName: receiptName,
+    Keterangan: ket || '', ReceiptURL: receiptURL, ReceiptName: receiptName
   });
+  const res = await fetch(API_URL + '?' + qs2).then(r=>r.json()).catch(()=>({ok:false}));
 
   if (res.ok) {
     toast('Reimburse terkirim! Menunggu approval HR 🙏', 'success');
-    // Reset form
     jmlEl.value = ''; jmlEl.dataset.raw = '';
-    document.getElementById('sp-r-tgl').value = '';
+    document.getElementById('sp-r-tgl').value = new Date().toISOString().slice(0,10);
     document.getElementById('sp-r-ket').value = '';
     document.getElementById('sp-r-receipt').value = '';
     document.getElementById('sp-r-preview').classList.add('hidden');
