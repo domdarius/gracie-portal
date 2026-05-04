@@ -376,6 +376,23 @@ tbody tr:hover td{background:#FAFAF7;}
 .master-item .mi-actions{display:flex;gap:6px;align-items:center;}
 .mi-inactive{opacity:.45;}
 
+/* ── CUTI & REIMBURSE TABLE FIX ─────────────── */
+#hr-cuti .table-wrap,
+#hr-reimburse .table-wrap { overflow-x: auto; }
+
+#hr-cuti table,
+#hr-reimburse table { min-width: 700px; table-layout: auto; }
+
+#hr-cuti th:last-child,
+#hr-cuti td:last-child,
+#hr-reimburse th:last-child,
+#hr-reimburse td:last-child {
+  white-space: nowrap;
+  min-width: 180px;
+}
+
+#hr-cuti td, #hr-reimburse td { vertical-align: middle; }
+
 /* ═══════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════ */
