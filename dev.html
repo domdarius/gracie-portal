@@ -609,7 +609,7 @@ tbody tr:hover td{background:#FAFAF7;}
           <div class="card">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Staff</th><th>Kategori</th><th>Tgl Transaksi</th><th>Tgl Input</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Staff</th><th>Kategori</th><th>Tgl Transaksi</th><th>Tgl Input</th><th>Jumlah</th><th>Keterangan</th><th>Receipt</th><th>Status</th><th>Aksi</th></tr></thead>
                 <tbody id="reimburse-table"></tbody>
               </table>
             </div>
@@ -728,23 +728,28 @@ tbody tr:hover td{background:#FAFAF7;}
             <label class="sp-form-label">Jenis Cuti</label>
             <select class="sp-select" id="sp-c-jenis"></select>
           </div>
-          <div class="sp-form-group">
-            <label class="sp-form-label">Durasi</label>
-            <select class="sp-select" id="sp-c-durasi" onchange="toggleEndDate()">
-              <option value="1">1 hari penuh</option>
-              <option value="0.5">½ hari</option>
-              <option value="multi">Lebih dari 1 hari</option>
-            </select>
-          </div>
           <div class="sp-form-row">
             <div class="sp-form-group">
               <label class="sp-form-label">Tanggal Mulai</label>
-              <input type="date" class="sp-input" id="sp-c-start">
+              <input type="date" class="sp-input" id="sp-c-start" onchange="updateCutiEnd()">
             </div>
-            <div class="sp-form-group" id="sp-c-end-wrap">
+            <div class="sp-form-group">
               <label class="sp-form-label">Tanggal Selesai</label>
-              <input type="date" class="sp-input" id="sp-c-end">
+              <input type="date" class="sp-input" id="sp-c-end" onchange="hitungDurasiCuti()">
             </div>
+          </div>
+          <div class="sp-form-row">
+            <div class="sp-form-group">
+              <label class="sp-form-label">Jam Mulai <span style="color:var(--ink3);font-size:10px">(opsional)</span></label>
+              <input type="time" class="sp-input" id="sp-c-jam-mulai" value="08:00" onchange="hitungDurasiCuti()">
+            </div>
+            <div class="sp-form-group">
+              <label class="sp-form-label">Jam Selesai <span style="color:var(--ink3);font-size:10px">(opsional)</span></label>
+              <input type="time" class="sp-input" id="sp-c-jam-selesai" value="17:00" onchange="hitungDurasiCuti()">
+            </div>
+          </div>
+          <div id="sp-c-durasi-info" style="background:var(--leaf-lt);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--forest);margin-bottom:4px;display:none">
+            <span id="sp-c-durasi-text"></span>
           </div>
           <div class="sp-form-group">
             <label class="sp-form-label">Keterangan</label>
@@ -784,8 +789,8 @@ tbody tr:hover td{background:#FAFAF7;}
             <div class="form-hint">Ketik angka, titik akan muncul otomatis</div>
           </div>
           <div class="sp-form-group">
-            <label class="sp-form-label">Keterangan <span style="color:var(--red)">*</span></label>
-            <textarea class="sp-textarea" id="sp-r-ket" placeholder="Jelaskan keperluan reimburse..."></textarea>
+            <label class="sp-form-label">Keterangan</label>
+            <textarea class="sp-textarea" id="sp-r-ket" placeholder="Jelaskan keperluan reimburse... (opsional)"></textarea>
           </div>
           <div class="sp-form-group">
             <label class="sp-form-label">Receipt / Bukti <span style="color:var(--red)">*</span></label>
@@ -1638,10 +1643,11 @@ function renderReimburse() {
       <td>${fmtDateTime(r.TanggalInput)}</td>
       <td><span class="mono fw-600">${fmtRp(r.Jumlah)}</span></td>
       <td>${ket}</td>
+      <td>${r.ReceiptURL ? `<a href="${r.ReceiptURL}" target="_blank" style="color:var(--leaf);font-size:12px">Lihat Receipt ↗</a>` : '—'}</td>
       <td>${badgeHtml(r.Status)}</td>
       <td>${aksi}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8">' + emptyHtml('Tidak ada data reimbursement') + '</td></tr>';
+  }).join('') : '<tr><td colspan="9">' + emptyHtml('Tidak ada data reimbursement') + '</td></tr>';
 }
 
 function filterReimburse(f, btn) {
@@ -1957,36 +1963,75 @@ function renderSpCuti() {
     : emptyHtml('Belum ada riwayat cuti');
 }
 
-function toggleEndDate() {
-  const v = document.getElementById('sp-c-durasi').value;
-  document.getElementById('sp-c-end-wrap').style.display = v === 'multi' ? 'block' : 'none';
+function updateCutiEnd() {
+  const start = document.getElementById('sp-c-start').value;
+  const endEl = document.getElementById('sp-c-end');
+  if (!endEl.value || endEl.value < start) endEl.value = start;
+  hitungDurasiCuti();
+}
+
+function hitungDurasiCuti() {
+  const start   = document.getElementById('sp-c-start').value;
+  const end     = document.getElementById('sp-c-end').value;
+  const jamMulai  = document.getElementById('sp-c-jam-mulai').value || '08:00';
+  const jamSelesai= document.getElementById('sp-c-jam-selesai').value || '17:00';
+  const infoEl  = document.getElementById('sp-c-durasi-info');
+  const textEl  = document.getElementById('sp-c-durasi-text');
+  if (!start) { infoEl.style.display='none'; return; }
+
+  const endDate = end || start;
+  const hari = daysBetween(start, endDate);
+
+  if (hari === 1) {
+    // Hitung jam
+    const [h1,m1] = jamMulai.split(':').map(Number);
+    const [h2,m2] = jamSelesai.split(':').map(Number);
+    const totalMenit = (h2*60+m2) - (h1*60+m1);
+    const totalJam = totalMenit / 60;
+    const durasi = totalJam < 4 ? 0.5 : 1;
+    infoEl.style.display = 'block';
+    textEl.textContent = totalJam.toFixed(1) + ' jam → dihitung ' + (durasi === 0.5 ? '½ hari' : '1 hari penuh');
+  } else {
+    infoEl.style.display = 'block';
+    textEl.textContent = hari + ' hari kerja';
+  }
 }
 
 async function submitCutiStaff() {
   const jenis = document.getElementById('sp-c-jenis').value;
-  const durasi = document.getElementById('sp-c-durasi').value;
   const start = document.getElementById('sp-c-start').value;
-  const end   = document.getElementById('sp-c-end').value;
+  const end   = document.getElementById('sp-c-end').value || start;
   const ket   = document.getElementById('sp-c-ket').value;
+  const jamMulai   = document.getElementById('sp-c-jam-mulai').value || '08:00';
+  const jamSelesai = document.getElementById('sp-c-jam-selesai').value || '17:00';
 
-  if (!jenis || !start) { toast('Jenis dan tanggal wajib diisi', 'error'); return; }
+  if (!jenis || !start) { toast('Jenis cuti dan tanggal wajib diisi', 'error'); return; }
+  if (end < start) { toast('Tanggal selesai tidak boleh sebelum tanggal mulai', 'error'); return; }
 
-  let dur, endDate;
-  if (durasi === '0.5') { dur = 0.5; endDate = start; }
-  else if (durasi === 'multi') {
-    if (!end || end < start) { toast('Tanggal selesai tidak valid', 'error'); return; }
-    dur = daysBetween(start, end); endDate = end;
-  } else { dur = 1; endDate = start; }
+  // Hitung durasi otomatis
+  const hari = daysBetween(start, end);
+  let dur;
+  if (hari === 1) {
+    const [h1,m1] = jamMulai.split(':').map(Number);
+    const [h2,m2] = jamSelesai.split(':').map(Number);
+    const totalJam = ((h2*60+m2) - (h1*60+m1)) / 60;
+    dur = totalJam < 4 ? 0.5 : 1;
+  } else {
+    dur = hari;
+  }
 
   const res = await apiPost({
     action: 'addCuti', staffId: state.session.staffId,
-    Jenis: jenis, TanggalMulai: start, TanggalSelesai: endDate, Durasi: dur, Keterangan: ket,
+    Jenis: jenis, TanggalMulai: start, TanggalSelesai: end,
+    Durasi: dur, JamMulai: jamMulai, JamSelesai: jamSelesai,
+    Keterangan: ket,
   });
   if (res.ok) {
     toast('Pengajuan terkirim! Menunggu approval HR 🙏', 'success');
     document.getElementById('sp-c-start').value = '';
     document.getElementById('sp-c-end').value = '';
     document.getElementById('sp-c-ket').value = '';
+    document.getElementById('sp-c-durasi-info').style.display = 'none';
     await loadStaffPortal();
   } else toast(res.error || 'Gagal mengirim', 'error');
 }
@@ -2040,32 +2085,58 @@ function previewReceipt(input) {
 }
 
 async function submitReimburseStaff() {
-  const kat = document.getElementById('sp-r-kat').value;
-  const tgl = document.getElementById('sp-r-tgl').value;
+  const kat   = document.getElementById('sp-r-kat').value;
+  const tgl   = document.getElementById('sp-r-tgl').value;
   const jmlEl = document.getElementById('sp-r-jml');
-  const jml = getRawNominal(jmlEl);
-  const ket = document.getElementById('sp-r-ket').value.trim();
-  const file = document.getElementById('sp-r-receipt').files[0];
+  const jml   = getRawNominal(jmlEl);
+  const ket   = document.getElementById('sp-r-ket').value.trim();
+  const file  = document.getElementById('sp-r-receipt').files[0];
 
-  if (!kat || !tgl || !jml || !ket || !file) {
-    toast('Semua field wajib diisi termasuk receipt', 'error'); return;
+  if (!kat || !tgl || !jml || !file) {
+    toast('Kategori, tanggal, jumlah, dan receipt wajib diisi', 'error'); return;
   }
 
-  // Convert receipt to base64 (simpan sebagai URL data atau bisa dikirim ke Drive nanti)
-  const base64 = await new Promise(resolve => {
+  // Step 1: Upload receipt ke Google Drive
+  toast('Mengupload receipt...');
+  const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
+
+  const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload = e => {
+      // Remove data:mime/type;base64, prefix
+      const b64 = e.target.result.split(',')[1];
+      resolve(b64);
+    };
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 
+  const uploadRes = await apiPost({
+    action: 'uploadReceipt',
+    base64,
+    mimeType: file.type || 'image/jpeg',
+    staffName,
+    kategori: kat,
+    tanggal: tgl,
+  });
+
+  const receiptURL = uploadRes.ok ? uploadRes.url : '';
+  const receiptName = uploadRes.ok ? uploadRes.name : file.name;
+  if (!uploadRes.ok) {
+    // Tetap lanjut meski upload gagal, tapi kasih warning
+    toast('⚠️ Receipt gagal diupload, tetap menyimpan pengajuan...');
+  }
+
+  // Step 2: Simpan data reimburse
   const res = await apiPost({
     action: 'addReimburse', staffId: state.session.staffId,
-    Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml, Keterangan: ket,
-    ReceiptURL: base64.slice(0, 500) + '...', // simpan partial, atau upload ke Drive nanti
+    Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
+    Keterangan: ket, ReceiptURL: receiptURL, ReceiptName: receiptName,
   });
 
   if (res.ok) {
     toast('Reimburse terkirim! Menunggu approval HR 🙏', 'success');
+    // Reset form
     jmlEl.value = ''; jmlEl.dataset.raw = '';
     document.getElementById('sp-r-tgl').value = '';
     document.getElementById('sp-r-ket').value = '';
@@ -2074,7 +2145,7 @@ async function submitReimburseStaff() {
     document.getElementById('sp-r-drop-label').style.display = 'block';
     document.getElementById('sp-r-drop-label').innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="display:block;margin:0 auto 6px;opacity:.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Tap untuk upload foto / file`;
     await loadStaffPortal();
-  } else toast(res.error || 'Gagal', 'error');
+  } else toast(res.error || 'Gagal menyimpan', 'error');
 }
 
 function renderSpProfil() {
@@ -2083,7 +2154,7 @@ function renderSpProfil() {
   // Editable fields
   const editableFields = [
     { key: 'NamaLengkap',  label: 'Nama Lengkap',  type: 'text' },
-    { key: 'TanggalLahir', label: 'Tanggal Lahir',  type: 'date' },
+    { key: 'TanggalLahir', label: 'Tanggal Lahir',  type: 'date', fmt: true },
     { key: 'WA',           label: 'No. WhatsApp',   type: 'tel' },
     { key: 'Email',        label: 'Email',           type: 'email' },
     { key: 'Alamat',       label: 'Alamat',          type: 'text' },
@@ -2092,12 +2163,23 @@ function renderSpProfil() {
     { key: 'TelegramID',   label: 'Telegram ID',    type: 'text' },
   ];
 
+  // Format date fields for display
+  const fmtFieldVal = (f, s) => {
+    const v = s[f.key] || '';
+    if (f.fmt && v) {
+      // Remove time part if present, format as dd/mm/yyyy
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d.toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'});
+    }
+    return v || '—';
+  };
+
   document.getElementById('sp-profil-editable').innerHTML = editableFields.map(f => `
     <div class="field-row">
       <div class="field-label">${f.label}</div>
       <div style="flex:1;text-align:right">
         <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
-          <span id="fv-${f.key}" class="field-value">${s[f.key] || '—'}</span>
+          <span id="fv-${f.key}" class="field-value">${fmtFieldVal(f, s)}</span>
           <span class="field-edit-btn" onclick="toggleFieldEdit('${f.key}')">Edit</span>
         </div>
         <div class="inline-edit" id="fe-${f.key}">
@@ -2159,9 +2241,6 @@ async function doChangePIN() {
 
 // ─── INIT ─────────────────────────────────────────────────────────
 (function init() {
-  // Set end date default ke hidden
-  document.getElementById('sp-c-end-wrap').style.display = 'none';
-
   // Check saved session
   const saved = localStorage.getItem('gracie_session');
   if (saved) {
