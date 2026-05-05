@@ -663,7 +663,9 @@ tbody tr:hover td{background:#FAFAF7;}
               <div class="card-header">
                 <h3 id="gaji-chart-title">Tren Payroll 2026</h3>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                  <select class="form-select" id="chart-tahun" style="width:auto" onchange="loadGajiChart()">
+                  <select class="form-select" id="chart-bulan" style="width:auto" onchange="onChartBulanChange()">
+                  </select>
+                  <select class="form-select" id="chart-tahun" style="width:auto" onchange="onChartTahunChange()">
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
@@ -1239,7 +1241,7 @@ tbody tr:hover td{background:#FAFAF7;}
       <div class="form-group"><label class="form-label">THR (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="ag-thr" oninput="formatNominal(this);hitungTotalGaji()" placeholder="0"></div>
     </div>
     <!-- Komponen Custom -->
-    <div id="ag-custom-fields" style="margin-top:12px"></div>
+    <div id="ag-live-field" style="margin-top:12px"></div>
     <div style="background:var(--leaf-lt);border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:12px">
       <span style="font-size:13px;color:var(--forest);font-weight:500">Total Gaji</span>
       <span style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--forest)" id="ag-total">Rp 0</span>
@@ -1545,8 +1547,9 @@ function hrNav(page, btn) {
 
   if (page === 'gaji')      {
     populatePeriode();
+    populateChartBulan();
     loadGaji();
-    setTimeout(() => loadGajiChart(), 300); // delay kecil biar periode sudah set
+    setTimeout(() => loadGajiChart(), 300);
   }
   if (page === 'staff')     renderStaff();
   if (page === 'cuti')      renderCuti();
@@ -2573,6 +2576,9 @@ async function loadGajiChart() {
 
   // Build datasets
   const curTotals = curRes.months.map((m, i) => i <= currentMonthIdx && m.total > 0 ? m.total : null);
+  // Simpan data untuk akses dari dropdown
+  window._lastChartData = curRes.months;
+
   // Update YTD
   const ytd = Math.round(curRes.months.slice(0, currentMonthIdx+1).reduce((s,m) => s+(m.total||0), 0));
   const ytdEl = document.getElementById('gaji-ytd');
@@ -2580,11 +2586,18 @@ async function loadGajiChart() {
   // Total bulan berjalan
   const bulanIni = curRes.months[currentMonthIdx]?.total || 0;
   const bulanIniEl = document.getElementById('gaji-bulan-ini');
-  if (bulanIniEl) bulanIniEl.textContent = fmtRp(bulanIni);
-  // Set dynamic label "Total Gaji (Mei 2026)"
+  if (bulanIniEl) bulanIniEl.textContent = bulanIni > 0 ? fmtRp(bulanIni) : '—';
+  // Label dinamis — ikut dropdown bulan yang dipilih
+  const selBulan = document.getElementById('chart-bulan');
+  const selBulanIdx = selBulan ? parseInt(selBulan.value)-1 : currentMonthIdx;
   const BULAN_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const bulanLabel = document.getElementById('gaji-bulan-ini-label');
-  if (bulanLabel) bulanLabel.textContent = 'Total Gaji (' + BULAN_NAMES[currentMonthIdx] + ' ' + tahun + ')';
+  if (bulanLabel) bulanLabel.textContent = 'Total Gaji (' + BULAN_NAMES[selBulanIdx] + ' ' + tahun + ')';
+  // Update value sesuai bulan yang dipilih
+  const selectedMonthData = curRes.months[selBulanIdx];
+  if (bulanIniEl && selBulanIdx !== currentMonthIdx) {
+    bulanIniEl.textContent = selectedMonthData?.total > 0 ? fmtRp(selectedMonthData.total) : '—';
+  }
 
   const datasets = [
     {
@@ -2673,6 +2686,55 @@ async function loadGajiChart() {
   }
 }
 
+function populateChartBulan() {
+  const sel = document.getElementById('chart-bulan');
+  if (!sel) return;
+  const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const now = new Date();
+  sel.innerHTML = BULAN.map((b, i) => {
+    const val = String(i+1).padStart(2,'0');
+    const selected = i === now.getMonth() ? 'selected' : '';
+    return `<option value="${val}" ${selected}>${b}</option>`;
+  }).join('');
+}
+
+function onChartTahunChange() {
+  loadGajiChart();
+  syncChartPeriodeToTable();
+}
+
+function onChartBulanChange() {
+  syncChartPeriodeToTable();
+  // Update label "Total Gaji (Bulan Tahun)"
+  updateBulanIniFromSelection();
+}
+
+function syncChartPeriodeToTable() {
+  const tahun = document.getElementById('chart-tahun')?.value;
+  const bulan = document.getElementById('chart-bulan')?.value;
+  if (!tahun || !bulan) return;
+  const periode = tahun + '-' + bulan;
+  const sel = document.getElementById('gaji-periode');
+  if (sel) {
+    sel.value = periode;
+    loadGaji();
+  }
+}
+
+function updateBulanIniFromSelection() {
+  const tahun = document.getElementById('chart-tahun')?.value || '2026';
+  const bulanIdx = parseInt(document.getElementById('chart-bulan')?.value || '1') - 1;
+  const BULAN_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const label = document.getElementById('gaji-bulan-ini-label');
+  if (label) label.textContent = 'Total Gaji (' + BULAN_NAMES[bulanIdx] + ' ' + tahun + ')';
+  // Update value dari data yang sudah di-load
+  if (window._lastChartData) {
+    const monthData = window._lastChartData[bulanIdx];
+    const el = document.getElementById('gaji-bulan-ini');
+    if (el) el.textContent = monthData?.total > 0 ? fmtRp(monthData.total) : '—';
+  }
+}
+
 function populatePeriode() {
   const sel = document.getElementById('gaji-periode');
   if (!sel) return;
@@ -2757,16 +2819,8 @@ function renderGajiTable() {
   if (checkAll) checkAll.checked = false;
 
   tbody.innerHTML = list.length ? list.map(r => {
-    // Parse custom components
-    let customHtml = '—', customTotal = 0;
-    try {
-      const cObj = JSON.parse(r.KomponenCustom || '{}');
-      const entries = Object.entries(cObj).filter(([,v]) => parseFloat(v) > 0);
-      if (entries.length) {
-        customHtml = entries.map(([k,v]) => `<div style="font-size:11px">${k}: ${fmtRp(v)}</div>`).join('');
-        entries.forEach(([,v]) => { customTotal += parseFloat(v)||0; });
-      }
-    } catch(_) {}
+    // Live langsung angka
+    const customTotal = parseFloat(r.Live) || 0;
 
     const sudahTransfer = r.StatusTransfer === 'Sudah';
     const aksi = !sudahTransfer
@@ -2903,17 +2957,17 @@ async function bulkMarkTransfer() {
 
 function buildCustomFields(existingJson) {
   const aktif = komponenGajiData.filter(k => String(k.Aktif) === 'true');
-  if (!aktif.length) { document.getElementById('ag-custom-fields').innerHTML = ''; return; }
+  if (!aktif.length) { document.getElementById('ag-live-field').innerHTML = ''; return; }
   let existing = {};
   try { existing = JSON.parse(existingJson || '{}'); } catch(_) {}
-  document.getElementById('ag-custom-fields').innerHTML =
+  document.getElementById('ag-live-field').innerHTML =
     `<div style="font-size:11px;font-family:var(--mono);color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Komponen Custom</div>` +
     `<div class="form-grid">` +
     aktif.map(k => {
       const val = existing[k.Nama] || 0;
       return `<div class="form-group">
         <label class="form-label">${k.Nama} (Rp)</label>
-        <input type="text" inputmode="numeric" class="form-input custom-komponen" data-nama="${k.Nama}"
+        <input type="text" inputmode="numeric" class="form-input live-input-field" data-nama="${k.Nama}"
           value="${val ? Number(val).toLocaleString('id-ID') : ''}"
           placeholder="0" oninput="formatNominal(this);hitungTotalGaji()">
       </div>`;
@@ -2923,7 +2977,7 @@ function buildCustomFields(existingJson) {
 function hitungTotalGaji() {
   const get = id => getRawNominal(document.getElementById(id)) || 0;
   let total = get('ag-pokok') + get('ag-tunjangan') + get('ag-lembur') + get('ag-bazaar') + get('ag-bonus') + get('ag-thr');
-  document.querySelectorAll('.custom-komponen').forEach(el => { total += getRawNominal(el) || 0; });
+  document.querySelectorAll('.live-input-field').forEach(el => { total += getRawNominal(el) || 0; });
   const el = document.getElementById('ag-total');
   if (el) el.textContent = fmtRp(total);
 }
@@ -2965,7 +3019,7 @@ async function submitAddGaji() {
 
   // Collect custom komponen
   const customObj = {};
-  document.querySelectorAll('.custom-komponen').forEach(el => {
+  document.querySelectorAll('.live-input-field').forEach(el => {
     const val = getRawNominal(el);
     if (val > 0) customObj[el.dataset.nama] = val;
   });
@@ -3041,7 +3095,7 @@ function openEditGaji(id) {
   setVal('ag-lembur', r.Lembur); setVal('ag-bazaar', r.Bazaar);
   setVal('ag-bonus', r.Bonus); setVal('ag-thr', r.THR);
   document.getElementById('ag-catatan').value = r.Catatan || '';
-  buildCustomFields(r.KomponenCustom || '{}');
+  buildCustomFields(r.Live || '{}');
   hitungTotalGaji();
   document.getElementById('modal-gaji-title').textContent = 'Edit Gaji — ' + r.NamaStaff;
   openModal('modal-add-gaji');
