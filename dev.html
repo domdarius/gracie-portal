@@ -675,8 +675,8 @@ tbody tr:hover td{background:#FAFAF7;}
                   </label>
                 </div>
               </div>
-              <div style="padding:16px 20px">
-                <canvas id="gaji-chart" height="160"></canvas>
+              <div style="padding:16px 20px;height:200px;position:relative">
+                <canvas id="gaji-chart" style="max-height:200px"></canvas>
               </div>
               <!-- YTD info bar -->
               <div style="padding:0 20px 16px;display:flex;gap:12px;flex-wrap:wrap">
@@ -2625,6 +2625,7 @@ async function loadGajiChart() {
     data: { labels: MONTHS, datasets },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 12 }, boxWidth: 16 } },
