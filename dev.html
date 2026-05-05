@@ -657,6 +657,46 @@ tbody tr:hover td{background:#FAFAF7;}
 
           <!-- PAYROLL TAB -->
           <div id="gaji-panel-payroll">
+
+            <!-- Chart Section -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <h3 id="gaji-chart-title">Tren Payroll 2026</h3>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <select class="form-select" id="chart-tahun" style="width:auto" onchange="loadGajiChart()">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                  </select>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" id="chart-prev-year" onchange="loadGajiChart()" style="width:14px;height:14px">
+                    Bandingkan tahun sebelumnya
+                  </label>
+                </div>
+              </div>
+              <div style="padding:16px 20px">
+                <canvas id="gaji-chart" height="280"></canvas>
+              </div>
+              <!-- Akumulasi info -->
+              <div style="padding:0 20px 16px;display:flex;gap:24px;flex-wrap:wrap">
+                <div>
+                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total YTD <span id="chart-tahun-label">2026</span></div>
+                  <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--forest)" id="gaji-ytd">—</div>
+                </div>
+                <div id="gaji-prev-ytd-wrap" style="display:none">
+                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total YTD <span id="chart-prev-label">2025</span></div>
+                  <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--ink3)" id="gaji-prev-ytd">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary per Divisi -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header"><h3>Summary per Divisi</h3></div>
+              <div id="gaji-divisi" style="padding:16px"></div>
+            </div>
+
             <div class="stats-grid" style="margin-bottom:16px">
               <div class="stat-card"><div class="s-label">Total Payroll</div><div class="s-value" style="font-size:20px" id="gs-total">—</div></div>
               <div class="stat-card amber"><div class="s-label">Belum Transfer</div><div class="s-value" id="gs-belum">—</div></div>
@@ -917,7 +957,32 @@ tbody tr:hover td{background:#FAFAF7;}
     <!-- GAJI -->
     <div class="sp-page" id="sp-gaji">
       <div style="font-size:20px;font-weight:600;margin-bottom:4px">Gaji Saya</div>
-      <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">Rincian gaji dari awal bergabung</div>
+      <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">Rincian dan progress gaji kamu</div>
+
+      <!-- Chart -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <h3 id="sp-chart-title">Tren Gaji 2026</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-select" id="sp-chart-tahun" style="width:auto" onchange="loadGajiChartStaff()">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+              <input type="checkbox" id="sp-chart-prev" onchange="loadGajiChartStaff()" style="width:13px;height:13px">
+              Tahun lalu
+            </label>
+          </div>
+        </div>
+        <div style="padding:12px 16px">
+          <canvas id="sp-gaji-chart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- List payslip -->
+      <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Riwayat Gaji</div>
       <div id="sp-gaji-list"></div>
     </div>
 
@@ -1219,6 +1284,7 @@ tbody tr:hover td{background:#FAFAF7;}
 <!-- ═══════════════════════════════════════════
      JAVASCRIPT
 ═══════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 'use strict';
 
@@ -2093,6 +2159,7 @@ async function loadStaffPortal() {
   ]);
   // Load gaji staff
   loadGajiStaff();
+  loadGajiChartStaff();
 
   if (sRes.ok)  state.staffData    = sRes.data;
   if (cRes.ok)  state.staffCuti    = cRes.data || [];
@@ -2466,6 +2533,142 @@ let gajiFilter = 'semua';
 let templateGajiData = [];
 let komponenGajiData = [];
 
+// ─── GAJI CHART ──────────────────────────────────────────────────
+let gajiChartInstance = null;
+
+async function loadGajiChart() {
+  const tahun = document.getElementById('chart-tahun')?.value || '2026';
+  const showPrev = document.getElementById('chart-prev-year')?.checked || false;
+  const prevTahun = String(parseInt(tahun) - 1);
+
+  // Update labels
+  const tlEl = document.getElementById('chart-tahun-label');
+  const plEl = document.getElementById('chart-prev-label');
+  if (tlEl) tlEl.textContent = tahun;
+  if (plEl) plEl.textContent = prevTahun;
+
+  document.getElementById('gaji-chart-title').textContent = 'Tren Payroll ' + tahun;
+
+  const [curRes, prevRes] = await Promise.all([
+    apiGet({ action: 'getGajiChart', token: HR_PASSWORD, tahun }),
+    showPrev ? apiGet({ action: 'getGajiChart', token: HR_PASSWORD, tahun: prevTahun }) : Promise.resolve(null),
+  ]);
+
+  if (!curRes.ok) return;
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const now = new Date();
+  const currentMonthIdx = (tahun === String(now.getFullYear())) ? now.getMonth() : 11;
+
+  // Build datasets
+  const curTotals = curRes.months.map((m, i) => i <= currentMonthIdx && m.total > 0 ? m.total : null);
+  const curAkum   = curRes.months.map((m, i) => i <= currentMonthIdx && m.akumulasi > 0 ? m.akumulasi : null);
+
+  // Update YTD
+  const ytd = curRes.months[currentMonthIdx]?.akumulasi || 0;
+  const ytdEl = document.getElementById('gaji-ytd');
+  if (ytdEl) ytdEl.textContent = fmtRp(ytd);
+
+  const datasets = [
+    {
+      label: 'Payroll Bulanan ' + tahun,
+      data: curTotals,
+      borderColor: '#3A6B22',
+      backgroundColor: 'rgba(58,107,34,0.08)',
+      borderWidth: 2.5,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      fill: true,
+      tension: 0.3,
+      yAxisID: 'y',
+    },
+    {
+      label: 'Akumulasi ' + tahun,
+      data: curAkum,
+      borderColor: '#1E4010',
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderDash: [5,4],
+      pointRadius: 2,
+      fill: false,
+      tension: 0.3,
+      yAxisID: 'y',
+    },
+  ];
+
+  if (showPrev && prevRes?.ok) {
+    const prevTotals = prevRes.months.map(m => m.total > 0 ? m.total : null);
+    const prevAkum   = prevRes.months[11]?.akumulasi || 0;
+    datasets.push({
+      label: 'Payroll Bulanan ' + prevTahun,
+      data: prevTotals,
+      borderColor: '#9A9793',
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderDash: [4,3],
+      pointRadius: 3,
+      fill: false,
+      tension: 0.3,
+      yAxisID: 'y',
+    });
+    document.getElementById('gaji-prev-ytd-wrap').style.display = 'block';
+    const prevYtdEl = document.getElementById('gaji-prev-ytd');
+    if (prevYtdEl) prevYtdEl.textContent = fmtRp(prevAkum);
+  } else {
+    document.getElementById('gaji-prev-ytd-wrap').style.display = 'none';
+  }
+
+  // Render chart
+  const ctx = document.getElementById('gaji-chart')?.getContext('2d');
+  if (!ctx) return;
+  if (gajiChartInstance) gajiChartInstance.destroy();
+  gajiChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels: MONTHS, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 12 }, boxWidth: 16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y ? fmtRp(ctx.parsed.y) : '—'),
+          }
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: v => 'Rp ' + (v >= 1000000 ? (v/1000000).toFixed(0)+'jt' : (v/1000).toFixed(0)+'rb'),
+            font: { family: 'DM Mono', size: 11 },
+          },
+          grid: { color: 'rgba(0,0,0,0.04)' },
+        },
+        x: { ticks: { font: { family: 'DM Sans', size: 12 } }, grid: { display: false } },
+      },
+    },
+  });
+
+  // Summary per divisi
+  const divisiData = {};
+  curRes.months.forEach(m => {
+    Object.entries(m.byDept || {}).forEach(([dept, total]) => {
+      divisiData[dept] = (divisiData[dept]||0) + total;
+    });
+  });
+  const divisiEl = document.getElementById('gaji-divisi');
+  if (divisiEl) {
+    const sorted = Object.entries(divisiData).sort((a,b) => b[1]-a[1]);
+    divisiEl.innerHTML = sorted.length
+      ? sorted.map(([dept, total]) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)">
+            <span style="font-size:13px;font-weight:500">${dept}</span>
+            <span style="font-family:var(--mono);font-weight:600;color:var(--forest)">${fmtRp(total)}</span>
+          </div>`).join('')
+      : '<div class="empty">Belum ada data departemen</div>';
+  }
+}
+
 function populatePeriode() {
   const sel = document.getElementById('gaji-periode');
   if (!sel) return;
@@ -2491,6 +2694,8 @@ async function loadGaji() {
   gajiData         = gRes.ok  ? gRes.data  || [] : [];
   templateGajiData = tRes.ok  ? tRes.data  || [] : [];
   komponenGajiData = kRes.ok  ? kRes.data  || [] : [];
+  // Load chart
+  loadGajiChart();
 
   const title = document.getElementById('gaji-table-title');
   if (title) title.textContent = 'Payroll ' + (document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || '');
@@ -2881,6 +3086,75 @@ async function toggleKomponenGaji(id, aktif) {
 }
 
 // ─── GAJI STAFF PORTAL ───────────────────────────────────────────
+let spGajiChartInstance = null;
+
+async function loadGajiChartStaff() {
+  const tahun    = document.getElementById('sp-chart-tahun')?.value || '2026';
+  const showPrev = document.getElementById('sp-chart-prev')?.checked || false;
+  const prevTahun = String(parseInt(tahun)-1);
+  document.getElementById('sp-chart-title').textContent = 'Tren Gaji ' + tahun;
+
+  const [curRes, prevRes] = await Promise.all([
+    apiGet({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun }),
+    showPrev ? apiGet({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun: prevTahun }) : Promise.resolve(null),
+  ]);
+  if (!curRes.ok) return;
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const now = new Date();
+  const currentMonthIdx = tahun === String(now.getFullYear()) ? now.getMonth() : 11;
+  const curData = curRes.months.map((m, i) => i <= currentMonthIdx ? m.total : null);
+
+  const datasets = [{
+    label: 'Gaji ' + tahun,
+    data: curData,
+    borderColor: '#3A6B22',
+    backgroundColor: 'rgba(58,107,34,0.08)',
+    borderWidth: 2.5,
+    pointRadius: 4,
+    fill: true,
+    tension: 0.3,
+    spanGaps: false,
+  }];
+
+  if (showPrev && prevRes?.ok) {
+    datasets.push({
+      label: 'Gaji ' + prevTahun,
+      data: prevRes.months.map(m => m.total),
+      borderColor: '#9A9793',
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderDash: [4,3],
+      pointRadius: 3,
+      fill: false,
+      tension: 0.3,
+      spanGaps: false,
+    });
+  }
+
+  const ctx = document.getElementById('sp-gaji-chart')?.getContext('2d');
+  if (!ctx) return;
+  if (spGajiChartInstance) spGajiChartInstance.destroy();
+  spGajiChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels: MONTHS, datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 14 } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y ? fmtRp(ctx.parsed.y) : '—') } },
+      },
+      scales: {
+        y: {
+          ticks: { callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'jt' : (v/1000).toFixed(0)+'rb', font: { size: 10 } },
+          grid: { color: 'rgba(0,0,0,0.04)' },
+        },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } },
+      },
+    },
+  });
+}
+
 async function loadGajiStaff() {
   const res = await apiGet({ action: 'getGajiStaff', staffId: state.session.staffId });
   if (!res.ok) return;
