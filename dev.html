@@ -2776,8 +2776,10 @@ function renderGajiTable() {
         </div>`;
 
     const sudahTransfer = r.StatusTransfer === 'Sudah';
-    return `<tr style="${sudahTransfer ? 'opacity:.65' : ''}">
-      <td><input type="checkbox" class="gaji-row-check" data-id="${r.ID}" ${sudahTransfer ? 'disabled' : ''} onchange="updateBulkCount()"></td>
+    const trStyle = sudahTransfer ? 'opacity:.65' : '';
+    const cbDisabled = sudahTransfer ? 'disabled' : '';
+    return `<tr style="${trStyle}">
+      <td><input type="checkbox" class="gaji-row-check" data-id="${r.ID}" ${cbDisabled} onchange="updateBulkCount()"></td>
       <td><span style="font-weight:500">${r.NamaStaff}</span></td>
       <td style="font-size:12px">${r.NamaBank||'—'}${r.NoRekening?' · '+r.NoRekening:''}</td>
       <td style="font-family:var(--mono)">${fmtRp(r.GajiPokok)}</td>
