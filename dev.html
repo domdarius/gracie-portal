@@ -675,8 +675,8 @@ tbody tr:hover td{background:#FAFAF7;}
                   </label>
                 </div>
               </div>
-              <div style="padding:16px 20px;height:200px;position:relative">
-                <canvas id="gaji-chart" style="max-height:200px"></canvas>
+              <div style="padding:8px 20px 16px;height:180px;position:relative">
+                <canvas id="gaji-chart"></canvas>
               </div>
               <!-- YTD info bar -->
               <div style="padding:0 20px 16px;display:flex;gap:12px;flex-wrap:wrap">
@@ -726,7 +726,7 @@ tbody tr:hover td{background:#FAFAF7;}
               </div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th style="width:36px"><input type="checkbox" id="gaji-check-all" onchange="toggleAllGaji(this)" title="Pilih semua"></th><th>Staff</th><th>Bank · Rekening</th><th>Pokok</th><th>Tunjangan</th><th>Lembur</th><th>Bazaar</th><th>Bonus</th><th>THR</th><th>Custom</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+                  <thead><tr><th style="width:36px"><input type="checkbox" id="gaji-check-all" onchange="toggleAllGaji(this)" title="Pilih semua"></th><th>Staff</th><th>Bank · Rekening</th><th>Pokok</th><th>Lembur</th><th>Bazaar</th><th>Bonus</th><th>THR</th><th>Live</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
                   <tbody id="gaji-table"></tbody>
                 </table>
               </div>
@@ -1366,7 +1366,7 @@ function fmtDateTime(d) {
 }
 
 function fmtRp(n) {
-  return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  return 'Rp ' + Math.round(Number(n || 0)).toLocaleString('id-ID');
 }
 
 // Auto format nominal: 200000 → 200.000
@@ -1543,7 +1543,11 @@ function hrNav(page, btn) {
   const titles = { dashboard:'Dashboard', staff:'Data Staff', cuti:'Cuti & Absensi', reimburse:'Reimbursement', gaji:'Gaji & Payroll', settings:'Pengaturan' };
   document.getElementById('hr-topbar-title').textContent = titles[page] || page;
 
-  if (page === 'gaji')      { populatePeriode(); loadGaji(); }
+  if (page === 'gaji')      {
+    populatePeriode();
+    loadGaji();
+    setTimeout(() => loadGajiChart(), 300); // delay kecil biar periode sudah set
+  }
   if (page === 'staff')     renderStaff();
   if (page === 'cuti')      renderCuti();
   if (page === 'reimburse') renderReimburse();
@@ -2570,7 +2574,7 @@ async function loadGajiChart() {
   // Build datasets
   const curTotals = curRes.months.map((m, i) => i <= currentMonthIdx && m.total > 0 ? m.total : null);
   // Update YTD
-  const ytd = curRes.months.slice(0, currentMonthIdx+1).reduce((s,m) => s+(m.total||0), 0);
+  const ytd = Math.round(curRes.months.slice(0, currentMonthIdx+1).reduce((s,m) => s+(m.total||0), 0));
   const ytdEl = document.getElementById('gaji-ytd');
   if (ytdEl) ytdEl.textContent = fmtRp(ytd);
   // Total bulan berjalan
@@ -2694,8 +2698,7 @@ async function loadGaji() {
   gajiData         = gRes.ok  ? gRes.data  || [] : [];
   templateGajiData = tRes.ok  ? tRes.data  || [] : [];
   komponenGajiData = kRes.ok  ? kRes.data  || [] : [];
-  // Load chart
-  loadGajiChart();
+  // Chart di-load oleh hrNav
 
   const title = document.getElementById('gaji-table-title');
   if (title) title.textContent = 'Payroll ' + (document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || '');
@@ -2782,12 +2785,11 @@ function renderGajiTable() {
       <td><span style="font-weight:500">${r.NamaStaff}</span></td>
       <td style="font-size:12px">${r.NamaBank||'—'}${r.NoRekening?' · '+r.NoRekening:''}</td>
       <td style="font-family:var(--mono)">${fmtRp(r.GajiPokok)}</td>
-      <td style="font-family:var(--mono);${!parseFloat(r.Tunjangan)?'color:var(--ink3)':''}">${fmtRp(r.Tunjangan)}</td>
       <td style="font-family:var(--mono);${!parseFloat(r.Lembur)?'color:var(--ink3)':''}">${fmtRp(r.Lembur)}</td>
       <td style="font-family:var(--mono);${!parseFloat(r.Bazaar)?'color:var(--ink3)':''}">${fmtRp(r.Bazaar)}</td>
       <td style="font-family:var(--mono);${!parseFloat(r.Bonus)?'color:var(--ink3)':''}">${fmtRp(r.Bonus)}</td>
       <td style="font-family:var(--mono);${!parseFloat(r.THR)?'color:var(--ink3)':''}">${fmtRp(r.THR)}</td>
-      <td style="font-size:12px">${customHtml}</td>
+      <td style="font-family:var(--mono);${customTotal>0?'':'color:var(--ink3)'}">${customTotal>0?fmtRp(customTotal):'—'}</td>
       <td style="font-family:var(--mono);font-weight:600;color:var(--forest)">${fmtRp(r.Total)}</td>
       <td>${r.StatusTransfer === 'Sudah'
         ? '<span class="badge badge-approved">✓ Sudah</span>'
@@ -2795,7 +2797,7 @@ function renderGajiTable() {
       <td style="white-space:nowrap">${aksi}</td>
     </tr>`;
   }).join('')
-  : '<tr><td colspan="13">' + emptyHtml('Belum ada data gaji periode ini') + '</td></tr>';
+  : '<tr><td colspan="12">' + emptyHtml('Belum ada data gaji periode ini') + '</td></tr>';
 }
 
 function filterGaji(f, btn) {
