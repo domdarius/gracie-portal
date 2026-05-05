@@ -679,16 +679,21 @@ tbody tr:hover td{background:#FAFAF7;}
                 <canvas id="gaji-chart" height="280"></canvas>
               </div>
               <!-- YTD info bar -->
-              <div style="padding:0 20px 16px;display:flex;gap:16px;flex-wrap:wrap">
-                <div style="background:var(--leaf-lt);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:12px">
-                  <div>
-                    <div style="font-size:11px;font-family:var(--mono);color:var(--forest);opacity:.7;text-transform:uppercase">Total Pengeluaran Gaji <span id="chart-tahun-label">2026</span></div>
-                    <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--forest)" id="gaji-ytd">—</div>
-                  </div>
+              <div style="padding:0 20px 16px;display:flex;gap:12px;flex-wrap:wrap">
+                <!-- Total bulan berjalan -->
+                <div style="background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;flex:1;min-width:180px">
+                  <div style="font-size:10px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase;margin-bottom:4px">Total Gaji Bulan Berjalan</div>
+                  <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--ink)" id="gaji-bulan-ini">—</div>
                 </div>
-                <div id="gaji-prev-ytd-wrap" style="display:none;background:var(--paper);border-radius:var(--r);padding:10px 16px">
-                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total <span id="chart-prev-label">2025</span></div>
-                  <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--ink2)" id="gaji-prev-ytd">—</div>
+                <!-- Total YTD -->
+                <div style="background:var(--leaf-lt);border-radius:var(--r);padding:12px 16px;flex:1;min-width:180px">
+                  <div style="font-size:10px;font-family:var(--mono);color:var(--forest);opacity:.8;text-transform:uppercase;margin-bottom:4px">Total Pengeluaran Gaji <span id="chart-tahun-label">2026</span></div>
+                  <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--forest)" id="gaji-ytd">—</div>
+                </div>
+                <!-- Total tahun lalu (conditional) -->
+                <div id="gaji-prev-ytd-wrap" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;flex:1;min-width:180px">
+                  <div style="font-size:10px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase;margin-bottom:4px">Total Pengeluaran <span id="chart-prev-label">2025</span></div>
+                  <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--ink2)" id="gaji-prev-ytd">—</div>
                 </div>
               </div>
             </div>
@@ -2568,6 +2573,10 @@ async function loadGajiChart() {
   const ytd = curRes.months.slice(0, currentMonthIdx+1).reduce((s,m) => s+(m.total||0), 0);
   const ytdEl = document.getElementById('gaji-ytd');
   if (ytdEl) ytdEl.textContent = fmtRp(ytd);
+  // Total bulan berjalan
+  const bulanIni = curRes.months[currentMonthIdx]?.total || 0;
+  const bulanIniEl = document.getElementById('gaji-bulan-ini');
+  if (bulanIniEl) bulanIniEl.textContent = fmtRp(bulanIni);
 
   const datasets = [
     {
@@ -2589,14 +2598,12 @@ async function loadGajiChart() {
     datasets.push({
       label: 'Payroll Bulanan ' + prevTahun,
       data: prevTotals,
-      borderColor: '#9A9793',
+      borderColor: '#C8C4BC',
       backgroundColor: 'transparent',
       borderWidth: 1.5,
-      borderDash: [4,3],
       pointRadius: 3,
       fill: false,
       tension: 0.3,
-      yAxisID: 'y',
     });
     document.getElementById('gaji-prev-ytd-wrap').style.display = 'block';
     const prevYtdEl = document.getElementById('gaji-prev-ytd');
