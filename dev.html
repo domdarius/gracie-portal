@@ -678,15 +678,17 @@ tbody tr:hover td{background:#FAFAF7;}
               <div style="padding:16px 20px">
                 <canvas id="gaji-chart" height="280"></canvas>
               </div>
-              <!-- Akumulasi info -->
-              <div style="padding:0 20px 16px;display:flex;gap:24px;flex-wrap:wrap">
-                <div>
-                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total YTD <span id="chart-tahun-label">2026</span></div>
-                  <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--forest)" id="gaji-ytd">—</div>
+              <!-- YTD info bar -->
+              <div style="padding:0 20px 16px;display:flex;gap:16px;flex-wrap:wrap">
+                <div style="background:var(--leaf-lt);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:12px">
+                  <div>
+                    <div style="font-size:11px;font-family:var(--mono);color:var(--forest);opacity:.7;text-transform:uppercase">Total Pengeluaran Gaji <span id="chart-tahun-label">2026</span></div>
+                    <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--forest)" id="gaji-ytd">—</div>
+                  </div>
                 </div>
-                <div id="gaji-prev-ytd-wrap" style="display:none">
-                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total YTD <span id="chart-prev-label">2025</span></div>
-                  <div style="font-size:20px;font-weight:600;font-family:var(--mono);color:var(--ink3)" id="gaji-prev-ytd">—</div>
+                <div id="gaji-prev-ytd-wrap" style="display:none;background:var(--paper);border-radius:var(--r);padding:10px 16px">
+                  <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase">Total <span id="chart-prev-label">2025</span></div>
+                  <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--ink2)" id="gaji-prev-ytd">—</div>
                 </div>
               </div>
             </div>
@@ -2562,10 +2564,8 @@ async function loadGajiChart() {
 
   // Build datasets
   const curTotals = curRes.months.map((m, i) => i <= currentMonthIdx && m.total > 0 ? m.total : null);
-  const curAkum   = curRes.months.map((m, i) => i <= currentMonthIdx && m.akumulasi > 0 ? m.akumulasi : null);
-
   // Update YTD
-  const ytd = curRes.months[currentMonthIdx]?.akumulasi || 0;
+  const ytd = curRes.months.slice(0, currentMonthIdx+1).reduce((s,m) => s+(m.total||0), 0);
   const ytdEl = document.getElementById('gaji-ytd');
   if (ytdEl) ytdEl.textContent = fmtRp(ytd);
 
@@ -2580,25 +2580,12 @@ async function loadGajiChart() {
       pointHoverRadius: 6,
       fill: true,
       tension: 0.3,
-      yAxisID: 'y',
-    },
-    {
-      label: 'Akumulasi ' + tahun,
-      data: curAkum,
-      borderColor: '#1E4010',
-      backgroundColor: 'transparent',
-      borderWidth: 1.5,
-      borderDash: [5,4],
-      pointRadius: 2,
-      fill: false,
-      tension: 0.3,
-      yAxisID: 'y',
     },
   ];
 
   if (showPrev && prevRes?.ok) {
     const prevTotals = prevRes.months.map(m => m.total > 0 ? m.total : null);
-    const prevAkum   = prevRes.months[11]?.akumulasi || 0;
+    const prevAkum   = prevRes.months.reduce((s,m) => s + (m.total||0), 0);
     datasets.push({
       label: 'Payroll Bulanan ' + prevTahun,
       data: prevTotals,
@@ -2639,10 +2626,11 @@ async function loadGajiChart() {
       scales: {
         y: {
           ticks: {
-            callback: v => 'Rp ' + (v >= 1000000 ? (v/1000000).toFixed(0)+'jt' : (v/1000).toFixed(0)+'rb'),
+            callback: v => v >= 1000000 ? 'Rp '+(v/1000000).toFixed(0)+'jt' : 'Rp '+(v/1000).toFixed(0)+'rb',
             font: { family: 'DM Mono', size: 11 },
           },
           grid: { color: 'rgba(0,0,0,0.04)' },
+          beginAtZero: true,
         },
         x: { ticks: { font: { family: 'DM Sans', size: 12 } }, grid: { display: false } },
       },
