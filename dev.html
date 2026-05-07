@@ -2752,8 +2752,11 @@ function populatePeriode() {
   const now = new Date();
   let opts = '';
   for (let i = 0; i < 13; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const val = d.toISOString().slice(0,7);
+    const yr = now.getFullYear();
+    const mn = now.getMonth() - i;
+    const d = new Date(yr, mn, 1);
+    // Pakai local year/month, bukan ISO (hindari timezone bug)
+    const val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
     const lbl = d.toLocaleDateString('id-ID', {month:'long', year:'numeric'});
     opts += `<option value="${val}">${lbl}</option>`;
   }
