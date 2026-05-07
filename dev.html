@@ -643,6 +643,7 @@ tbody tr:hover td{background:#FAFAF7;}
             <h2>Gaji &amp; Payroll</h2>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <select class="form-select" id="gaji-periode" style="width:auto" onchange="loadGaji()"></select>
+              <button class="btn btn-secondary" onclick="syncGajiFromSheets()" title="Sync data dari 11. Gaji Gracie">⬇ Sync Sheets</button>
               <button class="btn btn-secondary" onclick="openGenerateGaji()">⚡ Generate</button>
               <button class="btn btn-primary" onclick="openAddGaji()">+ Input Gaji</button>
             </div>
@@ -733,7 +734,8 @@ tbody tr:hover td{background:#FAFAF7;}
                 </table>
               </div>
             </div>
-            <div class="card">
+            <!-- Rekap Bank - hidden until rekening data is filled -->
+            <div class="card hidden" id="card-rekap-bank">
               <div class="card-header"><h3>Rekap per Rekening Bank</h3></div>
               <div id="gaji-rekap" style="padding:16px"></div>
             </div>
@@ -3054,6 +3056,19 @@ async function submitAddGaji() {
     toast(res.updated ? 'Gaji diupdate ✓' : 'Gaji disimpan ✓', 'success');
     await loadGaji();
   } else toast(res.error || 'Gagal', 'error');
+}
+
+async function syncGajiFromSheets() {
+  const periode = document.getElementById('gaji-periode')?.value;
+  if (!periode) { toast('Pilih periode dulu', 'error'); return; }
+  const label = document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || periode;
+  if (!confirm('Sync data gaji ' + label + ' dari Sheets "11. Gaji Gracie"?\n\nData yang sudah ada tidak akan di-overwrite.')) return;
+  toast('Syncing dari Sheets...');
+  const res = await apiGet({ action: 'syncGajiFromSheets', token: HR_PASSWORD, periode });
+  if (res.ok) {
+    toast('Sync selesai! ✓ Imported: ' + res.imported + ', Skip: ' + res.skipped, 'success');
+    await loadGaji();
+  } else toast(res.error || 'Gagal sync', 'error');
 }
 
 async function openGenerateGaji() {
