@@ -1550,6 +1550,14 @@ function hrNav(page, btn) {
   if (page === 'gaji')      {
     populatePeriode();
     populateChartBulan();
+    // Sync gaji-periode dengan chart bulan+tahun
+    const cb = document.getElementById('chart-bulan');
+    const ct = document.getElementById('chart-tahun');
+    const gp = document.getElementById('gaji-periode');
+    if (cb && ct && gp) {
+      const syncPeriode = ct.value + '-' + cb.value;
+      if (gp.value !== syncPeriode) gp.value = syncPeriode;
+    }
     loadGaji();
     setTimeout(() => loadGajiChart(), 300);
   }
@@ -2701,6 +2709,15 @@ function populateChartBulan() {
 }
 
 function onChartTahunChange() {
+  // Reset bulan ke Januari saat ganti tahun
+  const now = new Date();
+  const tahun = document.getElementById('chart-tahun')?.value;
+  const cb = document.getElementById('chart-bulan');
+  if (cb && tahun === String(now.getFullYear())) {
+    cb.value = String(now.getMonth()+1).padStart(2,'0');
+  } else if (cb) {
+    cb.value = '01';
+  }
   loadGajiChart();
   syncChartPeriodeToTable();
 }
