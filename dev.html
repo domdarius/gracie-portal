@@ -707,7 +707,7 @@ tbody tr:hover td{background:#FAFAF7;}
             </div>
 
             <div class="stats-grid" style="margin-bottom:16px">
-              <div class="stat-card"><div class="s-label">Total Payroll</div><div class="s-value" style="font-size:20px" id="gs-total">—</div></div>
+              <div class="stat-card"><div class="s-label" id="gs-total-label">Total Payroll</div><div class="s-value" style="font-size:20px" id="gs-total">—</div></div>
               <div class="stat-card amber"><div class="s-label">Belum Transfer</div><div class="s-value" id="gs-belum">—</div></div>
               <div class="stat-card green"><div class="s-label">Sudah Transfer</div><div class="s-value" id="gs-sudah">—</div></div>
               <div class="stat-card"><div class="s-label">Total Staff</div><div class="s-value" id="gs-count">—</div></div>
@@ -2762,8 +2762,11 @@ async function loadGaji() {
   komponenGajiData = kRes.ok  ? kRes.data  || [] : [];
   // Chart di-load oleh hrNav
 
+  const periodeLabel = document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || '';
   const title = document.getElementById('gaji-table-title');
-  if (title) title.textContent = 'Payroll ' + (document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || '');
+  if (title) title.textContent = 'Payroll ' + periodeLabel;
+  const totalLabel = document.getElementById('gs-total-label');
+  if (totalLabel) totalLabel.textContent = 'Total Payroll ' + periodeLabel;
 
   renderGajiStats();
   renderGajiTable();
@@ -2780,6 +2783,15 @@ function switchGajiSubtab(tab, btn) {
 }
 
 function renderGajiStats() {
+  // Update label Total Payroll dengan periode
+  const periodeEl = document.getElementById('gaji-periode');
+  if (periodeEl && periodeEl.value) {
+    const [yr, mn] = periodeEl.value.split('-');
+    const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const label = 'Total Payroll ' + BULAN[parseInt(mn)-1] + ' ' + yr;
+    const labelEl = document.getElementById('gs-total-label');
+    if (labelEl) labelEl.textContent = label;
+  }
   const total = gajiData.reduce((s,r) => s + (parseFloat(r.Total)||0), 0);
   const belum = gajiData.filter(r => r.StatusTransfer === 'Belum').length;
   const sudah = gajiData.filter(r => r.StatusTransfer === 'Sudah').length;
