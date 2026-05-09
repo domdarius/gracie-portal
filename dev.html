@@ -1792,7 +1792,10 @@ function renderCuti() {
         <button class="btn btn-reject btn-sm btn-icon" onclick="openRejectCuti('${c.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
-      aksi = `<button class="btn btn-ghost btn-sm" onclick="undoCuti('${c.ID}')">↩ Undo</button>`;
+      aksi = `<div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="undoCuti('${c.ID}')">↩ Undo</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCutiRow('${c.ID}')">🗑</button>
+      </div>`;
     }
 
     return `<tr>
@@ -1902,6 +1905,15 @@ async function submitRejectCuti() {
   } else toast(res.error || 'Gagal', 'error');
 }
 
+async function deleteCutiRow(id) {
+  if (!confirm('Hapus data cuti ini permanen? Tidak bisa dibatalkan.')) return;
+  const res = await apiGet({ action: 'deleteCuti', token: HR_PASSWORD, id });
+  if (res.ok) {
+    toast('Data cuti dihapus ✓', 'success');
+    await syncAll(); renderCuti();
+  } else toast(res.error || 'Gagal hapus', 'error');
+}
+
 async function undoCuti(id) {
   if (!confirm('Kembalikan status pengajuan ini ke Pending?')) return;
   const res = await apiGet({ action: 'undoCuti', token: HR_PASSWORD, id });
@@ -1925,7 +1937,10 @@ function renderReimburse() {
         <button class="btn btn-reject btn-sm btn-icon" onclick="openRejectReimburse('${r.ID}')" title="Tolak">✕</button>
       </div>`;
     } else {
-      aksi = `<button class="btn btn-ghost btn-sm" onclick="undoReimburse('${r.ID}')">↩ Undo</button>`;
+      aksi = `<div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="undoReimburse('${r.ID}')">↩ Undo</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReimburseRow('${r.ID}')">🗑</button>
+      </div>`;
     }
     const ket = r.Keterangan ? `<span title="${r.Keterangan}" style="cursor:help;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">${r.Keterangan}</span>` : '—';
     return `<tr>
@@ -2006,6 +2021,15 @@ async function submitRejectReimburse() {
     toast('Reimbursement ditolak', 'success');
     await syncAll(); renderDashboard(); renderReimburse();
   } else toast(res.error || 'Gagal', 'error');
+}
+
+async function deleteReimburseRow(id) {
+  if (!confirm('Hapus data reimburse ini permanen? Tidak bisa dibatalkan.')) return;
+  const res = await apiGet({ action: 'deleteReimburse', token: HR_PASSWORD, id });
+  if (res.ok) {
+    toast('Data reimburse dihapus ✓', 'success');
+    await syncAll(); renderReimburse();
+  } else toast(res.error || 'Gagal hapus', 'error');
 }
 
 async function undoReimburse(id) {
