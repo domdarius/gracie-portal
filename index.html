@@ -1974,7 +1974,10 @@ function openAddReimburseHR() {
     .map(k => `<option value="${k.Nama}">${k.Nama}</option>`).join('');
   // Default tanggal transaksi = hari ini
   const tglEl = document.getElementById('hr-reimb-tgl');
-  if (tglEl) tglEl.value = new Date().toISOString().slice(0,10);
+  if (tglEl) {
+    const now = new Date();
+    tglEl.value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  }
   openModal('modal-add-reimb-hr');
 }
 
@@ -2280,7 +2283,10 @@ function renderSpCuti() {
             <div class="history-meta">${fmtDate(c.TanggalMulai)} – ${fmtDate(c.TanggalSelesai)} · ${c.Durasi} hari</div>
             ${c.Status === 'Rejected' && c.CatatanHR ? `<div class="text-xs" style="color:var(--red);margin-top:4px">Alasan: ${c.CatatanHR}</div>` : ''}
           </div>
-          ${badgeHtml(c.Status)}
+          <div style="display:flex;align-items:center;gap:8px">
+            ${badgeHtml(c.Status)}
+            ${c.Status === 'Pending' ? `<button onclick="staffDeleteCuti('${c.ID}')" style="background:none;border:none;cursor:pointer;font-size:16px;opacity:.6;padding:2px" title="Batalkan">🗑</button>` : ''}
+          </div>
         </div>
       </div>`).join('')
     : emptyHtml('Belum ada riwayat cuti');
@@ -2362,7 +2368,10 @@ async function submitCutiStaff() {
 function renderSpReimburse() {
   // Set default tanggal transaksi = hari ini
   const tglEl = document.getElementById('sp-r-tgl');
-  if (tglEl && !tglEl.value) tglEl.value = new Date().toISOString().slice(0,10);
+  if (tglEl && !tglEl.value) {
+    const now = new Date();
+    tglEl.value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  }
   // Populate kategori
   document.getElementById('sp-r-kat').innerHTML = (state.kategori || [])
     .filter(k => String(k.Aktif) === 'true')
@@ -2380,7 +2389,10 @@ function renderSpReimburse() {
           </div>
           <div style="text-align:right">
             <div class="history-amount">${fmtRp(r.Jumlah)}</div>
-            ${badgeHtml(r.Status)}
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:4px">
+              ${badgeHtml(r.Status)}
+              ${r.Status === 'Pending' ? `<button onclick="staffDeleteReimburse('${r.ID}')" style="background:none;border:none;cursor:pointer;font-size:16px;opacity:.6;padding:2px" title="Batalkan">🗑</button>` : ''}
+            </div>
           </div>
         </div>
       </div>`).join('')
@@ -2422,7 +2434,7 @@ async function submitReimburseStaff() {
     toast('Kategori, tanggal, jumlah, dan receipt wajib diisi', 'error'); return;
   }
 
-  toast('Mengirim pengajuan...');
+  toast('Mengupload receipt...');
   const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
 
   // Encode file sebagai base64
@@ -2433,43 +2445,42 @@ async function submitReimburseStaff() {
     reader.readAsDataURL(file);
   });
 
-  // Kirim semua sekaligus via GET (Apps Script menerima GET tanpa CORS issue)
-  // Split base64 jadi chunks karena URL ada batas panjang
-  const CHUNK = 1000;
-  const chunks = [];
-  for (let i = 0; i < base64.length; i += CHUNK) chunks.push(base64.slice(i, i+CHUNK));
-
-  // Upload receipt chunk by chunk, lalu assemble di server
+  // Upload receipt via POST (tidak ada batas panjang URL)
   let receiptURL = '';
-  let receiptName = staffName.replace(/\s+/g,'_') + '_' + kat.replace(/\s+/g,'_') + '_' + tgl;
-
-  if (chunks.length <= 3) {
-    // File kecil — kirim langsung
-    const qs = new URLSearchParams({
-      action: 'uploadReceipt',
-      base64: base64,
-      mimeType: file.type || 'image/jpeg',
-      staffName, kategori: kat, tanggal: tgl
-    });
-    const upRes = await fetch(API_URL + '?' + qs).then(r=>r.json()).catch(()=>({ok:false}));
+  try {
+    const upRes = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'uploadReceipt',
+        base64,
+        mimeType: file.type || 'image/jpeg',
+        staffName, kategori: kat, tanggal: tgl,
+      }),
+    }).then(r=>r.json());
     if (upRes.ok) receiptURL = upRes.url;
-  } else {
-    // File besar — lewati upload Drive, simpan nama saja
-    receiptURL = '';
-  }
+    else console.warn('Upload receipt gagal:', upRes.error);
+  } catch(e) { console.warn('Upload error:', e); }
 
-  // Simpan data reimburse
-  const qs2 = new URLSearchParams({
-    action: 'addReimburse', staffId: state.session.staffId,
-    Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
-    Keterangan: ket || '', ReceiptURL: receiptURL, ReceiptName: receiptName
-  });
-  const res = await fetch(API_URL + '?' + qs2).then(r=>r.json()).catch(()=>({ok:false}));
+  toast('Menyimpan pengajuan...');
+
+  // Simpan data reimburse via POST
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'addReimburse', staffId: state.session.staffId,
+      Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
+      Keterangan: ket || '', ReceiptURL: receiptURL,
+    }),
+  }).then(r=>r.json()).catch(()=>({ok:false}));
 
   if (res.ok) {
     toast('Reimburse terkirim! Menunggu approval HR 🙏', 'success');
     jmlEl.value = ''; jmlEl.dataset.raw = '';
-    document.getElementById('sp-r-tgl').value = new Date().toISOString().slice(0,10);
+    // Fix timezone — pakai local date
+    const now = new Date();
+    document.getElementById('sp-r-tgl').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
     document.getElementById('sp-r-ket').value = '';
     document.getElementById('sp-r-receipt').value = '';
     document.getElementById('sp-r-preview').classList.add('hidden');
@@ -2552,6 +2563,24 @@ async function saveField(key) {
     toggleFieldEdit(key);
     toast('Tersimpan ✓', 'success');
   } else toast('Gagal menyimpan', 'error');
+}
+
+async function staffDeleteCuti(id) {
+  if (!confirm('Batalkan pengajuan cuti ini?')) return;
+  const res = await apiGet({ action: 'deleteCuti', token: HR_PASSWORD, id });
+  if (res.ok) {
+    toast('Pengajuan cuti dibatalkan ✓', 'success');
+    await loadStaffPortal();
+  } else toast(res.error || 'Gagal', 'error');
+}
+
+async function staffDeleteReimburse(id) {
+  if (!confirm('Batalkan pengajuan reimburse ini?')) return;
+  const res = await apiGet({ action: 'deleteReimburse', token: HR_PASSWORD, id });
+  if (res.ok) {
+    toast('Pengajuan reimburse dibatalkan ✓', 'success');
+    await loadStaffPortal();
+  } else toast(res.error || 'Gagal', 'error');
 }
 
 async function doChangePIN() {
