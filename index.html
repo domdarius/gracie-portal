@@ -1381,7 +1381,10 @@ function formatNominal(el) {
 }
 
 function getRawNominal(el) {
-  return parseFloat((el.dataset.raw || el.value.replace(/\./g, '').replace(/,/g, '.')) || '0');
+  if (!el) return 0;
+  // Prioritas: dataset.raw (set oleh formatNominal), lalu parse dari value
+  const raw = el.dataset.raw || el.value.replace(/[^0-9]/g, '');
+  return parseFloat(raw || '0') || 0;
 }
 
 function initials(n) {
@@ -2430,9 +2433,12 @@ async function submitReimburseStaff() {
   const ket   = document.getElementById('sp-r-ket').value.trim();
   const file  = document.getElementById('sp-r-receipt').files[0];
 
-  if (!kat || !tgl || !jml || !file) {
-    toast('Kategori, tanggal, jumlah, dan receipt wajib diisi', 'error'); return;
-  }
+  // Fallback: baca jml langsung dari value kalau dataset.raw kosong
+  const jmlFinal = jml || parseFloat(jmlEl.value.replace(/[^0-9]/g,'')) || 0;
+  if (!kat) { toast('Pilih kategori dulu', 'error'); return; }
+  if (!tgl) { toast('Isi tanggal transaksi', 'error'); return; }
+  if (!jmlFinal) { toast('Isi jumlah reimburse', 'error'); return; }
+  if (!file) { toast('Upload foto receipt dulu', 'error'); return; }
 
   toast('Mengupload receipt...');
   const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
@@ -2470,7 +2476,7 @@ async function submitReimburseStaff() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'addReimburse', staffId: state.session.staffId,
-      Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
+      Kategori: kat, TanggalTransaksi: tgl, Jumlah: jmlFinal,
       Keterangan: ket || '', ReceiptURL: receiptURL,
     }),
   }).then(r=>r.json()).catch(()=>({ok:false}));
