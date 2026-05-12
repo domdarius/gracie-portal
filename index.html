@@ -2425,6 +2425,40 @@ function previewReceipt(input) {
   }
 }
 
+// Compress image sebelum upload — max 800px, quality 70%
+async function compressImage(file) {
+  return new Promise(resolve => {
+    if (file.type === 'application/pdf') {
+      const r = new FileReader();
+      r.onload = e => resolve({ base64: e.target.result.split(',')[1], mimeType: 'application/pdf' });
+      r.readAsDataURL(file);
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
+    };
+    img.onerror = () => {
+      const r = new FileReader();
+      r.onload = e => resolve({ base64: e.target.result.split(',')[1], mimeType: file.type });
+      r.readAsDataURL(file);
+    };
+    img.src = url;
+  });
+}
+
 async function submitReimburseStaff() {
   const kat   = document.getElementById('sp-r-kat').value;
   const tgl   = document.getElementById('sp-r-tgl').value;
@@ -2433,53 +2467,36 @@ async function submitReimburseStaff() {
   const ket   = document.getElementById('sp-r-ket').value.trim();
   const file  = document.getElementById('sp-r-receipt').files[0];
 
-  // Fallback: baca jml langsung dari value kalau dataset.raw kosong
   const jmlFinal = jml || parseFloat(jmlEl.value.replace(/[^0-9]/g,'')) || 0;
   if (!kat) { toast('Pilih kategori dulu', 'error'); return; }
   if (!tgl) { toast('Isi tanggal transaksi', 'error'); return; }
   if (!jmlFinal) { toast('Isi jumlah reimburse', 'error'); return; }
   if (!file) { toast('Upload foto receipt dulu', 'error'); return; }
 
-  toast('Mengupload receipt...');
+  toast('Memproses receipt...');
   const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
 
-  // Encode file sebagai base64
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  // Compress image sebelum upload
+  const { base64, mimeType } = await compressImage(file);
+  console.log('Compressed size:', base64.length, 'chars');
 
-  // Upload receipt via POST (tidak ada batas panjang URL)
+  // Upload receipt via GET
   let receiptURL = '';
   try {
-    const upRes = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'uploadReceipt',
-        base64,
-        mimeType: file.type || 'image/jpeg',
-        staffName, kategori: kat, tanggal: tgl,
-      }),
-    }).then(r=>r.json());
+    const upRes = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
+    console.log('Upload:', upRes);
     if (upRes.ok) receiptURL = upRes.url;
-    else console.warn('Upload receipt gagal:', upRes.error);
+    else toast('Receipt gagal upload, data tetap tersimpan', '');
   } catch(e) { console.warn('Upload error:', e); }
 
   toast('Menyimpan pengajuan...');
 
-  // Simpan data reimburse via POST
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'addReimburse', staffId: state.session.staffId,
-      Kategori: kat, TanggalTransaksi: tgl, Jumlah: jmlFinal,
-      Keterangan: ket || '', ReceiptURL: receiptURL,
-    }),
-  }).then(r=>r.json()).catch(()=>({ok:false}));
+  // Simpan data reimburse
+  const res = await apiGet({
+    action: 'addReimburse', staffId: state.session.staffId,
+    Kategori: kat, TanggalTransaksi: tgl, Jumlah: jmlFinal,
+    Keterangan: ket || '-', ReceiptURL: receiptURL,
+  });
 
   if (res.ok) {
     toast('Reimburse terkirim! Menunggu approval HR 🙏', 'success');
