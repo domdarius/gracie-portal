@@ -1954,7 +1954,13 @@ function renderReimburse() {
       <td>${fmtDateTime(r.TanggalInput)}</td>
       <td><span class="mono fw-600">${fmtRp(r.Jumlah)}</span></td>
       <td>${ket}</td>
-      <td>${r.ReceiptURL ? `<a href="${r.ReceiptURL}" target="_blank" style="color:var(--leaf);font-size:12px">Lihat Receipt ↗</a>` : '—'}</td>
+      <td>${r.ReceiptURL
+        ? `<a href="${r.ReceiptURL}" target="_blank">
+            <img src="${r.ReceiptURL}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer" 
+            onerror="this.style.display='none';this.nextSibling.style.display='inline'">
+            <span style="display:none;color:var(--leaf);font-size:12px">Lihat ↗</span>
+           </a>`
+        : '—'}</td>
       <td>${badgeHtml(r.Status)}</td>
       <td>${aksi}</td>
     </tr>`;
@@ -2480,13 +2486,24 @@ async function submitReimburseStaff() {
   const { base64, mimeType } = await compressImage(file);
   console.log('Compressed size:', base64.length, 'chars');
 
-  // Upload receipt via GET
+  // Upload receipt ke ImgBB (CORS OK, gratis, max 32MB)
+  // Ganti IMGBB_KEY dengan API key dari https://api.imgbb.com (gratis, daftar 1 menit)
+  const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
   let receiptURL = '';
   try {
-    const upRes = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
-    console.log('Upload:', upRes);
-    if (upRes.ok) receiptURL = upRes.url;
-    else toast('Receipt gagal upload, data tetap tersimpan', '');
+    if (IMGBB_KEY) {
+      const fd = new FormData();
+      fd.append('image', base64);
+      fd.append('key', IMGBB_KEY);
+      const upRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd }).then(r=>r.json());
+      console.log('ImgBB:', upRes);
+      if (upRes.success) receiptURL = upRes.data.url;
+    } else {
+      // Fallback ke Google Drive via GET (hanya work untuk foto kecil)
+      const gsUp = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
+      console.log('GS Upload:', gsUp);
+      if (gsUp.ok) receiptURL = gsUp.url;
+    }
   } catch(e) { console.warn('Upload error:', e); }
 
   toast('Menyimpan pengajuan...');
