@@ -1112,6 +1112,7 @@ tbody tr:hover td{background:#FAFAF7;}
       <div class="form-group"><label class="form-label">Sisa Cuti</label><input type="number" class="form-input" id="es-cuti-sisa" min="0" step="0.5"></div>
       <div class="form-group"><label class="form-label">No. Rekening</label><input type="text" class="form-input" id="es-norek"></div>
       <div class="form-group"><label class="form-label">Nama Bank</label><input type="text" class="form-input" id="es-bank"></div>
+      <div class="form-group"><label class="form-label">NIK KTP</label><input type="text" class="form-input" id="es-nik" maxlength="16" placeholder="16 digit NIK"></div>
       <div class="form-group full"><label class="form-label">Catatan HR</label><textarea class="form-textarea" id="es-catatan"></textarea></div>
     </div>
     <div class="modal-footer">
@@ -1720,6 +1721,7 @@ function openEditStaff(id) {
   document.getElementById('es-cuti-sisa').value  = s.CutiSisa || 0;
   document.getElementById('es-norek').value      = s.NoRekening || '';
   document.getElementById('es-bank').value       = s.NamaBank || '';
+  document.getElementById('es-nik').value        = s.NIK || '';
   document.getElementById('es-catatan').value    = s.CatatanHR || '';
   openModal('modal-edit-staff');
 }
@@ -1767,6 +1769,7 @@ async function submitEditStaff() {
     CutiSisa: document.getElementById('es-cuti-sisa').value,
     NoRekening: document.getElementById('es-norek').value,
     NamaBank: document.getElementById('es-bank').value,
+    NIK: document.getElementById('es-nik').value,
     CatatanHR: document.getElementById('es-catatan').value,
   });
   if (res.ok) {
@@ -2555,6 +2558,7 @@ function renderSpProfil() {
   const editableFields = [
     { key: 'NamaLengkap',  label: 'Nama Lengkap',  type: 'text' },
     { key: 'TanggalLahir', label: 'Tanggal Lahir',  type: 'date', fmt: true },
+    { key: 'NIK',          label: 'NIK KTP',         type: 'text' },
     { key: 'WA',           label: 'No. WhatsApp',   type: 'tel' },
     { key: 'Email',        label: 'Email',           type: 'email' },
     { key: 'Alamat',       label: 'Alamat',          type: 'text' },
