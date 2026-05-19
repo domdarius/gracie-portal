@@ -2308,30 +2308,48 @@ function updateCutiEnd() {
   hitungDurasiCuti();
 }
 
-function hitungDurasiCuti() {
-  const start   = document.getElementById('sp-c-start').value;
-  const end     = document.getElementById('sp-c-end').value;
-  const jamMulai  = document.getElementById('sp-c-jam-mulai').value || '08:00';
-  const jamSelesai= document.getElementById('sp-c-jam-selesai').value || '17:00';
-  const infoEl  = document.getElementById('sp-c-durasi-info');
-  const textEl  = document.getElementById('sp-c-durasi-text');
+async function hitungDurasiCuti() {
+  const start      = document.getElementById('sp-c-start').value;
+  const end        = document.getElementById('sp-c-end').value;
+  const jamMulai   = document.getElementById('sp-c-jam-mulai').value || '08:00';
+  const jamSelesai = document.getElementById('sp-c-jam-selesai').value || '17:00';
+  const infoEl     = document.getElementById('sp-c-durasi-info');
+  const textEl     = document.getElementById('sp-c-durasi-text');
   if (!start) { infoEl.style.display='none'; return; }
 
   const endDate = end || start;
   const hari = daysBetween(start, endDate);
+  infoEl.style.display = 'block';
 
   if (hari === 1) {
-    // Hitung jam
     const [h1,m1] = jamMulai.split(':').map(Number);
     const [h2,m2] = jamSelesai.split(':').map(Number);
-    const totalMenit = (h2*60+m2) - (h1*60+m1);
-    const totalJam = totalMenit / 60;
+    const totalJam = ((h2*60+m2) - (h1*60+m1)) / 60;
     const durasi = totalJam < 4 ? 0.5 : 1;
-    infoEl.style.display = 'block';
     textEl.textContent = totalJam.toFixed(1) + ' jam → dihitung ' + (durasi === 0.5 ? '½ hari' : '1 hari penuh');
   } else {
-    infoEl.style.display = 'block';
-    textEl.textContent = hari + ' hari kerja';
+    textEl.textContent = 'Menghitung...';
+    try {
+      const res = await apiGet({ action: 'getLiburRentang', tglMulai: start, tglSelesai: endDate });
+      const libur = res.data || [];
+      // Hitung Minggu di rentang
+      let minggu = 0;
+      const cur = new Date(start); const endD = new Date(endDate);
+      while (cur <= endD) { if (cur.getDay() === 0) minggu++; cur.setDate(cur.getDate()+1); }
+      const hariKerja = Math.max(1, hari - minggu - libur.length);
+      const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      let info = hariKerja + ' hari kerja';
+      const extras = [];
+      if (minggu > 0) extras.push(minggu + ' hari Minggu');
+      if (libur.length > 0) {
+        const ls = libur.map(d => { const dd=new Date(d); return dd.getDate()+' '+BULAN[dd.getMonth()]; }).join(', ');
+        extras.push('libur: ' + ls);
+      }
+      if (extras.length) info += ' (' + extras.join(', ') + ' tidak dihitung)';
+      textEl.innerHTML = '<b>' + info + '</b>';
+    } catch(e) {
+      textEl.textContent = hari + ' hari (kalender)';
+    }
   }
 }
 
