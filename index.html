@@ -1107,6 +1107,7 @@ tbody tr:hover td{background:#FAFAF7;}
       </div>
       <div class="form-group"><label class="form-label">Tanggal Join</label><input type="date" class="form-input" id="es-join"></div>
       <div class="form-group"><label class="form-label">Tanggal Resign</label><input type="date" class="form-input" id="es-resign"></div>
+      <div class="form-group"><label class="form-label">Tanggal Lahir</label><input type="date" class="form-input" id="es-tgllahir"></div>
       <div class="form-group"><label class="form-label">No. WhatsApp</label><input type="tel" class="form-input" id="es-wa"></div>
       <div class="form-group"><label class="form-label">Jatah Cuti</label><input type="number" class="form-input" id="es-cuti-jatah" min="0" step="0.5"></div>
       <div class="form-group"><label class="form-label">Sisa Cuti</label><input type="number" class="form-input" id="es-cuti-sisa" min="0" step="0.5"></div>
@@ -1716,6 +1717,7 @@ function openEditStaff(id) {
   document.getElementById('es-status').value     = s.Status || 'Aktif';
   document.getElementById('es-join').value       = toDateInput(s.TanggalMulai);
   document.getElementById('es-resign').value     = toDateInput(s.TanggalSelesai);
+  document.getElementById('es-tgllahir').value    = toDateInput(s.TanggalLahir);
   document.getElementById('es-wa').value         = s.WA || '';
   document.getElementById('es-cuti-jatah').value = s.CutiJatah || 12;
   document.getElementById('es-cuti-sisa').value  = s.CutiSisa || 0;
@@ -1764,6 +1766,7 @@ async function submitEditStaff() {
     Status: document.getElementById('es-status').value,
     TanggalMulai: document.getElementById('es-join').value,
     TanggalSelesai: document.getElementById('es-resign').value,
+    TanggalLahir: document.getElementById('es-tgllahir').value,
     WA: document.getElementById('es-wa').value,
     CutiJatah: document.getElementById('es-cuti-jatah').value,
     CutiSisa: document.getElementById('es-cuti-sisa').value,
