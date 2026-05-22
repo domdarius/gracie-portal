@@ -1080,6 +1080,7 @@ tbody tr:hover td{background:#FAFAF7;}
         <select class="form-select" id="ms-tipe"><option>Full-Time</option><option>Part-Time</option><option>Freelance</option></select>
       </div>
       <div class="form-group"><label class="form-label">Tanggal Join</label><input type="date" class="form-input" id="ms-join"></div>
+      <div class="form-group"><label class="form-label">Tanggal Lahir</label><input type="date" class="form-input" id="ms-tgllahir"></div>
       <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="ms-email"></div>
       <div class="form-group"><label class="form-label">Jatah Cuti (hari)</label><input type="number" class="form-input" id="ms-cuti" value="12" min="0"></div>
     </div>
@@ -1119,6 +1120,52 @@ tbody tr:hover td{background:#FAFAF7;}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-staff')">Batal</button>
       <button class="btn btn-primary" onclick="submitEditStaff()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Cuti (Staff — Pending only) -->
+<div class="modal-overlay" id="modal-edit-cuti-staff">
+  <div class="modal">
+    <div class="modal-title">Edit Pengajuan Cuti</div>
+    <input type="hidden" id="ec-id">
+    <div class="form-grid">
+      <div class="form-group full"><label class="form-label">Jenis Cuti</label><select class="form-select" id="ec-jenis"></select></div>
+      <div class="form-group"><label class="form-label">Tanggal Mulai</label><input type="date" class="form-input" id="ec-start" onchange="updateEditCutiEnd()"></div>
+      <div class="form-group"><label class="form-label">Tanggal Selesai</label><input type="date" class="form-input" id="ec-end" onchange="hitungDurasiEditCuti()"></div>
+      <div class="form-group"><label class="form-label">Jam Mulai <span style="color:var(--ink3);font-size:10px">(opsional)</span></label><input type="time" class="form-input" id="ec-jam-mulai" value="08:00" onchange="hitungDurasiEditCuti()"></div>
+      <div class="form-group"><label class="form-label">Jam Selesai <span style="color:var(--ink3);font-size:10px">(opsional)</span></label><input type="time" class="form-input" id="ec-jam-selesai" value="17:00" onchange="hitungDurasiEditCuti()"></div>
+      <div class="form-group full" id="ec-durasi-info" style="background:var(--leaf-lt);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--forest);display:none"><span id="ec-durasi-text"></span></div>
+      <div class="form-group full"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="ec-ket"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-cuti-staff')">Batal</button>
+      <button class="btn btn-primary" onclick="submitEditCutiStaff()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Reimburse (Staff — Pending only) -->
+<div class="modal-overlay" id="modal-edit-reimburse-staff">
+  <div class="modal">
+    <div class="modal-title">Edit Pengajuan Reimburse</div>
+    <input type="hidden" id="er-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Kategori</label><select class="form-select" id="er-kat"></select></div>
+      <div class="form-group"><label class="form-label">Tanggal Transaksi</label><input type="date" class="form-input" id="er-tgl"></div>
+      <div class="form-group full"><label class="form-label">Jumlah (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="er-jml" placeholder="0" oninput="formatNominal(this)"></div>
+      <div class="form-group full"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="er-ket"></textarea></div>
+      <div class="form-group full">
+        <label class="form-label">Receipt / Bukti</label>
+        <div id="er-receipt-current" style="font-size:12px;color:var(--ink3);margin-bottom:6px"></div>
+        <input type="file" id="er-receipt" accept="image/*,application/pdf" onchange="previewEditReceipt(this)">
+        <div id="er-receipt-name" style="font-size:12px;color:var(--leaf);margin-top:6px"></div>
+        <div class="form-hint">Kosongkan jika tidak ingin mengganti struk.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-reimburse-staff')">Batal</button>
+      <button class="btn btn-primary" onclick="submitEditReimburseStaff()">Simpan Perubahan</button>
     </div>
   </div>
 </div>
@@ -1745,6 +1792,7 @@ async function submitAddStaff() {
     Departemen: document.getElementById('ms-dept').value,
     TipeKerja: document.getElementById('ms-tipe').value,
     TanggalMulai: document.getElementById('ms-join').value,
+    TanggalLahir: document.getElementById('ms-tgllahir').value,
     Email: document.getElementById('ms-email').value,
     CutiJatah: document.getElementById('ms-cuti').value,
   });
@@ -2300,6 +2348,7 @@ function renderSpCuti() {
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             ${badgeHtml(c.Status)}
+            ${c.Status === 'Pending' ? `<button onclick="openEditCutiStaff('${c.ID}')" style="background:none;border:none;cursor:pointer;font-size:15px;opacity:.6;padding:2px" title="Edit">✏️</button>` : ''}
             ${c.Status === 'Pending' ? `<button onclick="staffDeleteCuti('${c.ID}')" style="background:none;border:none;cursor:pointer;font-size:16px;opacity:.6;padding:2px" title="Batalkan">🗑</button>` : ''}
           </div>
         </div>
@@ -2424,6 +2473,7 @@ function renderSpReimburse() {
             <div class="history-amount">${fmtRp(r.Jumlah)}</div>
             <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:4px">
               ${badgeHtml(r.Status)}
+              ${r.Status === 'Pending' ? `<button onclick="openEditReimburseStaff('${r.ID}')" style="background:none;border:none;cursor:pointer;font-size:15px;opacity:.6;padding:2px" title="Edit">✏️</button>` : ''}
               ${r.Status === 'Pending' ? `<button onclick="staffDeleteReimburse('${r.ID}')" style="background:none;border:none;cursor:pointer;font-size:16px;opacity:.6;padding:2px" title="Batalkan">🗑</button>` : ''}
             </div>
           </div>
@@ -2628,6 +2678,195 @@ async function saveField(key) {
     toggleFieldEdit(key);
     toast('Tersimpan ✓', 'success');
   } else toast('Gagal menyimpan', 'error');
+}
+
+// ─── EDIT PENGAJUAN CUTI (staff, Pending only) ────────────────────
+function openEditCutiStaff(id) {
+  const c = (state.staffCuti || []).find(x => String(x.ID) === String(id));
+  if (!c) { toast('Data cuti tidak ditemukan', 'error'); return; }
+  if (c.Status !== 'Pending') { toast('Hanya pengajuan Pending yang bisa diedit', 'error'); return; }
+
+  // Populate jenis cuti
+  document.getElementById('ec-jenis').innerHTML = (state.jenisCuti || [])
+    .filter(j => String(j.Aktif) === 'true')
+    .map(j => `<option value="${j.Nama}">${j.Nama}</option>`).join('');
+
+  document.getElementById('ec-id').value    = c.ID;
+  document.getElementById('ec-jenis').value = c.Jenis || '';
+  document.getElementById('ec-start').value = toDateInput(c.TanggalMulai);
+  document.getElementById('ec-end').value   = toDateInput(c.TanggalSelesai);
+  document.getElementById('ec-jam-mulai').value   = '08:00';
+  document.getElementById('ec-jam-selesai').value = '17:00';
+  document.getElementById('ec-ket').value   = c.Keterangan || '';
+  document.getElementById('ec-durasi-info').style.display = 'none';
+  openModal('modal-edit-cuti-staff');
+  hitungDurasiEditCuti();
+}
+
+function updateEditCutiEnd() {
+  const start = document.getElementById('ec-start').value;
+  const endEl = document.getElementById('ec-end');
+  if (!endEl.value || endEl.value < start) endEl.value = start;
+  hitungDurasiEditCuti();
+}
+
+async function hitungDurasiEditCuti() {
+  const start      = document.getElementById('ec-start').value;
+  const end        = document.getElementById('ec-end').value;
+  const jamMulai   = document.getElementById('ec-jam-mulai').value || '08:00';
+  const jamSelesai = document.getElementById('ec-jam-selesai').value || '17:00';
+  const infoEl     = document.getElementById('ec-durasi-info');
+  const textEl     = document.getElementById('ec-durasi-text');
+  if (!start) { infoEl.style.display = 'none'; return; }
+
+  const endDate = end || start;
+  const hari = daysBetween(start, endDate);
+  infoEl.style.display = 'block';
+
+  if (hari === 1) {
+    const [h1,m1] = jamMulai.split(':').map(Number);
+    const [h2,m2] = jamSelesai.split(':').map(Number);
+    const totalJam = ((h2*60+m2) - (h1*60+m1)) / 60;
+    const durasi = totalJam < 4 ? 0.5 : 1;
+    textEl.textContent = totalJam.toFixed(1) + ' jam → dihitung ' + (durasi === 0.5 ? '½ hari' : '1 hari penuh');
+  } else {
+    textEl.textContent = 'Menghitung...';
+    try {
+      const res = await apiGet({ action: 'getLiburRentang', tglMulai: start, tglSelesai: endDate });
+      const libur = res.data || [];
+      let minggu = 0;
+      const cur = new Date(start); const endD = new Date(endDate);
+      while (cur <= endD) { if (cur.getDay() === 0) minggu++; cur.setDate(cur.getDate()+1); }
+      const hariKerja = Math.max(1, hari - minggu - libur.length);
+      const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      let info = hariKerja + ' hari kerja';
+      const extras = [];
+      if (minggu > 0) extras.push(minggu + ' hari Minggu');
+      if (libur.length > 0) {
+        const ls = libur.map(d => { const dd=new Date(d); return dd.getDate()+' '+BULAN[dd.getMonth()]; }).join(', ');
+        extras.push('libur: ' + ls);
+      }
+      if (extras.length) info += ' (' + extras.join(', ') + ' tidak dihitung)';
+      textEl.innerHTML = '<b>' + info + '</b>';
+    } catch(e) {
+      textEl.textContent = hari + ' hari (kalender)';
+    }
+  }
+}
+
+async function submitEditCutiStaff() {
+  const id    = document.getElementById('ec-id').value;
+  const jenis = document.getElementById('ec-jenis').value;
+  const start = document.getElementById('ec-start').value;
+  const end   = document.getElementById('ec-end').value || start;
+  const ket   = document.getElementById('ec-ket').value;
+  const jamMulai   = document.getElementById('ec-jam-mulai').value || '08:00';
+  const jamSelesai = document.getElementById('ec-jam-selesai').value || '17:00';
+
+  if (!jenis || !start) { toast('Jenis cuti dan tanggal wajib diisi', 'error'); return; }
+  if (end < start) { toast('Tanggal selesai tidak boleh sebelum tanggal mulai', 'error'); return; }
+
+  // Hitung durasi (½ hari hanya untuk 1 hari)
+  const hari = daysBetween(start, end);
+  let dur;
+  if (hari === 1) {
+    const [h1,m1] = jamMulai.split(':').map(Number);
+    const [h2,m2] = jamSelesai.split(':').map(Number);
+    const totalJam = ((h2*60+m2) - (h1*60+m1)) / 60;
+    dur = totalJam < 4 ? 0.5 : 1;
+  } else {
+    dur = hari;
+  }
+
+  const res = await apiGet({
+    action: 'updateCuti', id, staffId: state.session.staffId,
+    Jenis: jenis, TanggalMulai: start, TanggalSelesai: end,
+    Durasi: dur, Keterangan: ket,
+  });
+  if (res.ok) {
+    closeModal('modal-edit-cuti-staff');
+    toast('Pengajuan cuti diperbarui ✓', 'success');
+    await loadStaffPortal();
+  } else toast(res.error || 'Gagal menyimpan', 'error');
+}
+
+// ─── EDIT PENGAJUAN REIMBURSE (staff, Pending only) ───────────────
+let editReceiptFile = null;
+
+function openEditReimburseStaff(id) {
+  const r = (state.staffReimb || []).find(x => String(x.ID) === String(id));
+  if (!r) { toast('Data reimburse tidak ditemukan', 'error'); return; }
+  if (r.Status !== 'Pending') { toast('Hanya pengajuan Pending yang bisa diedit', 'error'); return; }
+
+  editReceiptFile = null;
+  document.getElementById('er-kat').innerHTML = (state.kategori || [])
+    .filter(k => String(k.Aktif) === 'true')
+    .map(k => `<option value="${k.Nama}">${k.Nama}</option>`).join('');
+
+  document.getElementById('er-id').value  = r.ID;
+  document.getElementById('er-kat').value = r.Kategori || '';
+  document.getElementById('er-tgl').value = toDateInput(r.TanggalTransaksi);
+  const jmlEl = document.getElementById('er-jml');
+  const rawJml = String(Math.round(parseFloat(r.Jumlah) || 0));
+  jmlEl.dataset.raw = rawJml;
+  jmlEl.value = rawJml ? Number(rawJml).toLocaleString('id-ID') : '';
+  document.getElementById('er-ket').value = (r.Keterangan && r.Keterangan !== '-') ? r.Keterangan : '';
+  document.getElementById('er-receipt').value = '';
+  document.getElementById('er-receipt-name').textContent = '';
+  document.getElementById('er-receipt-current').innerHTML = r.ReceiptURL
+    ? `Struk saat ini: <a href="${r.ReceiptURL}" target="_blank" style="color:var(--leaf)">lihat struk</a>`
+    : 'Belum ada struk terlampir.';
+  openModal('modal-edit-reimburse-staff');
+}
+
+function previewEditReceipt(input) {
+  if (!input.files || !input.files[0]) { editReceiptFile = null; return; }
+  editReceiptFile = input.files[0];
+  document.getElementById('er-receipt-name').textContent = '📄 ' + editReceiptFile.name + ' (struk akan diganti)';
+}
+
+async function submitEditReimburseStaff() {
+  const id    = document.getElementById('er-id').value;
+  const kat   = document.getElementById('er-kat').value;
+  const tgl   = document.getElementById('er-tgl').value;
+  const jmlEl = document.getElementById('er-jml');
+  const jml   = getRawNominal(jmlEl);
+  const ket   = document.getElementById('er-ket').value.trim();
+
+  if (!kat) { toast('Pilih kategori dulu', 'error'); return; }
+  if (!tgl) { toast('Isi tanggal transaksi', 'error'); return; }
+  if (!jml) { toast('Isi jumlah reimburse', 'error'); return; }
+
+  // Upload struk baru kalau ada
+  let receiptURL = '';
+  if (editReceiptFile) {
+    toast('Memproses receipt...');
+    try {
+      const { base64 } = await compressImage(editReceiptFile);
+      const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
+      const fd = new FormData();
+      fd.append('image', base64);
+      fd.append('key', IMGBB_KEY);
+      const upRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd }).then(r=>r.json());
+      if (upRes.success) receiptURL = upRes.data.url;
+    } catch(e) { console.warn('Upload error:', e); }
+  }
+
+  toast('Menyimpan perubahan...');
+  const payload = {
+    action: 'updateReimburse', id, staffId: state.session.staffId,
+    Kategori: kat, TanggalTransaksi: tgl, Jumlah: jml,
+    Keterangan: ket || '-',
+  };
+  if (receiptURL) payload.ReceiptURL = receiptURL;
+
+  const res = await apiGet(payload);
+  if (res.ok) {
+    editReceiptFile = null;
+    closeModal('modal-edit-reimburse-staff');
+    toast('Pengajuan reimburse diperbarui ✓', 'success');
+    await loadStaffPortal();
+  } else toast(res.error || 'Gagal menyimpan', 'error');
 }
 
 async function staffDeleteCuti(id) {
