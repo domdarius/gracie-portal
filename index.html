@@ -613,8 +613,8 @@ tbody tr:hover td{background:#FAFAF7;}
           <!-- Sub-tab: Pengajuan -->
           <div id="cuti-panel-pengajuan">
             <div class="tabs">
-              <button class="tab active" onclick="filterCuti('semua',this)">Semua</button>
-              <button class="tab" onclick="filterCuti('Pending',this)">Pending</button>
+              <button class="tab" onclick="filterCuti('semua',this)">Semua</button>
+              <button class="tab active" onclick="filterCuti('Pending',this)">Pending</button>
               <button class="tab" onclick="filterCuti('Approved',this)">Approved</button>
               <button class="tab" onclick="filterCuti('Rejected',this)">Rejected</button>
             </div>
@@ -644,8 +644,8 @@ tbody tr:hover td{background:#FAFAF7;}
             <button class="btn btn-primary" onclick="openAddReimburseHR()">+ Ajukan Reimburse</button>
           </div>
           <div class="tabs">
-            <button class="tab active" onclick="filterReimburse('semua',this)">Semua</button>
-            <button class="tab" onclick="filterReimburse('Pending',this)">Pending</button>
+            <button class="tab" onclick="filterReimburse('semua',this)">Semua</button>
+            <button class="tab active" onclick="filterReimburse('Pending',this)">Pending</button>
             <button class="tab" onclick="filterReimburse('Approved',this)">Approved</button>
             <button class="tab" onclick="filterReimburse('Rejected',this)">Rejected</button>
           </div>
@@ -1383,8 +1383,8 @@ const state = {
   reimburse:[],
   kategori: [],
   jenisCuti:[],
-  cutiFilter: 'semua',
-  reimbFilter: 'semua',
+  cutiFilter: 'Pending',
+  reimbFilter: 'Pending',
   staffFilter: 'semua',
 };
 
