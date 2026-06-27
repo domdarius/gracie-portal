@@ -2582,25 +2582,26 @@ async function submitReimburseStaff() {
   const { base64, mimeType } = await compressImage(file);
   console.log('Compressed size:', base64.length, 'chars');
 
-  // Upload receipt ke ImgBB (CORS OK, gratis, max 32MB)
-  // Ganti IMGBB_KEY dengan API key dari https://api.imgbb.com (gratis, daftar 1 menit)
-  const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
+  // Upload receipt ke Google Drive (primary) — lebih reliable, tidak diblokir
   let receiptURL = '';
   try {
-    if (IMGBB_KEY) {
+    const gsUp = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
+    console.log('GDrive Upload:', gsUp);
+    if (gsUp.ok) receiptURL = gsUp.url;
+  } catch(e) { console.warn('GDrive upload error:', e); }
+
+  // Fallback ke ImgBB jika Google Drive gagal
+  if (!receiptURL) {
+    try {
+      const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
       const fd = new FormData();
       fd.append('image', base64);
       fd.append('key', IMGBB_KEY);
       const upRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd }).then(r=>r.json());
-      console.log('ImgBB:', upRes);
+      console.log('ImgBB fallback:', upRes);
       if (upRes.success) receiptURL = upRes.data.url;
-    } else {
-      // Fallback ke Google Drive via GET (hanya work untuk foto kecil)
-      const gsUp = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
-      console.log('GS Upload:', gsUp);
-      if (gsUp.ok) receiptURL = gsUp.url;
-    }
-  } catch(e) { console.warn('Upload error:', e); }
+    } catch(e) { console.warn('ImgBB fallback error:', e); }
+  }
 
   toast('Menyimpan pengajuan...');
 
