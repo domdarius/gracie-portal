@@ -361,6 +361,28 @@ tbody tr:hover td{background:#FAFAF7;}
 .receipt-drop:hover{border-color:var(--leaf);}
 .receipt-preview-img{max-height:120px;border-radius:6px;object-fit:contain;margin-bottom:8px;}
 
+/* Lightbox receipt */
+#receipt-lightbox{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.82);align-items:center;justify-content:center;
+}
+#receipt-lightbox.open{display:flex;}
+#receipt-lightbox img{
+  max-width:92vw;max-height:88vh;border-radius:10px;
+  box-shadow:0 8px 40px rgba(0,0,0,.5);object-fit:contain;
+}
+#receipt-lightbox-close{
+  position:absolute;top:16px;right:20px;color:#fff;font-size:32px;
+  cursor:pointer;line-height:1;opacity:.8;
+}
+#receipt-lightbox-close:hover{opacity:1;}
+#receipt-lightbox-open{
+  position:absolute;bottom:20px;right:20px;
+  background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);
+  border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer;text-decoration:none;
+}
+#receipt-lightbox-open:hover{background:rgba(255,255,255,.25);}
+
 /* ═══════════════════════════════════════════
    HR SETTINGS — Master data
 ═══════════════════════════════════════════ */
@@ -1157,8 +1179,9 @@ tbody tr:hover td{background:#FAFAF7;}
       <div class="form-group full"><label class="form-label">Keterangan</label><textarea class="form-textarea" id="er-ket"></textarea></div>
       <div class="form-group full">
         <label class="form-label">Receipt / Bukti</label>
-        <div id="er-receipt-current" style="font-size:12px;color:var(--ink3);margin-bottom:6px"></div>
+        <div id="er-receipt-current" style="margin-bottom:8px"></div>
         <input type="file" id="er-receipt" accept="image/*,application/pdf" onchange="previewEditReceipt(this)">
+        <img id="er-receipt-preview" style="max-height:120px;border-radius:6px;object-fit:contain;border:1px solid var(--line);margin-top:8px;display:none">
         <div id="er-receipt-name" style="font-size:12px;color:var(--leaf);margin-top:6px"></div>
         <div class="form-hint">Kosongkan jika tidak ingin mengganti struk.</div>
       </div>
@@ -2009,11 +2032,9 @@ function renderReimburse() {
       <td><span class="mono fw-600">${fmtRp(r.Jumlah)}</span></td>
       <td>${ket}</td>
       <td>${r.ReceiptURL
-        ? `<a href="${r.ReceiptURL}" target="_blank">
-            <img src="${r.ReceiptURL}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer" 
-            onerror="this.style.display='none';this.nextSibling.style.display='inline'">
-            <span style="display:none;color:var(--leaf);font-size:12px">Lihat ↗</span>
-           </a>`
+        ? `<img src="${r.ReceiptURL}" onclick="openReceiptLightbox('${r.ReceiptURL}')"
+            style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:zoom-in"
+            onerror="this.outerHTML='<a href=\\'${r.ReceiptURL}\\' target=\\'_blank\\' style=\\'color:var(--leaf);font-size:12px\\'>Lihat ↗</a>'">`
         : '—'}</td>
       <td>${badgeHtml(r.Status)}</td>
       <td>${aksi}</td>
@@ -2468,6 +2489,7 @@ function renderSpReimburse() {
             <div class="history-title">${r.Kategori}</div>
             <div class="history-meta">${fmtDate(r.TanggalTransaksi)} · ${r.Keterangan}</div>
             ${r.Status === 'Rejected' && r.CatatanHR ? `<div class="text-xs" style="color:var(--red);margin-top:4px">Alasan: ${r.CatatanHR}</div>` : ''}
+            ${r.ReceiptURL ? `<img src="${r.ReceiptURL}" onclick="openReceiptLightbox('${r.ReceiptURL}')" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;margin-top:8px" onerror="this.outerHTML='<a href=\\'${r.ReceiptURL}\\' target=\\'_blank\\' style=\\'color:var(--leaf);font-size:12px;margin-top:8px;display:inline-block\\'>Lihat struk ↗</a>'">` : ''}
           </div>
           <div style="text-align:right">
             <div class="history-amount">${fmtRp(r.Jumlah)}</div>
@@ -2813,16 +2835,32 @@ function openEditReimburseStaff(id) {
   document.getElementById('er-ket').value = (r.Keterangan && r.Keterangan !== '-') ? r.Keterangan : '';
   document.getElementById('er-receipt').value = '';
   document.getElementById('er-receipt-name').textContent = '';
+  const prev = document.getElementById('er-receipt-preview');
+  prev.style.display = 'none'; prev.src = '';
   document.getElementById('er-receipt-current').innerHTML = r.ReceiptURL
-    ? `Struk saat ini: <a href="${r.ReceiptURL}" target="_blank" style="color:var(--leaf)">lihat struk</a>`
-    : 'Belum ada struk terlampir.';
+    ? `<div style="font-size:12px;color:var(--ink3);margin-bottom:6px">Struk saat ini:</div>`
+      + `<a href="${r.ReceiptURL}" target="_blank">`
+      + `<img src="${r.ReceiptURL}" style="max-height:120px;border-radius:6px;object-fit:contain;border:1px solid var(--line);cursor:pointer" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">`
+      + `<span style="display:none;color:var(--leaf);font-size:12px">Lihat struk ↗ (mungkin PDF)</span></a>`
+    : `<div style="font-size:12px;color:var(--ink3)">Belum ada struk terlampir.</div>`;
   openModal('modal-edit-reimburse-staff');
 }
 
 function previewEditReceipt(input) {
-  if (!input.files || !input.files[0]) { editReceiptFile = null; return; }
+  const prev = document.getElementById('er-receipt-preview');
+  const nameEl = document.getElementById('er-receipt-name');
+  if (!input.files || !input.files[0]) {
+    editReceiptFile = null; prev.style.display = 'none'; prev.src = ''; nameEl.textContent = ''; return;
+  }
   editReceiptFile = input.files[0];
-  document.getElementById('er-receipt-name').textContent = '📄 ' + editReceiptFile.name + ' (struk akan diganti)';
+  nameEl.textContent = '📄 ' + editReceiptFile.name + ' (struk akan diganti)';
+  if (editReceiptFile.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+    reader.readAsDataURL(editReceiptFile);
+  } else {
+    prev.style.display = 'none'; prev.src = '';
+  }
 }
 
 async function submitEditReimburseStaff() {
@@ -3686,6 +3724,29 @@ async function loadGajiStaff() {
   }
   showView('login');
 })();
+
+// ── Lightbox receipt ──────────────────────────────
+function openReceiptLightbox(url) {
+  const lb = document.getElementById('receipt-lightbox');
+  document.getElementById('receipt-lb-img').src = url;
+  document.getElementById('receipt-lightbox-open').href = url;
+  lb.classList.add('open');
+}
+function closeReceiptLightbox() {
+  const lb = document.getElementById('receipt-lightbox');
+  lb.classList.remove('open');
+  document.getElementById('receipt-lb-img').src = '';
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeReceiptLightbox();
+});
 </script>
+
+<!-- Lightbox Modal Receipt -->
+<div id="receipt-lightbox" onclick="if(event.target===this)closeReceiptLightbox()">
+  <span id="receipt-lightbox-close" onclick="closeReceiptLightbox()">×</span>
+  <img id="receipt-lb-img" src="" alt="Receipt">
+  <a id="receipt-lightbox-open" href="" target="_blank">Buka di tab baru ↗</a>
+</div>
 </body>
 </html>
