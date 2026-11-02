@@ -1658,6 +1658,30 @@ async function syncAll() {
   toast('Data berhasil dimuat ✓', 'success');
 }
 
+// Background sync — tidak block UI, tidak tampil toast, re-render setelah selesai
+function syncBackground() {
+  Promise.all([
+    apiGet({ action: 'getAllStaff',  token: HR_PASSWORD }),
+    apiGet({ action: 'getCuti',      token: HR_PASSWORD }),
+    apiGet({ action: 'getReimburse', token: HR_PASSWORD }),
+  ]).then(([sRes, cRes, rRes]) => {
+    if (sRes.ok) state.staff    = sRes.data || [];
+    if (cRes.ok) state.cuti     = cRes.data || [];
+    if (rRes.ok) state.reimburse= rRes.data || [];
+    renderDashboard();
+  }).catch(() => {});
+}
+
+// Update satu item di array state secara lokal
+function patchState(arr, id, updates) {
+  const idx = arr.findIndex(x => x.ID === id);
+  if (idx !== -1) Object.assign(arr[idx], updates);
+}
+function removeState(arr, id) {
+  const idx = arr.findIndex(x => x.ID === id);
+  if (idx !== -1) arr.splice(idx, 1);
+}
+
 // ─── HR DASHBOARD ─────────────────────────────────────────────────
 function renderDashboard() {
   const aktif  = state.staff.filter(s => String(s.Status).toLowerCase() === 'aktif').length;
@@ -1964,7 +1988,9 @@ async function approveCuti(id) {
   const res = await apiGet({ action: 'approveCuti', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Cuti disetujui ✓', 'success');
-    await syncAll(); renderDashboard(); renderCuti();
+    patchState(state.cuti, id, { Status: 'Approved' });
+    renderDashboard(); renderCuti();
+    syncBackground();
   } else toast(res.error || 'Gagal approve', 'error');
 }
 
@@ -1981,7 +2007,9 @@ async function submitRejectCuti() {
   if (res.ok) {
     closeModal('modal-reject-cuti');
     toast('Pengajuan ditolak', 'success');
-    await syncAll(); renderDashboard(); renderCuti();
+    patchState(state.cuti, id, { Status: 'Rejected', CatatanHR: catatan });
+    renderDashboard(); renderCuti();
+    syncBackground();
   } else toast(res.error || 'Gagal', 'error');
 }
 
@@ -1990,7 +2018,9 @@ async function deleteCutiRow(id) {
   const res = await apiGet({ action: 'deleteCuti', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Data cuti dihapus ✓', 'success');
-    await syncAll(); renderCuti();
+    removeState(state.cuti, id);
+    renderCuti();
+    syncBackground();
   } else toast(res.error || 'Gagal hapus', 'error');
 }
 
@@ -1999,7 +2029,9 @@ async function undoCuti(id) {
   const res = await apiGet({ action: 'undoCuti', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
-    await syncAll(); renderDashboard(); renderCuti();
+    patchState(state.cuti, id, { Status: 'Pending', CatatanHR: '' });
+    renderDashboard(); renderCuti();
+    syncBackground();
   } else toast(res.error || 'Gagal undo', 'error');
 }
 
@@ -2089,7 +2121,9 @@ async function approveReimburse(id) {
   const res = await apiGet({ action: 'approveReimburse', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Reimbursement disetujui ✓', 'success');
-    await syncAll(); renderDashboard(); renderReimburse();
+    patchState(state.reimburse, id, { Status: 'Approved' });
+    renderDashboard(); renderReimburse();
+    syncBackground();
   } else toast(res.error || 'Gagal', 'error');
 }
 
@@ -2106,7 +2140,9 @@ async function submitRejectReimburse() {
   if (res.ok) {
     closeModal('modal-reject-reimb');
     toast('Reimbursement ditolak', 'success');
-    await syncAll(); renderDashboard(); renderReimburse();
+    patchState(state.reimburse, id, { Status: 'Rejected', CatatanHR: catatan });
+    renderDashboard(); renderReimburse();
+    syncBackground();
   } else toast(res.error || 'Gagal', 'error');
 }
 
@@ -2115,7 +2151,9 @@ async function deleteReimburseRow(id) {
   const res = await apiGet({ action: 'deleteReimburse', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Data reimburse dihapus ✓', 'success');
-    await syncAll(); renderReimburse();
+    removeState(state.reimburse, id);
+    renderReimburse();
+    syncBackground();
   } else toast(res.error || 'Gagal hapus', 'error');
 }
 
@@ -2124,7 +2162,9 @@ async function undoReimburse(id) {
   const res = await apiGet({ action: 'undoReimburse', token: HR_PASSWORD, id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
-    await syncAll(); renderDashboard(); renderReimburse();
+    patchState(state.reimburse, id, { Status: 'Pending', CatatanHR: '' });
+    renderDashboard(); renderReimburse();
+    syncBackground();
   } else toast(res.error || 'Gagal', 'error');
 }
 
