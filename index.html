@@ -2580,7 +2580,7 @@ async function compressImage(file) {
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX = 800;
+      const MAX = 1920;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -2589,7 +2589,7 @@ async function compressImage(file) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
       resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
     };
     img.onerror = () => {
