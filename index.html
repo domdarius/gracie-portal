@@ -744,6 +744,12 @@ tbody tr:hover td{background:#FAFAF7;}
                     <button class="tab" onclick="filterGaji('Belum',this)">Belum</button>
                     <button class="tab" onclick="filterGaji('Sudah',this)">Sudah</button>
                   </div>
+                  <div class="tabs" style="margin:0">
+                    <button class="tab active" onclick="filterGajiEntitas('',this)">Semua Entitas</button>
+                    <button class="tab" onclick="filterGajiEntitas('PT Gracie Royal Sejahtera',this)">PT Gracie</button>
+                    <button class="tab" onclick="filterGajiEntitas('CV Gracie Royal Sentosa',this)">CV Sentosa</button>
+                    <button class="tab" onclick="filterGajiEntitas('CV Gracie Sukses Abadi',this)">CV Sukses</button>
+                  </div>
                   <button class="btn btn-approve btn-sm hidden" id="btn-bulk-transfer" onclick="bulkMarkTransfer()">
                     ✓ Tandai Transfer (<span id="bulk-count">0</span>)
                   </button>
@@ -1136,6 +1142,14 @@ tbody tr:hover td{background:#FAFAF7;}
       <div class="form-group"><label class="form-label">Sisa Cuti</label><input type="number" class="form-input" id="es-cuti-sisa" min="0" step="0.5"></div>
       <div class="form-group"><label class="form-label">No. Rekening</label><input type="text" class="form-input" id="es-norek"></div>
       <div class="form-group"><label class="form-label">Nama Bank</label><input type="text" class="form-input" id="es-bank"></div>
+      <div class="form-group"><label class="form-label">Entitas Pembayar</label>
+        <select class="form-select" id="es-entitas">
+          <option value="">— Pilih Entitas —</option>
+          <option value="PT Gracie Royal Sejahtera">PT Gracie Royal Sejahtera (1983575777)</option>
+          <option value="CV Gracie Royal Sentosa">CV Gracie Royal Sentosa (5325642588)</option>
+          <option value="CV Gracie Sukses Abadi">CV Gracie Sukses Abadi (5325136135)</option>
+        </select>
+      </div>
       <div class="form-group"><label class="form-label">NIK KTP</label><input type="text" class="form-input" id="es-nik" maxlength="16" placeholder="16 digit NIK"></div>
       <div class="form-group full"><label class="form-label">Catatan HR</label><textarea class="form-textarea" id="es-catatan"></textarea></div>
     </div>
@@ -1817,6 +1831,7 @@ function openEditStaff(id) {
   document.getElementById('es-cuti-sisa').value  = s.CutiSisa || 0;
   document.getElementById('es-norek').value      = s.NoRekening || '';
   document.getElementById('es-bank').value       = s.NamaBank || '';
+  document.getElementById('es-entitas').value    = s.EntitasBayar || '';
   document.getElementById('es-nik').value        = s.NIK || '';
   document.getElementById('es-catatan').value    = s.CatatanHR || '';
   openModal('modal-edit-staff');
@@ -1867,6 +1882,7 @@ async function submitEditStaff() {
     CutiSisa: document.getElementById('es-cuti-sisa').value,
     NoRekening: document.getElementById('es-norek').value,
     NamaBank: document.getElementById('es-bank').value,
+    EntitasBayar: document.getElementById('es-entitas').value,
     NIK: document.getElementById('es-nik').value,
     CatatanHR: document.getElementById('es-catatan').value,
   });
@@ -2985,6 +3001,7 @@ async function doChangePIN() {
 // ─── GAJI & PAYROLL ──────────────────────────────────────────────
 let gajiData = [];
 let gajiFilter = 'semua';
+let gajiEntitasFilter = '';
 let templateGajiData = [];
 let komponenGajiData = [];
 
@@ -3281,10 +3298,23 @@ function renderGajiStats() {
   }
 }
 
+function filterGajiEntitas(entitas, btn) {
+  gajiEntitasFilter = entitas;
+  document.querySelectorAll('#gaji-panel-payroll .tabs:last-of-type .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderGajiTable();
+}
+
 function renderGajiTable() {
   let list = gajiData;
   if (gajiFilter === 'Belum') list = list.filter(r => r.StatusTransfer === 'Belum');
   if (gajiFilter === 'Sudah') list = list.filter(r => r.StatusTransfer === 'Sudah');
+  if (gajiEntitasFilter) {
+    list = list.filter(r => {
+      const staff = state.staff.find(s => s.ID === r.StaffID);
+      return staff && (staff.EntitasBayar || '') === gajiEntitasFilter;
+    });
+  }
   const tbody = document.getElementById('gaji-table');
   if (!tbody) return;
 
