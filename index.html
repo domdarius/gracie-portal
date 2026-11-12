@@ -744,7 +744,7 @@ tbody tr:hover td{background:#FAFAF7;}
                     <button class="tab" onclick="filterGaji('Belum',this)">Belum</button>
                     <button class="tab" onclick="filterGaji('Sudah',this)">Sudah</button>
                   </div>
-                  <div class="tabs" style="margin:0">
+                  <div class="tabs" id="gaji-entitas-tabs" style="margin:0">
                     <button class="tab active" onclick="filterGajiEntitas('',this)">Semua Entitas</button>
                     <button class="tab" onclick="filterGajiEntitas('PT Gracie Royal Sejahtera',this)">PT Gracie</button>
                     <button class="tab" onclick="filterGajiEntitas('CV Gracie Royal Sentosa',this)">CV Sentosa</button>
@@ -3300,7 +3300,7 @@ function renderGajiStats() {
 
 function filterGajiEntitas(entitas, btn) {
   gajiEntitasFilter = entitas;
-  document.querySelectorAll('#gaji-panel-payroll .tabs:last-of-type .tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#gaji-entitas-tabs .tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderGajiTable();
 }
@@ -3333,7 +3333,7 @@ function renderGajiTable() {
           <button class="btn btn-ghost btn-sm" onclick="openEditGaji('${r.ID}')">Edit</button>
         </div>`
       : `<div style="display:flex;gap:4px;align-items:center">
-          <span style="font-size:11px;color:var(--ink3)">${r.TanggalTransfer||''}</span>
+          <span style="font-size:11px;color:var(--ink3)">${r.TanggalTransfer ? fmtDate(r.TanggalTransfer) : ''}</span>
           <button class="btn btn-ghost btn-sm" onclick="undoTransfer('${r.ID}')" title="Undo transfer">↩</button>
         </div>`;
     const trStyle = sudahTransfer ? 'opacity:.65' : '';
