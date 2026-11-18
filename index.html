@@ -1386,12 +1386,16 @@ tbody tr:hover td{background:#FAFAF7;}
 'use strict';
 
 // ─── CONFIG ───────────────────────────────────────────────────────
-const API_URL     = 'https://script.google.com/macros/s/AKfycbyDX_SwOXv8AlbWK17l_JQzbAZfD_K3OxhnhATOErLde0lyKaxm0ZdR5fRDCDbzr2yx/exec'; // DEV
-const HR_PASSWORD = 'AdminGRC123';
+// Deployment Apps Script yang aktif. Tidak ada kata sandi di file ini.
+// Setelah PIN benar, server mengirim sessionToken. Token disimpan di
+// sessionStorage (hilang saat tab ditutup) dan dikirim lewat POST.
+const API_URL = 'https://script.google.com/macros/s/AKfycbyDX_SwOXv8AlbWK17l_JQzbAZfD_K3OxhnhATOErLde0lyKaxm0ZdR5fRDCDbzr2yx/exec';
+const TOKEN_KEY = 'gracie_token';
 
 // ─── STATE ────────────────────────────────────────────────────────
 const state = {
-  session:  null,  // { staffId, nama, role }
+  session:  null,  // { staffId, nama, role } — tampilan saja, bukan bukti akses
+  setupToken: '',  // tiket sekali pakai untuk buat PIN pertama; tidak disimpan
   staff:    [],
   cuti:     [],
   reimburse:[],
@@ -1402,21 +1406,65 @@ const state = {
   staffFilter: 'semua',
 };
 
+function getToken() {
+  try { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+  catch (_) { return ''; }
+}
+
+function setToken(token) {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch (_) {}
+}
+
 // ─── API ──────────────────────────────────────────────────────────
 function apiGet(params) {
   const qs = new URLSearchParams(params).toString();
-  return fetch(API_URL + '?' + qs)
+  return fetch(API_URL + '?' + qs, { cache: 'no-store' })
     .then(r => r.json())
     .catch(() => ({ ok: false, error: 'Koneksi gagal' }));
 }
 
+// text/plain supaya permintaan ini tidak memicu preflight CORS di Apps Script.
+// doPost membaca JSON dari e.postData.contents.
 function apiPost(params) {
   return fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    redirect: 'follow',
+    cache: 'no-store',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(params),
-    mode: 'cors',
   }).then(r => r.json()).catch(() => ({ ok: false, error: 'Koneksi gagal' }));
+}
+
+let authRedirecting = false;
+function handleAuthExpired() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  setToken('');
+  state.session = null;
+  state.setupToken = '';
+  try { localStorage.removeItem('gracie_session'); } catch (_) {}
+  showStep('step-wa');
+  showView('login');
+  toast('Sesi habis. Silakan masuk lagi.', 'error');
+  setTimeout(() => { authRedirecting = false; }, 800);
+}
+
+function noteAuth(res) {
+  if (res && res.auth === false) handleAuthExpired();
+  return res;
+}
+
+// Panggilan HR dan data pribadi staff. Token sesi tidak pernah masuk ke URL.
+function apiAuth(params) {
+  const token = getToken();
+  if (!token) {
+    handleAuthExpired();
+    return Promise.resolve({ ok: false, auth: false, error: 'Sesi habis. Silakan masuk lagi.' });
+  }
+  return apiPost(Object.assign({}, params, { token: token })).then(noteAuth);
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────
@@ -1524,7 +1572,7 @@ async function doLoginWA() {
 
   const btn = document.querySelector('#step-wa .l-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
-  const res = await apiGet({ action: 'loginStaff', wa });
+  const res = await apiPost({ action: 'loginStaff', wa });
   btn.textContent = 'Lanjut →'; btn.disabled = false;
 
   if (!res.ok && !res.needPin && !res.needSetPin) {
@@ -1534,9 +1582,15 @@ async function doLoginWA() {
   }
 
   tempWA = wa;  // already normalized via normalizeWA()
+  state.setupToken = res.setupToken || '';
   state.session = { staffId: res.staffId, nama: res.nama, role: res.role };
 
   if (res.needSetPin) {
+    if (!state.setupToken) {
+      errEl.textContent = 'Tidak bisa membuat PIN saat ini. Coba lagi, atau hubungi HR.';
+      errEl.classList.remove('hidden');
+      return;
+    }
     showStep('step-setpin');
     return;
   }
@@ -1553,7 +1607,7 @@ async function doLoginPIN() {
 
   const btn = document.querySelector('#step-pin .l-btn');
   btn.textContent = 'Memeriksa...'; btn.disabled = true;
-  const res = await apiGet({ action: 'loginStaff', wa: normalizeWA(tempWA), pin });
+  const res = await apiPost({ action: 'loginStaff', wa: normalizeWA(tempWA), pin });
   btn.textContent = 'Masuk →'; btn.disabled = false;
 
   if (!res.ok) {
@@ -1562,8 +1616,15 @@ async function doLoginPIN() {
     document.getElementById('inp-pin').value = '';
     return;
   }
+  if (!res.sessionToken) {
+    errEl.textContent = 'Server belum mengeluarkan sesi. Hubungi HR.';
+    errEl.classList.remove('hidden');
+    return;
+  }
 
   state.session = { staffId: res.staffId, nama: res.nama, role: res.role };
+  state.setupToken = '';
+  setToken(res.sessionToken);
   saveSession();
   enterApp();
 }
@@ -1578,16 +1639,30 @@ async function doSetPIN() {
   if (p1 !== p2) { errEl.textContent = 'PIN tidak cocok'; errEl.classList.remove('hidden'); return; }
   if (!/^\d+$/.test(p1)) { errEl.textContent = 'PIN hanya boleh angka'; errEl.classList.remove('hidden'); return; }
 
-  const res = await apiGet({ action: 'setPin', staffId: state.session.staffId, pin: p1 });
+  const res = await apiPost({
+    action: 'setPin',
+    staffId: state.session.staffId,
+    pin: p1,
+    setupToken: state.setupToken,
+  });
   if (!res.ok) { errEl.textContent = res.error || 'Gagal'; errEl.classList.remove('hidden'); return; }
+  if (!res.sessionToken) {
+    errEl.textContent = 'PIN tersimpan, tetapi sesi belum keluar. Masuk lagi dengan PIN baru.';
+    errEl.classList.remove('hidden');
+    showStep('step-pin');
+    return;
+  }
 
-  state.session.role = res.role;
+  state.session.role = res.role || state.session.role;
+  state.setupToken = '';
+  setToken(res.sessionToken);
   saveSession();
   enterApp();
   toast('PIN berhasil dibuat! 🔐', 'success');
 }
 
 function backToWA() {
+  state.setupToken = '';
   showStep('step-wa');
   document.getElementById('inp-pin').value = '';
   document.getElementById('err-pin').classList.add('hidden');
@@ -1597,7 +1672,7 @@ function saveSession() {
   localStorage.setItem('gracie_session', JSON.stringify(state.session));
 }
 
-function enterApp() {
+function showSessionView() {
   if (state.session.role === 'hr') {
     showView('hr');
     document.getElementById('hr-user-name').textContent = state.session.nama;
@@ -1609,9 +1684,34 @@ function enterApp() {
   }
 }
 
+function enterApp() {
+  if (!state.session || !getToken()) { handleAuthExpired(); return; }
+  showSessionView();
+  // Role di browser tidak dipercaya. Server yang menentukan hr atau staff.
+  apiAuth({ action: 'sessionInfo' }).then(who => {
+    if (!who || who.auth === false) return;
+    if (!who.ok || !who.role || !who.staffId) {
+      if (who && who.error === 'Koneksi gagal') return;
+      toast((who && who.error) || 'Sesi tidak berlaku', 'error');
+      handleAuthExpired();
+      return;
+    }
+    const changed = who.role !== state.session.role || String(who.staffId) !== String(state.session.staffId);
+    state.session.role = who.role;
+    state.session.staffId = who.staffId;
+    if (who.nama) state.session.nama = who.nama;
+    saveSession();
+    if (changed) showSessionView();
+  });
+}
+
 function doLogout() {
+  const token = getToken();
+  setToken('');
+  state.setupToken = '';
   localStorage.removeItem('gracie_session');
   state.session = null;
+  if (token) apiPost({ action: 'logout', token });
   showStep('step-wa');
   document.getElementById('inp-wa').value = '';
   document.getElementById('inp-pin').value = '';
@@ -1655,12 +1755,14 @@ function hrNav(page, btn) {
 async function syncAll() {
   toast('Memuat data...');
   const [sRes, cRes, rRes, kRes, jRes] = await Promise.all([
-    apiGet({ action: 'getAllStaff',  token: HR_PASSWORD }),
-    apiGet({ action: 'getCuti',      token: HR_PASSWORD }),
-    apiGet({ action: 'getReimburse', token: HR_PASSWORD }),
-    apiGet({ action: 'getKategori',  token: HR_PASSWORD, all: 'true' }),
-    apiGet({ action: 'getJenisCuti', token: HR_PASSWORD, all: 'true' }),
+    apiAuth({ action: 'getAllStaff' }),
+    apiAuth({ action: 'getCuti' }),
+    apiAuth({ action: 'getReimburse' }),
+    apiAuth({ action: 'getKategori',  all: 'true' }),
+    apiAuth({ action: 'getJenisCuti', all: 'true' }),
   ]);
+
+  if ([sRes, cRes, rRes, kRes, jRes].some(r => r && r.auth === false)) return;
 
   if (sRes.ok) state.staff    = sRes.data || [];
   if (cRes.ok) state.cuti     = cRes.data || [];
@@ -1669,15 +1771,19 @@ async function syncAll() {
   if (jRes.ok) state.jenisCuti= jRes.data || [];
 
   renderDashboard();
+  if (!sRes.ok && !cRes.ok && !rRes.ok) {
+    toast((sRes && sRes.error) || 'Gagal memuat data', 'error');
+    return;
+  }
   toast('Data berhasil dimuat ✓', 'success');
 }
 
 // Background sync — tidak block UI, tidak tampil toast, re-render setelah selesai
 function syncBackground() {
   Promise.all([
-    apiGet({ action: 'getAllStaff',  token: HR_PASSWORD }),
-    apiGet({ action: 'getCuti',      token: HR_PASSWORD }),
-    apiGet({ action: 'getReimburse', token: HR_PASSWORD }),
+    apiAuth({ action: 'getAllStaff' }),
+    apiAuth({ action: 'getCuti' }),
+    apiAuth({ action: 'getReimburse' }),
   ]).then(([sRes, cRes, rRes]) => {
     if (sRes.ok) state.staff    = sRes.data || [];
     if (cRes.ok) state.cuti     = cRes.data || [];
@@ -1847,9 +1953,8 @@ async function submitAddStaff() {
   const nama = document.getElementById('ms-nama').value.trim();
   const wa   = document.getElementById('ms-wa').value.trim();
   if (!nama || !wa) { toast('Nama dan WA wajib diisi', 'error'); return; }
-  const res = await apiGet({
-    action: 'addStaff', token: HR_PASSWORD,
-    NamaLengkap: nama, WA: wa,
+  const res = await apiAuth({
+    action: 'addStaff', NamaLengkap: nama, WA: wa,
     JobTitle: document.getElementById('ms-jobtitle').value,
     Departemen: document.getElementById('ms-dept').value,
     TipeKerja: document.getElementById('ms-tipe').value,
@@ -1867,8 +1972,8 @@ async function submitAddStaff() {
 
 async function submitEditStaff() {
   const id = document.getElementById('es-id').value;
-  const res = await apiGet({
-    action: 'updateStaffHR', token: HR_PASSWORD, staffId: id,
+  const res = await apiAuth({
+    action: 'updateStaffHR', staffId: id,
     NamaLengkap: document.getElementById('es-nama').value,
     JobTitle: document.getElementById('es-jobtitle').value,
     Departemen: document.getElementById('es-dept').value,
@@ -1986,7 +2091,7 @@ async function submitAddCutiHR() {
   const start   = document.getElementById('hc-start').value;
   const end     = document.getElementById('hc-end').value || start;
   if (!start) { toast('Pilih tanggal mulai', 'error'); return; }
-  const res = await apiGet({
+  const res = await apiAuth({
     action: 'addCuti', staffId,
     Jenis: document.getElementById('hc-jenis').value,
     TanggalMulai: start, TanggalSelesai: end,
@@ -2001,7 +2106,7 @@ async function submitAddCutiHR() {
 }
 
 async function approveCuti(id) {
-  const res = await apiGet({ action: 'approveCuti', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'approveCuti', id });
   if (res.ok) {
     toast('Cuti disetujui ✓', 'success');
     patchState(state.cuti, id, { Status: 'Approved' });
@@ -2019,7 +2124,7 @@ function openRejectCuti(id) {
 async function submitRejectCuti() {
   const id = document.getElementById('rc-id').value;
   const catatan = document.getElementById('rc-alasan').value;
-  const res = await apiGet({ action: 'rejectCuti', token: HR_PASSWORD, id, catatan });
+  const res = await apiAuth({ action: 'rejectCuti', id, catatan });
   if (res.ok) {
     closeModal('modal-reject-cuti');
     toast('Pengajuan ditolak', 'success');
@@ -2031,7 +2136,7 @@ async function submitRejectCuti() {
 
 async function deleteCutiRow(id) {
   if (!confirm('Hapus data cuti ini permanen? Tidak bisa dibatalkan.')) return;
-  const res = await apiGet({ action: 'deleteCuti', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'deleteCuti', id });
   if (res.ok) {
     toast('Data cuti dihapus ✓', 'success');
     removeState(state.cuti, id);
@@ -2042,7 +2147,7 @@ async function deleteCutiRow(id) {
 
 async function undoCuti(id) {
   if (!confirm('Kembalikan status pengajuan ini ke Pending?')) return;
-  const res = await apiGet({ action: 'undoCuti', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'undoCuti', id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
     patchState(state.cuti, id, { Status: 'Pending', CatatanHR: '' });
@@ -2120,7 +2225,7 @@ async function submitAddReimburseHR() {
   const jmlEl = document.getElementById('hr-reimb-jml');
   const jml = getRawNominal(jmlEl);
   if (!tgl || !ket || !jml) { toast('Semua field wajib diisi', 'error'); return; }
-  const res = await apiGet({
+  const res = await apiAuth({
     action: 'addReimburse', staffId,
     Kategori: document.getElementById('hr-reimb-kat').value,
     TanggalTransaksi: tgl, Jumlah: jml, Keterangan: ket,
@@ -2134,7 +2239,7 @@ async function submitAddReimburseHR() {
 }
 
 async function approveReimburse(id) {
-  const res = await apiGet({ action: 'approveReimburse', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'approveReimburse', id });
   if (res.ok) {
     toast('Reimbursement disetujui ✓', 'success');
     patchState(state.reimburse, id, { Status: 'Approved' });
@@ -2152,7 +2257,7 @@ function openRejectReimburse(id) {
 async function submitRejectReimburse() {
   const id = document.getElementById('rr-id').value;
   const catatan = document.getElementById('rr-alasan').value;
-  const res = await apiGet({ action: 'rejectReimburse', token: HR_PASSWORD, id, catatan });
+  const res = await apiAuth({ action: 'rejectReimburse', id, catatan });
   if (res.ok) {
     closeModal('modal-reject-reimb');
     toast('Reimbursement ditolak', 'success');
@@ -2164,7 +2269,7 @@ async function submitRejectReimburse() {
 
 async function deleteReimburseRow(id) {
   if (!confirm('Hapus data reimburse ini permanen? Tidak bisa dibatalkan.')) return;
-  const res = await apiGet({ action: 'deleteReimburse', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'deleteReimburse', id });
   if (res.ok) {
     toast('Data reimburse dihapus ✓', 'success');
     removeState(state.reimburse, id);
@@ -2175,7 +2280,7 @@ async function deleteReimburseRow(id) {
 
 async function undoReimburse(id) {
   if (!confirm('Kembalikan ke Pending?')) return;
-  const res = await apiGet({ action: 'undoReimburse', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'undoReimburse', id });
   if (res.ok) {
     toast('Status dikembalikan ke Pending ✓', 'success');
     patchState(state.reimburse, id, { Status: 'Pending', CatatanHR: '' });
@@ -2248,12 +2353,12 @@ async function submitKategori() {
   const nama = document.getElementById('kat-nama').value.trim();
   if (!nama) { toast('Nama wajib diisi', 'error'); return; }
   const res = id
-    ? await apiGet({ action: 'updateKategori', token: HR_PASSWORD, id, Nama: nama })
-    : await apiGet({ action: 'addKategori', token: HR_PASSWORD, Nama: nama });
+    ? await apiAuth({ action: 'updateKategori', id, Nama: nama })
+    : await apiAuth({ action: 'addKategori', Nama: nama });
   if (res.ok) {
     closeModal('modal-kategori');
     toast('Tersimpan ✓', 'success');
-    const kRes = await apiGet({ action: 'getKategori', token: HR_PASSWORD, all: 'true' });
+    const kRes = await apiAuth({ action: 'getKategori', all: 'true' });
     if (kRes.ok) state.kategori = kRes.data || [];
     renderSettings();
   } else toast(res.error || 'Gagal', 'error');
@@ -2261,9 +2366,9 @@ async function submitKategori() {
 
 async function toggleKategori(id, aktif) {
   const newVal = String(aktif) === 'true' ? 'false' : 'true';
-  const res = await apiGet({ action: 'updateKategori', token: HR_PASSWORD, id, Aktif: newVal });
+  const res = await apiAuth({ action: 'updateKategori', id, Aktif: newVal });
   if (res.ok) {
-    const kRes = await apiGet({ action: 'getKategori', token: HR_PASSWORD, all: 'true' });
+    const kRes = await apiAuth({ action: 'getKategori', all: 'true' });
     if (kRes.ok) state.kategori = kRes.data || [];
     renderSettings();
   } else toast(res.error || 'Gagal', 'error');
@@ -2292,12 +2397,12 @@ async function submitJenisCuti() {
   const potong = document.getElementById('jc-potong').checked ? 'true' : 'false';
   if (!nama) { toast('Nama wajib diisi', 'error'); return; }
   const res = id
-    ? await apiGet({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Nama: nama, PotongKuota: potong })
-    : await apiGet({ action: 'addJenisCuti', token: HR_PASSWORD, Nama: nama, PotongKuota: potong });
+    ? await apiAuth({ action: 'updateJenisCuti', id, Nama: nama, PotongKuota: potong })
+    : await apiAuth({ action: 'addJenisCuti', Nama: nama, PotongKuota: potong });
   if (res.ok) {
     closeModal('modal-jenis-cuti');
     toast('Tersimpan ✓', 'success');
-    const jRes = await apiGet({ action: 'getJenisCuti', token: HR_PASSWORD, all: 'true' });
+    const jRes = await apiAuth({ action: 'getJenisCuti', all: 'true' });
     if (jRes.ok) state.jenisCuti = jRes.data || [];
     renderSettings();
   } else toast(res.error || 'Gagal', 'error');
@@ -2305,9 +2410,9 @@ async function submitJenisCuti() {
 
 async function toggleJenisCuti(id, aktif) {
   const newVal = String(aktif) === 'true' ? 'false' : 'true';
-  const res = await apiGet({ action: 'updateJenisCuti', token: HR_PASSWORD, id, Aktif: newVal });
+  const res = await apiAuth({ action: 'updateJenisCuti', id, Aktif: newVal });
   if (res.ok) {
-    const jRes = await apiGet({ action: 'getJenisCuti', token: HR_PASSWORD, all: 'true' });
+    const jRes = await apiAuth({ action: 'getJenisCuti', all: 'true' });
     if (jRes.ok) state.jenisCuti = jRes.data || [];
     renderSettings();
   } else toast(res.error || 'Gagal', 'error');
@@ -2319,7 +2424,7 @@ async function doResetPin() {
   const s = state.staff.find(x => x.ID === staffId);
   if (!s) return;
   if (!confirm('Reset PIN ' + s.NamaLengkap + '? Mereka harus buat PIN baru saat login berikutnya.')) return;
-  const res = await apiGet({ action: 'resetPin', token: HR_PASSWORD, staffId });
+  const res = await apiAuth({ action: 'resetPin', staffId });
   if (res.ok) toast('PIN ' + s.NamaLengkap + ' berhasil direset ✓', 'success');
   else toast(res.error || 'Gagal', 'error');
 }
@@ -2336,10 +2441,10 @@ function spNav(page, btn) {
 async function loadStaffPortal() {
   const sid = state.session.staffId;
   const [sRes, cRes, rRes, csRes, kRes, jRes] = await Promise.all([
-    apiGet({ action: 'getStaff',       staffId: sid }),
-    apiGet({ action: 'getCuti',        staffId: sid }),
-    apiGet({ action: 'getReimburse',   staffId: sid }),
-    apiGet({ action: 'getCutiSummary', staffId: sid }),
+    apiAuth({ action: 'getStaff',       staffId: sid }),
+    apiAuth({ action: 'getCuti',        staffId: sid }),
+    apiAuth({ action: 'getReimburse',   staffId: sid }),
+    apiAuth({ action: 'getCutiSummary', staffId: sid }),
     apiGet({ action: 'getKategori' }),
     apiGet({ action: 'getJenisCuti' }),
   ]);
@@ -2508,7 +2613,7 @@ async function submitCutiStaff() {
     dur = hari;
   }
 
-  const res = await apiGet({
+  const res = await apiAuth({
     action: 'addCuti', staffId: state.session.staffId,
     Jenis: jenis, TanggalMulai: start, TanggalSelesai: end,
     Durasi: dur, JamMulai: jamMulai, JamSelesai: jamSelesai,
@@ -2617,6 +2722,21 @@ async function compressImage(file) {
   });
 }
 
+async function uploadReceiptToDrive(file, meta) {
+  const packed = await compressImage(file);
+  const up = await apiAuth({
+    action: 'uploadReceipt',
+    staffId: state.session.staffId,
+    base64: packed.base64,
+    mimeType: packed.mimeType,
+    staffName: meta.staffName,
+    kategori: meta.kategori,
+    tanggal: meta.tanggal,
+  });
+  if (up && up.ok && up.url) return up.url;
+  return '';
+}
+
 async function submitReimburseStaff() {
   const kat   = document.getElementById('sp-r-kat').value;
   const tgl   = document.getElementById('sp-r-tgl').value;
@@ -2633,36 +2753,16 @@ async function submitReimburseStaff() {
 
   toast('Memproses receipt...');
   const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
-
-  // Compress image sebelum upload
-  const { base64, mimeType } = await compressImage(file);
-  console.log('Compressed size:', base64.length, 'chars');
-
-  // Upload receipt ke Google Drive (primary) — lebih reliable, tidak diblokir
-  let receiptURL = '';
-  try {
-    const gsUp = await apiGet({ action: 'uploadReceipt', base64, mimeType, staffName, kategori: kat, tanggal: tgl });
-    console.log('GDrive Upload:', gsUp);
-    if (gsUp.ok) receiptURL = gsUp.url;
-  } catch(e) { console.warn('GDrive upload error:', e); }
-
-  // Fallback ke ImgBB jika Google Drive gagal
+  const receiptURL = await uploadReceiptToDrive(file, { staffName: staffName, kategori: kat, tanggal: tgl });
   if (!receiptURL) {
-    try {
-      const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
-      const fd = new FormData();
-      fd.append('image', base64);
-      fd.append('key', IMGBB_KEY);
-      const upRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd }).then(r=>r.json());
-      console.log('ImgBB fallback:', upRes);
-      if (upRes.success) receiptURL = upRes.data.url;
-    } catch(e) { console.warn('ImgBB fallback error:', e); }
+    toast('Gagal mengunggah struk. Coba lagi.', 'error');
+    return;
   }
 
   toast('Menyimpan pengajuan...');
 
   // Simpan data reimburse
-  const res = await apiGet({
+  const res = await apiAuth({
     action: 'addReimburse', staffId: state.session.staffId,
     Kategori: kat, TanggalTransaksi: tgl, Jumlah: jmlFinal,
     Keterangan: ket || '-', ReceiptURL: receiptURL,
@@ -2749,7 +2849,7 @@ function toggleFieldEdit(key) {
 
 async function saveField(key) {
   const val = document.getElementById('fi-' + key).value.trim();
-  const res = await apiGet({ action: 'updateStaff', staffId: state.session.staffId, [key]: val });
+  const res = await apiAuth({ action: 'updateStaff', staffId: state.session.staffId, [key]: val });
   if (res.ok) {
     if (!state.staffData) state.staffData = {};
     state.staffData[key] = val;
@@ -2857,7 +2957,7 @@ async function submitEditCutiStaff() {
     dur = hari;
   }
 
-  const res = await apiGet({
+  const res = await apiAuth({
     action: 'updateCuti', id, staffId: state.session.staffId,
     Jenis: jenis, TanggalMulai: start, TanggalSelesai: end,
     Durasi: dur, Keterangan: ket,
@@ -2932,19 +3032,15 @@ async function submitEditReimburseStaff() {
   if (!tgl) { toast('Isi tanggal transaksi', 'error'); return; }
   if (!jml) { toast('Isi jumlah reimburse', 'error'); return; }
 
-  // Upload struk baru kalau ada
   let receiptURL = '';
   if (editReceiptFile) {
     toast('Memproses receipt...');
-    try {
-      const { base64 } = await compressImage(editReceiptFile);
-      const IMGBB_KEY = '1888a0ffee055de8fe03957f89f86eee';
-      const fd = new FormData();
-      fd.append('image', base64);
-      fd.append('key', IMGBB_KEY);
-      const upRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd }).then(r=>r.json());
-      if (upRes.success) receiptURL = upRes.data.url;
-    } catch(e) { console.warn('Upload error:', e); }
+    const staffName = (state.staffData && state.staffData.NamaLengkap) || state.session.nama;
+    receiptURL = await uploadReceiptToDrive(editReceiptFile, { staffName: staffName, kategori: kat, tanggal: tgl });
+    if (!receiptURL) {
+      toast('Gagal mengunggah struk baru. Perubahan belum disimpan.', 'error');
+      return;
+    }
   }
 
   toast('Menyimpan perubahan...');
@@ -2955,7 +3051,7 @@ async function submitEditReimburseStaff() {
   };
   if (receiptURL) payload.ReceiptURL = receiptURL;
 
-  const res = await apiGet(payload);
+  const res = await apiAuth(payload);
   if (res.ok) {
     editReceiptFile = null;
     closeModal('modal-edit-reimburse-staff');
@@ -2966,7 +3062,7 @@ async function submitEditReimburseStaff() {
 
 async function staffDeleteCuti(id) {
   if (!confirm('Batalkan pengajuan cuti ini?')) return;
-  const res = await apiGet({ action: 'deleteCuti', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'deleteCuti', id, staffId: state.session.staffId });
   if (res.ok) {
     toast('Pengajuan cuti dibatalkan ✓', 'success');
     await loadStaffPortal();
@@ -2975,7 +3071,7 @@ async function staffDeleteCuti(id) {
 
 async function staffDeleteReimburse(id) {
   if (!confirm('Batalkan pengajuan reimburse ini?')) return;
-  const res = await apiGet({ action: 'deleteReimburse', token: HR_PASSWORD, id });
+  const res = await apiAuth({ action: 'deleteReimburse', id, staffId: state.session.staffId });
   if (res.ok) {
     toast('Pengajuan reimburse dibatalkan ✓', 'success');
     await loadStaffPortal();
@@ -2989,7 +3085,7 @@ async function doChangePIN() {
   if (baru !== konfirm) { toast('PIN baru tidak cocok', 'error'); return; }
   if (!baru || baru.length < 4) { toast('PIN minimal 4 digit', 'error'); return; }
   if (!/^\d+$/.test(baru)) { toast('PIN hanya boleh angka', 'error'); return; }
-  const res = await apiGet({ action: 'changePin', staffId: state.session.staffId, pinLama: lama, pinBaru: baru });
+  const res = await apiAuth({ action: 'changePin', staffId: state.session.staffId, pinLama: lama, pinBaru: baru });
   if (res.ok) {
     toast('PIN berhasil diganti! 🔐', 'success');
     document.getElementById('cp-lama').value = '';
@@ -3022,8 +3118,8 @@ async function loadGajiChart() {
   document.getElementById('gaji-chart-title').textContent = 'Tren Payroll ' + tahun;
 
   const [curRes, prevRes] = await Promise.all([
-    apiGet({ action: 'getGajiChart', token: HR_PASSWORD, tahun }),
-    showPrev ? apiGet({ action: 'getGajiChart', token: HR_PASSWORD, tahun: prevTahun }) : Promise.resolve(null),
+    apiAuth({ action: 'getGajiChart', tahun }),
+    showPrev ? apiAuth({ action: 'getGajiChart', tahun: prevTahun }) : Promise.resolve(null),
   ]);
 
   if (!curRes.ok) return;
@@ -3232,9 +3328,9 @@ async function loadGaji() {
   const periode = document.getElementById('gaji-periode')?.value;
   if (!periode) return;
   const [gRes, tRes, kRes] = await Promise.all([
-    apiGet({ action: 'getGaji', token: HR_PASSWORD, periode }),
-    apiGet({ action: 'getTemplateGaji', token: HR_PASSWORD }),
-    apiGet({ action: 'getKomponenGaji', token: HR_PASSWORD }),
+    apiAuth({ action: 'getGaji', periode }),
+    apiAuth({ action: 'getTemplateGaji' }),
+    apiAuth({ action: 'getKomponenGaji' }),
   ]);
   gajiData         = gRes.ok  ? gRes.data  || [] : [];
   templateGajiData = tRes.ok  ? tRes.data  || [] : [];
@@ -3408,7 +3504,7 @@ function todayStr() {
 
 async function markTransfer(id) {
   const today = todayStr();
-  const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
+  const res = await apiAuth({ action: 'updateGaji', id, StatusTransfer: 'Sudah', TanggalTransfer: today });
   if (res.ok) {
     const item = gajiData.find(r => r.ID === id);
     if (item) { item.StatusTransfer = 'Sudah'; item.TanggalTransfer = today; }
@@ -3418,7 +3514,7 @@ async function markTransfer(id) {
 }
 
 async function undoTransfer(id) {
-  const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Belum', TanggalTransfer: '' });
+  const res = await apiAuth({ action: 'updateGaji', id, StatusTransfer: 'Belum', TanggalTransfer: '' });
   if (res.ok) {
     const item = gajiData.find(r => r.ID === id);
     if (item) { item.StatusTransfer = 'Belum'; item.TanggalTransfer = ''; }
@@ -3448,7 +3544,7 @@ async function bulkMarkTransfer() {
   let done = 0;
   for (const cb of checked) {
     const id = cb.dataset.id;
-    const res = await apiGet({ action: 'updateGaji', token: HR_PASSWORD, id, StatusTransfer: 'Sudah', TanggalTransfer: today });
+    const res = await apiAuth({ action: 'updateGaji', id, StatusTransfer: 'Sudah', TanggalTransfer: today });
     if (res.ok) {
       const item = gajiData.find(r => r.ID === id);
       if (item) { item.StatusTransfer = 'Sudah'; item.TanggalTransfer = today; }
@@ -3529,9 +3625,9 @@ async function submitAddGaji() {
   });
 
   const editId = document.getElementById('ag-edit-id').value;
-  const res = await apiGet({
+  const res = await apiAuth({
     action: editId ? 'addGaji' : 'addGaji',
-    token: HR_PASSWORD, staffId, Periode: periode,
+    staffId, Periode: periode,
     GajiPokok: pokok,
     Tunjangan: getRawNominal(document.getElementById('ag-tunjangan')),
     Lembur: getRawNominal(document.getElementById('ag-lembur')),
@@ -3554,7 +3650,7 @@ async function syncGajiFromSheets() {
   const label = document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || periode;
   if (!confirm('Sync data gaji ' + label + ' dari Sheets "11. Gaji Gracie"?\n\nData yang sudah ada tidak akan di-overwrite.')) return;
   toast('Syncing dari Sheets...');
-  const res = await apiGet({ action: 'syncGajiFromSheets', token: HR_PASSWORD, periode });
+  const res = await apiAuth({ action: 'syncGajiFromSheets', periode });
   if (res.ok) {
     toast('Sync selesai! ✓ Imported: ' + res.imported + ', Skip: ' + res.skipped, 'success');
     await loadGaji();
@@ -3567,7 +3663,7 @@ async function openGenerateGaji() {
   const label = document.getElementById('gaji-periode')?.options[document.getElementById('gaji-periode')?.selectedIndex]?.text || periode;
   if (!confirm('Generate gaji ' + label + ' dari template untuk semua staff aktif? Staff yang sudah ada data bulan ini akan di-skip.')) return;
   toast('Generating...');
-  const res = await apiGet({ action: 'generateGaji', token: HR_PASSWORD, Periode: periode });
+  const res = await apiAuth({ action: 'generateGaji', Periode: periode });
   if (res.ok) {
     toast('Generated: ' + res.generated + ' staff, skip: ' + res.skipped, 'success');
     await loadGaji();
@@ -3585,8 +3681,8 @@ function openTemplateGaji(staffId, nama, pokok, tunjangan, lembur, bazaar) {
 
 async function submitTemplateGaji() {
   const staffId = document.getElementById('tg-staffid').value;
-  const res = await apiGet({
-    action: 'setTemplateGaji', token: HR_PASSWORD, staffId,
+  const res = await apiAuth({
+    action: 'setTemplateGaji', staffId,
     GajiPokok: getRawNominal(document.getElementById('tg-pokok')),
     Tunjangan: getRawNominal(document.getElementById('tg-tunjangan')),
     Lembur: getRawNominal(document.getElementById('tg-lembur')),
@@ -3638,12 +3734,12 @@ async function submitKomponenGaji() {
   const nama = document.getElementById('kg-nama').value.trim();
   if (!nama) { toast('Nama wajib diisi', 'error'); return; }
   const res = id
-    ? await apiGet({ action: 'updateKomponenGaji', token: HR_PASSWORD, id, Nama: nama })
-    : await apiGet({ action: 'addKomponenGaji', token: HR_PASSWORD, Nama: nama });
+    ? await apiAuth({ action: 'updateKomponenGaji', id, Nama: nama })
+    : await apiAuth({ action: 'addKomponenGaji', Nama: nama });
   if (res.ok) {
     closeModal('modal-komponen-gaji');
     toast('Tersimpan ✓', 'success');
-    const kRes = await apiGet({ action: 'getKomponenGaji', token: HR_PASSWORD });
+    const kRes = await apiAuth({ action: 'getKomponenGaji' });
     if (kRes.ok) komponenGajiData = kRes.data || [];
     renderKomponenGaji();
   } else toast(res.error || 'Gagal', 'error');
@@ -3651,9 +3747,9 @@ async function submitKomponenGaji() {
 
 async function toggleKomponenGaji(id, aktif) {
   const newVal = String(aktif) === 'true' ? 'false' : 'true';
-  const res = await apiGet({ action: 'updateKomponenGaji', token: HR_PASSWORD, id, Aktif: newVal });
+  const res = await apiAuth({ action: 'updateKomponenGaji', id, Aktif: newVal });
   if (res.ok) {
-    const kRes = await apiGet({ action: 'getKomponenGaji', token: HR_PASSWORD });
+    const kRes = await apiAuth({ action: 'getKomponenGaji' });
     if (kRes.ok) komponenGajiData = kRes.data || [];
     renderKomponenGaji();
   } else toast(res.error || 'Gagal', 'error');
@@ -3669,8 +3765,8 @@ async function loadGajiChartStaff() {
   document.getElementById('sp-chart-title').textContent = 'Tren Gaji ' + tahun;
 
   const [curRes, prevRes] = await Promise.all([
-    apiGet({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun }),
-    showPrev ? apiGet({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun: prevTahun }) : Promise.resolve(null),
+    apiAuth({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun }),
+    showPrev ? apiAuth({ action: 'getGajiChartStaff', staffId: state.session.staffId, tahun: prevTahun }) : Promise.resolve(null),
   ]);
   if (!curRes.ok) return;
 
@@ -3730,7 +3826,7 @@ async function loadGajiChartStaff() {
 }
 
 async function loadGajiStaff() {
-  const res = await apiGet({ action: 'getGajiStaff', staffId: state.session.staffId });
+  const res = await apiAuth({ action: 'getGajiStaff', staffId: state.session.staffId });
   if (!res.ok) return;
   const list = res.data || [];
   const el = document.getElementById('sp-gaji-list');
@@ -3780,9 +3876,10 @@ async function loadGajiStaff() {
 
 // ─── INIT ─────────────────────────────────────────────────────────
 (function init() {
-  // Check saved session
+  // Role di localStorage hanya mengingat tampilan. Akses butuh token sesi.
   const saved = localStorage.getItem('gracie_session');
-  if (saved) {
+  const token = getToken();
+  if (saved && token) {
     try {
       const s = JSON.parse(saved);
       if (s && s.staffId && s.role) {
@@ -3791,8 +3888,9 @@ async function loadGajiStaff() {
         return;
       }
     } catch(_) {}
-    localStorage.removeItem('gracie_session');
   }
+  localStorage.removeItem('gracie_session');
+  setToken('');
   showView('login');
 })();
 
